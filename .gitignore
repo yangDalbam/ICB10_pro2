@@ -1,0 +1,80 @@
+# 파이썬 데이터 분석용 .gitignore 설정
+
+# --- 파이썬 컴파일 및 캐시 파일 ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# --- 가상환경 ---
+.venv/
+venv/
+env/
+ENV/
+bin/
+lib/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- 주피터 노트북 (Jupyter Notebook) ---
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+*.ipynb_checkpoints/
+.ipython/
+.jupyter/
+
+# --- 데이터 분석용 대용량 파일 및 폴더 ---
+# 대용량 원시 데이터 및 모델 저장 폴더
+data/
+raw_data/
+processed_data/
+datasets/
+models/
+weights/
+
+# 개별 대용량 데이터 및 바이너리 파일
+*.csv
+*.tsv
+*.xlsx
+*.xls
+*.jsonl
+*.parquet
+*.feather
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+*.npy
+*.npz
+*.db
+*.sqlite
+*.sqlite3
+
+# --- 환경변수 및 보안 설정 파일 ---
+.env
+.env.local
+.env.*
+secrets.json
+
+# --- IDE 및 운영체제 관련 파일 ---
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*~
+.DS_Store
+Thumbs.db
