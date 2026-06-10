@@ -83,6 +83,85 @@ def make_post_request(url: str, json_data: dict, client_id: str, client_secret: 
         return response.json()
     except requests.exceptions.RequestException as e:
         st.error(f"API 요청 중 오류가 발생했습니다: {e}")
-        if response.text:
-            st.error(f"오류 상세: {response.text}")
+        try:
+            if response.text:
+                st.error(f"오류 상세: {response.text}")
+        except Exception:
+            pass
         return None
+
+def inject_custom_css():
+    """모든 페이지에 네이버 브랜드 테마 및 현대적인 UI 디자인 스타일을 주입합니다."""
+    st.markdown(
+        """
+        <style>
+        /* 기본 폰트 설정 및 배경 개선 */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        
+        html, body, [class*="css"] {
+            font-family: 'Inter', 'Outfit', 'Noto Sans KR', sans-serif !important;
+        }
+        
+        /* 버튼 스타일링 */
+        div.stButton > button {
+            background-color: #00c73c !important;
+            color: white !important;
+            border-radius: 8px !important;
+            border: none !important;
+            font-weight: 600 !important;
+            padding: 0.5rem 1.25rem !important;
+            transition: all 0.25s ease !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 199, 60, 0.15), 0 2px 4px -1px rgba(0, 199, 60, 0.05) !important;
+        }
+        
+        div.stButton > button:hover {
+            background-color: #00b135 !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 8px 12px -3px rgba(0, 199, 60, 0.25), 0 4px 6px -2px rgba(0, 199, 60, 0.08) !important;
+        }
+        
+        /* 카드 컴포넌트 */
+        .metric-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid #eef2f6;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            margin-bottom: 0.75rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+        }
+        
+        /* 사이드바 글래스모피즘 */
+        [data-testid="stSidebar"] {
+            background-color: #f8f9fa !important;
+            border-right: 1px solid #eef2f6 !important;
+        }
+        
+        /* 그라디언트 텍스트 및 헤더 */
+        .gradient-text {
+            background: linear-gradient(135deg, #00c73c 0%, #009c2f 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+        
+        /* 로딩 스피너 커스텀 */
+        .stSpinner > div {
+            border-top-color: #00c73c !important;
+        }
+        
+        /* 데이터프레임 스타일 */
+        [data-testid="stDataFrame"] {
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #eef2f6;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
