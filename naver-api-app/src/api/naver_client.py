@@ -22,13 +22,29 @@ load_dotenv(os.path.join(current_dir, ".env"))
 load_dotenv(os.path.join(src_dir, ".env"))
 load_dotenv(os.path.join(naver_api_app_dir, ".env"))
 
-# st.session_state에 값이 없을 경우 환경변수(.env)에서 읽어와 초기화
-# Windows 캐리지 리턴(\r) 등으로 인한 인증 실패를 예방하기 위해 strip() 처리 적용
+# st.session_state에 값이 없을 경우 API Key 로드
+# 1순위: Streamlit secrets (배포 환경 설정)
+# 2순위: 환경 변수 / .env 파일 (로컬 개발 환경)
 if "client_id" not in st.session_state or not st.session_state["client_id"]:
-    val = os.getenv("NAVER_CLIENT_ID", "")
+    val = None
+    try:
+        if "NAVER_CLIENT_ID" in st.secrets:
+            val = st.secrets["NAVER_CLIENT_ID"]
+    except Exception:
+        pass
+    if not val:
+        val = os.getenv("NAVER_CLIENT_ID", "")
     st.session_state["client_id"] = val.strip() if val else ""
+
 if "client_secret" not in st.session_state or not st.session_state["client_secret"]:
-    val = os.getenv("NAVER_CLIENT_SECRET", "")
+    val = None
+    try:
+        if "NAVER_CLIENT_SECRET" in st.secrets:
+            val = st.secrets["NAVER_CLIENT_SECRET"]
+    except Exception:
+        pass
+    if not val:
+        val = os.getenv("NAVER_CLIENT_SECRET", "")
     st.session_state["client_secret"] = val.strip() if val else ""
 
 def get_headers(client_id: str, client_secret: str) -> dict:

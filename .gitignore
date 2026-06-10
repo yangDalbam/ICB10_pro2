@@ -87,6 +87,7 @@ Thumbs.db
 !.gitignore
 !.gitattributes
 !.env.example
+!.streamlit/
 !.agents/
 
 # --- 개발 및 로컬 설정 파일 ---

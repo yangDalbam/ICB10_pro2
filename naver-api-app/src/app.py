@@ -20,13 +20,29 @@ load_dotenv()
 load_dotenv(os.path.join(current_dir, ".env"))
 load_dotenv(os.path.join(parent_dir, ".env"))
 
-# 세션 상태 초기화 (.env 또는 환경 변수값 우선 활용)
-# Windows 캐리지 리턴(\r) 등으로 인한 인증 실패를 예방하기 위해 strip() 처리 적용
+# 세션 상태 초기화
+# 1순위: Streamlit secrets (배포 환경 설정)
+# 2순위: 환경 변수 / .env 파일 (로컬 개발 환경)
 if "client_id" not in st.session_state:
-    val = os.getenv("NAVER_CLIENT_ID", "")
+    val = None
+    try:
+        if "NAVER_CLIENT_ID" in st.secrets:
+            val = st.secrets["NAVER_CLIENT_ID"]
+    except Exception:
+        pass
+    if not val:
+        val = os.getenv("NAVER_CLIENT_ID", "")
     st.session_state["client_id"] = val.strip() if val else ""
+
 if "client_secret" not in st.session_state:
-    val = os.getenv("NAVER_CLIENT_SECRET", "")
+    val = None
+    try:
+        if "NAVER_CLIENT_SECRET" in st.secrets:
+            val = st.secrets["NAVER_CLIENT_SECRET"]
+    except Exception:
+        pass
+    if not val:
+        val = os.getenv("NAVER_CLIENT_SECRET", "")
     st.session_state["client_secret"] = val.strip() if val else ""
 
 st.set_page_config(
