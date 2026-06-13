@@ -133,7 +133,7 @@ def build():
 </html>
 """
 
-    dist_dir = os.path.join(base_dir, "dist")
+    dist_dir = os.path.join(base_dir, "report")
     os.makedirs(dist_dir, exist_ok=True)
     output_path = os.path.join(dist_dir, "korea_trip_dashboard.html")
     
