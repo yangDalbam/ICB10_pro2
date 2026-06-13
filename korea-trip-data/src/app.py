@@ -60,10 +60,10 @@ st.markdown("### 🧭 5단계 분석 프레임워크 요약")
 col_step1, col_step2, col_step3, col_step4, col_step5 = st.columns(5)
 
 step_card_style = """
-<div style="background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1rem; height: 160px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: flex-start; transition: transform 0.2s;">
-    <span style="background-color: {color}; color: #FFFFFF; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; width: fit-content; margin-bottom: 8px;">{step}</span>
-    <h4 style="margin: 0 0 6px 0; color: #1E293B; font-size: 0.95rem; font-weight: 700;">{title}</h4>
-    <p style="margin: 0; color: #64748B; font-size: 0.82rem; line-height: 1.5;">{desc}</p>
+<div style="background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 0.8rem; min-height: 180px; box-sizing: border-box; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: flex-start; transition: transform 0.2s;">
+    <span style="background-color: {color}; color: #FFFFFF; font-size: 0.7rem; font-weight: 700; padding: 2px 6px; border-radius: 9999px; width: fit-content; margin-bottom: 8px;">{step}</span>
+    <h4 style="margin: 0 0 6px 0; color: #1E293B; font-size: 0.85rem; font-weight: 700; white-space: nowrap; letter-spacing: -0.5px;">{title}</h4>
+    <p style="margin: 0; color: #64748B; font-size: 0.75rem; line-height: 1.4; word-break: keep-all;">{desc}</p>
 </div>
 """
 
