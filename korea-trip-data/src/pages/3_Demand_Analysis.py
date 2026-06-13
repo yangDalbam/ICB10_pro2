@@ -111,7 +111,7 @@ if not d_c1.empty and not d_c2.empty:
     ))
     fig_radar.update_layout(
         polar=dict(
-            radialaxis=dict(visible=True, range=[0, 1], gridcolor="#E2E8F0", labelside="end"),
+            radialaxis=dict(visible=True, range=[0, 1], gridcolor="#E2E8F0"),
             angularaxis=dict(gridcolor="#E2E8F0")
         ),
         showlegend=True,
