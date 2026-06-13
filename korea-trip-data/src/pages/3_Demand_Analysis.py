@@ -78,7 +78,6 @@ if not d_c1.empty and not d_c2.empty:
     st.markdown("### 📊 1. 5대 핵심 관광 역량 레이더 차트 비교")
     
     # 레이더용 점수 산정 (Mock 가중치 기반 동적 대리치 매핑)
-    # 실제 데이터에서는 백분위 순위 등을 계산하여 매핑할 수 있습니다.
     labels = ["관광객 다양성", "소비 다양성", "국제 다양성", "SNS 언급량", "내비 검색량"]
     
     val_c1 = [
@@ -104,10 +103,12 @@ if not d_c1.empty and not d_c2.empty:
     # Plotly 레이더 플롯 그리기
     fig_radar = go.Figure()
     fig_radar.add_trace(go.Scatterpolar(
-        r=val_c1, theta=labels, fill='toself', name=city_1, line_color='#EF4444', fillcolor='rgba(239, 68, 68, 0.15)'
+        r=val_c1, theta=labels, fill='toself', name=city_1, line_color='#EF4444', fillcolor='rgba(239, 68, 68, 0.15)',
+        hovertemplate="<b>도시</b>: " + city_1 + "<br>역량 차원: %{theta}<br>평가 지표: %{r:.2f}<extra></extra>"
     ))
     fig_radar.add_trace(go.Scatterpolar(
-        r=val_c2, theta=labels, fill='toself', name=city_2, line_color='#3B82F6', fillcolor='rgba(59, 130, 246, 0.15)'
+        r=val_c2, theta=labels, fill='toself', name=city_2, line_color='#3B82F6', fillcolor='rgba(59, 130, 246, 0.15)',
+        hovertemplate="<b>도시</b>: " + city_2 + "<br>역량 차원: %{theta}<br>평가 지표: %{r:.2f}<extra></extra>"
     ))
     fig_radar.update_layout(
         polar=dict(
@@ -118,8 +119,7 @@ if not d_c1.empty and not d_c2.empty:
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
         font=dict(family="Pretendard, sans-serif", size=12),
-        margin=dict(l=80, r=80, t=60, b=40),
-        title=f"{city_1} vs {city_2} 5대 차원 평가 지표"
+        margin=dict(l=80, r=80, t=20, b=40)
     )
     st.plotly_chart(fig_radar, use_container_width=True)
     
@@ -132,16 +132,18 @@ if not d_c1.empty and not d_c2.empty:
     s_pivot = pd.concat([s_c1, s_c2])
     fig_spend = px.bar(
         s_pivot, x="cardUseAmt", y="signguNm", color="indutyNm",
-        title="두 도시의 관광 카드 결제 업종 구성 비교",
         labels={"cardUseAmt": "카드 총 매출액(원)", "signguNm": "도시명", "indutyNm": "소비 업종"},
         orientation="h",
         color_discrete_sequence=["#3182CE", "#319795", "#ED8936", "#ECC94B", "#48BB78", "#9F7AEA"]
+    )
+    fig_spend.update_traces(
+        hovertemplate="<b>도시명</b>: %{y}<br><b>소비 업종</b>: %{legendgroup}<br><b>매출액</b>: %{x:,.0f}원<extra></extra>"
     )
     fig_spend.update_layout(
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
         font=dict(family="Pretendard, sans-serif", size=12),
-        margin=dict(l=40, r=40, t=60, b=40),
+        margin=dict(l=40, r=40, t=20, b=40),
         xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
         yaxis=dict(showgrid=False)
     )
@@ -167,15 +169,27 @@ if not d_c1.empty and not d_c2.empty:
 
     col_spend_stat1, col_spend_stat2 = st.columns(2)
     with col_spend_stat1:
-        st.markdown(f"**🔴 {city_1} 소비 특징**")
-        st.write(f"- 총 소비 규모: **{c1_total_spend / 100000000:.1f} 억원**")
-        st.write(f"- 식음료 편중률: **{c1_food_ratio:.1f}%**")
-        st.write(f"- 체류형 숙박 비율: **{c1_stay_ratio:.1f}%**")
+        st.markdown(f"""
+        <div style="background-color: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
+            <h4 style="margin: 0 0 10px 0; color: #991B1B; font-size: 1.05rem; font-weight: 700;">🔴 {city_1} 소비 특징</h4>
+            <p style="margin: 0; font-size: 0.92rem; color: #B91C1C; line-height: 1.7;">
+                • <strong>총 소비 규모</strong>: {c1_total_spend / 100000000:.1f} 억원<br>
+                • <strong>식음료 편중률</strong>: {c1_food_ratio:.1f}%<br>
+                • <strong>체류형 숙박 비율</strong>: {c1_stay_ratio:.1f}%
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
     with col_spend_stat2:
-        st.markdown(f"**🔵 {city_2} 소비 특징**")
-        st.write(f"- 총 소비 규모: **{c2_total_spend / 100000000:.1f} 억원**")
-        st.write(f"- 식음료 편중률: **{c2_food_ratio:.1f}%**")
-        st.write(f"- 체류형 숙박 비율: **{c2_stay_ratio:.1f}%**")
+        st.markdown(f"""
+        <div style="background-color: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
+            <h4 style="margin: 0 0 10px 0; color: #1E40AF; font-size: 1.05rem; font-weight: 700;">🔵 {city_2} 소비 특징</h4>
+            <p style="margin: 0; font-size: 0.92rem; color: #1E3A8A; line-height: 1.7;">
+                • <strong>총 소비 규모</strong>: {c2_total_spend / 100000000:.1f} 억원<br>
+                • <strong>식음료 편중률</strong>: {c2_food_ratio:.1f}%<br>
+                • <strong>체류형 숙박 비율</strong>: {c2_stay_ratio:.1f}%
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
     st.markdown("---")
     
@@ -189,16 +203,19 @@ if not d_c1.empty and not d_c2.empty:
         v_pivot = pd.concat([v_c1, v_c2])
         fig_vis = px.bar(
             v_pivot, x="visitorCo", y="signguNm", color="ageGrp",
-            title="방문객 연령대 분포 비교",
             labels={"visitorCo": "방문객 수(명)", "signguNm": "도시명", "ageGrp": "연령대"},
             orientation="h",
             color_discrete_sequence=["#CBD5E1", "#94A3B8", "#64748B", "#475569", "#334155", "#1E293B"]
         )
+        fig_vis.update_traces(
+            hovertemplate="<b>도시명</b>: %{y}<br><b>연령대</b>: %{legendgroup}<br><b>방문객 수</b>: %{x:,.0f}명<extra></extra>"
+        )
         fig_vis.update_layout(
+            height=320,  # 두 차트의 높이 통일
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
             font=dict(family="Pretendard, sans-serif", size=12),
-            margin=dict(l=40, r=40, t=60, b=40),
+            margin=dict(l=40, r=40, t=20, b=40),
             xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
             yaxis=dict(showgrid=False)
         )
@@ -209,16 +226,19 @@ if not d_c1.empty and not d_c2.empty:
         c_pivot = pd.concat([c_c1, c_c2])
         fig_cult = px.bar(
             c_pivot, x="searchCo", y="signguNm", color="clNm",
-            title="내비게이션 목적지 카테고리 비교",
             labels={"searchCo": "목적지 검색수", "signguNm": "도시명", "clNm": "목적지 분류"},
             orientation="h",
             color_discrete_sequence=["#3182CE", "#319795", "#ED8936", "#ECC94B", "#48BB78", "#9F7AEA"]
         )
+        fig_cult.update_traces(
+            hovertemplate="<b>도시명</b>: %{y}<br><b>목적지 분류</b>: %{legendgroup}<br><b>검색수</b>: %{x:,.0f}건<extra></extra>"
+        )
         fig_cult.update_layout(
+            height=320,  # 두 차트의 높이 통일
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
             font=dict(family="Pretendard, sans-serif", size=12),
-            margin=dict(l=40, r=40, t=60, b=40),
+            margin=dict(l=40, r=40, t=20, b=40),
             xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
             yaxis=dict(showgrid=False)
         )
@@ -233,20 +253,26 @@ if not d_c1.empty and not d_c2.empty:
     food_gap = c2_food_ratio - c1_food_ratio
     stay_gap = c1_stay_ratio - c2_stay_ratio
     
-    st.success(f"""
-    #### ✍️ {city_2} 관광 활성화를 위한 성공 도시 {city_1} 벤치마킹 보고서
+    st.markdown(f"#### ✍️ {city_2} 관광 활성화를 위한 성공 도시 {city_1} 벤치마킹 보고서")
     
-    1. **식음료 편중 완화 및 복합 상권 개발 (맛집 연계 쇼핑 인프라)**
-       - 분석 결과, {city_2}의 식음료 소비 비중은 **{c2_food_ratio:.1f}%**로, {city_1}의 **{c1_food_ratio:.1f}%** 대비 **{food_gap:.1f}%p 높은 극단적 편중** 현상을 보이고 있습니다.
-       - 단순 식사 소비에 그치지 않고 소비가 지역 내로 분산될 수 있도록, 대표 맛집 주변 반경 500m 이내에 지역 고유의 공방, 청년 창업 매장, 기념품 숍을 배치하여 동선 내 **'로컬 쇼핑 상권' 연계**를 구축해야 합니다.
-       
-    2. **체류 여건 보완 및 다각적 야간 콘텐츠 활성화 (숙박 유도)**
-       - {city_1}은 전체 소비 중 **{c1_stay_ratio:.1f}%**가 숙박 업종에서 이루어져 높은 체류성 소비를 생산하는 반면, {city_2}은 **{c2_stay_ratio:.1f}%** 수준에 머물러 관광객이 체류하지 않고 당일로 이탈하고 있습니다.
-       - {city_1}의 감성 한옥스테이나 도심형 게스트하우스 모델을 벤치마킹하여, 지역 유휴 자원을 활용한 **감성 숙박(스테이) 클러스터**를 보급하고, 야간 경관 미술관이나 야간 푸드 마켓 등을 개방하여 머무를 수 있는 밤 문화를 개발해야 합니다.
-       
-    3. **내비게이션 행선지 다양화 (문화/체험 시설 확대)**
-       - 내비게이션 목적지 검색 비교 결과, {city_2}은 역사나 자연관광지의 단순 자연 경관 감상 비중이 압도적인 반면, {city_1}은 복합 문화시설 및 스포츠여가 검색 비중이 뚜렷합니다.
-       - 자연 자원을 보유한 {city_2}의 장점을 극대화하되, 실내 미디어 아트 센터, 복합 문화 체험 공간 등을 결합하여 기후 영향 없이 4계절 내내 방문객을 흡수할 수 있는 하이브리드 관광 복합 공간 확충이 요구됩니다.
-    """)
+    with st.expander("📍 1. 식음료 편중 완화 및 복합 상권 개발 (맛집 연계 쇼핑)", expanded=True):
+        st.markdown(f"""
+        - **현황 분석**: {city_2}의 식음료 소비 비중은 **{c2_food_ratio:.1f}%**로, {city_1}의 **{c1_food_ratio:.1f}%** 대비 **{food_gap:.1f}%p 높은 극단적 편중** 현상을 보이고 있습니다.
+        - **개선 제언**: 단순 식사 소비에 그치지 않고 소비가 지역 내로 분산될 수 있도록, 대표 맛집 주변 반경 500m 이내에 지역 고유의 공방, 청년 창업 매장, 기념품 숍을 배치하여 동선 내 **'로컬 쇼핑 상권' 연계**를 구축해야 합니다.
+        """)
+        
+    with st.expander("🏨 2. 체류 여건 보완 및 다각적 야간 콘텐츠 활성화 (숙박 유도)", expanded=True):
+        st.markdown(f"""
+        - **현황 분석**: {city_1}은 전체 소비 중 **{c1_stay_ratio:.1f}%**가 숙박 업종에서 이루어져 높은 체류성 소비를 생산하는 반면, {city_2}은 **{c2_stay_ratio:.1f}%** 수준에 머물러 관광객이 체류하지 않고 당일로 이탈하고 있습니다.
+        - **개선 제언**: {city_1}의 감성 한옥스테이나 도심형 게스트하우스 모델을 벤치마킹하여, 지역 유휴 자원을 활용한 **감성 숙박(스테이) 클러스터**를 보급하고, 야간 경관 미술관이나 야간 푸드 마켓 등을 개방하여 머무를 수 있는 밤 문화를 개발해야 합니다.
+        """)
+        
+    with st.expander("🏞️ 3. 내비게이션 행선지 다양화 (문화/체험 시설 확대)", expanded=True):
+        st.markdown(f"""
+        - **현황 분석**: 내비게이션 목적지 검색 비교 결과, {city_2}은 역사나 자연관광지의 단순 자연 경관 감상 비중이 압도적인 반면, {city_1}은 복합 문화시설 및 스포츠여가 검색 비중이 뚜렷합니다.
+        - **개선 제언**: 자연 자원을 보유한 {city_2}의 장점을 극대화하되, 실내 미디어 아트 센터, 복합 문화 체험 공간 등을 결합하여 기후 영향 없이 4계절 내내 방문객을 흡수할 수 있는 하이브리드 관광 복합 공간 확충이 요구됩니다.
+        """)
+        
+    st.markdown("<br><p style='text-align: center; color: #94A3B8; font-size: 0.85rem;'>🗺️ Korea Trip Data랩 대시보드분석 보고서 끝</p>", unsafe_allow_html=True)
 else:
     st.error("도시 정보를 비교하기 위한 통계 데이터가 부족합니다.")

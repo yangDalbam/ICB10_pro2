@@ -46,23 +46,37 @@ st.markdown("---")
 
 # 기획 의도 소개 (Rich UI 카드 형태)
 st.markdown("""
-### 🎯 프로젝트 기획 의도
-방한 외국인 관광객들의 **특정 대도시(서울, 제주 등) 편중 현상**을 해결하고, 잠재력 있는 지역 도시들의 관광 활성화를 모색합니다.
-본 대시보드는 온라인 상의 **관심도(SNS/검색)**와 오프라인의 **실제 행동(내비게이션 행선지/신용카드 소비)** 데이터를 융합하여 분석을 전개합니다.
-""")
+<div style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border-left: 5px solid #2563EB; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+    <h3 style="margin-top:0; color:#1E3A8A; font-size:1.3rem; font-weight:700; display:flex; align-items:center; gap:8px;">🎯 프로젝트 기획 의도</h3>
+    <p style="margin:0; color:#1E40AF; font-size:1.05rem; line-height:1.7;">
+        방한 외국인 관광객들의 <strong>특정 대도시(서울, 제주 등) 편중 현상</strong>을 해결하고, 잠재력 있는 지역 도시들의 관광 활성화를 모색합니다.<br>
+        본 대시보드는 온라인 상의 <strong>관심도(SNS/검색)</strong>와 오프라인의 <strong>실제 행동(내비게이션 행선지/신용카드 소비)</strong> 데이터를 융합하여 분석을 전개합니다.
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
 # 5단계 분석 프레임워크 요약 안내
+st.markdown("### 🧭 5단계 분석 프레임워크 요약")
 col_step1, col_step2, col_step3, col_step4, col_step5 = st.columns(5)
+
+step_card_style = """
+<div style="background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1rem; height: 160px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: flex-start; transition: transform 0.2s;">
+    <span style="background-color: {color}; color: #FFFFFF; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 9999px; width: fit-content; margin-bottom: 8px;">{step}</span>
+    <h4 style="margin: 0 0 6px 0; color: #1E293B; font-size: 0.95rem; font-weight: 700;">{title}</h4>
+    <p style="margin: 0; color: #64748B; font-size: 0.82rem; line-height: 1.5;">{desc}</p>
+</div>
+"""
+
 with col_step1:
-    st.info("**1단계: 관심도 분석**\n\n외국인이 주목하는 인기 관심 도시 랭킹 파악")
+    st.markdown(step_card_style.format(step="1단계", color="#3B82F6", title="🔍 관심도 분석", desc="외국인이 주목하는 인기 관심 도시 랭킹 파악"), unsafe_allow_html=True)
 with col_step2:
-    st.info("**2단계: 실제 방문 대조**\n\n온라인의 관심이 오프라인 방문으로 연결되는지 분석")
+    st.markdown(step_card_style.format(step="2단계", color="#10B981", title="🚗 실제 방문 대조", desc="온라인의 관심이 오프라인 방문으로 연결되는지 분석"), unsafe_allow_html=True)
 with col_step3:
-    st.info("**3단계: 도시 매트릭스**\n\n성공 도시(도시1) vs 잠재 도시(도시2) 분류")
+    st.markdown(step_card_style.format(step="3단계", color="#F59E0B", title="🧩 도시 매트릭스", desc="성공 도시(도시1) vs 잠재 도시(도시2) 분류"), unsafe_allow_html=True)
 with col_step4:
-    st.info("**4단계: 인프라 분석**\n\n소비 패턴 및 연령/국적별 다양성 격차 규명")
+    st.markdown(step_card_style.format(step="4단계", color="#EF4444", title="💳 인프라 분석", desc="소비 패턴 및 연령/국적별 다양성 격차 규명"), unsafe_allow_html=True)
 with col_step5:
-    st.info("**5단계: 벤치마킹**\n\n성공 요소를 바탕으로 한 활성화 솔루션 도출")
+    st.markdown(step_card_style.format(step="5단계", color="#8B5CF6", title="💡 벤치마킹", desc="성공 요소를 바탕으로 한 활성화 솔루션 도출"), unsafe_allow_html=True)
 
 st.markdown("---")
 
@@ -103,21 +117,21 @@ if not df_foreigner.empty:
     df_trend = df_foreigner.groupby("기준연월")["인원수"].sum().reset_index()
     fig = px.line(
         df_trend, x="기준연월", y="인원수", 
-        title="방한 외래객 월별 추이 (2023-2024)",
         labels={"인원수": "관광객 수(명)", "기준연월": "연월"},
         markers=True,
         color_discrete_sequence=["#3182CE"]
     )
     fig.update_traces(
         line=dict(width=3),
-        marker=dict(size=8, symbol="circle", line=dict(width=2, color="white"))
+        marker=dict(size=8, symbol="circle", line=dict(width=2, color="white")),
+        hovertemplate="<b>기준연월</b>: %{x}<br><b>관광객 수</b>: %{y:,.0f}명<extra></extra>"
     )
     fig.update_layout(
         hovermode="x unified",
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
         font=dict(family="Pretendard, sans-serif", size=12),
-        margin=dict(l=40, r=40, t=60, b=40),
+        margin=dict(l=40, r=40, t=20, b=40),
         xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
         yaxis=dict(showgrid=True, gridcolor="#F1F5F9")
     )
@@ -158,13 +172,16 @@ if not df_kto_demand.empty:
             color="snsMentionCo",
             color_continuous_scale=["#FCA5A5", "#EF4444", "#991B1B"]
         )
+        fig_sns.update_traces(
+            hovertemplate="<b>시군구</b>: %{y}<br><b>SNS 언급량</b>: %{x:,.0f}건<extra></extra>"
+        )
         fig_sns.update_layout(
             showlegend=False, 
             coloraxis_showscale=False,
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
             font=dict(family="Pretendard, sans-serif", size=12),
-            margin=dict(l=40, r=40, t=20, b=40),
+            margin=dict(l=40, r=40, t=10, b=40),
             xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
             yaxis=dict(categoryorder='total ascending', showgrid=False)
         )
@@ -180,13 +197,16 @@ if not df_kto_demand.empty:
             color="naviSearchCo",
             color_continuous_scale=["#93C5FD", "#3B82F6", "#1E3A8A"]
         )
+        fig_navi.update_traces(
+            hovertemplate="<b>시군구</b>: %{y}<br><b>내비 검색수</b>: %{x:,.0f}건<extra></extra>"
+        )
         fig_navi.update_layout(
             showlegend=False, 
             coloraxis_showscale=False,
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
             font=dict(family="Pretendard, sans-serif", size=12),
-            margin=dict(l=40, r=40, t=20, b=40),
+            margin=dict(l=40, r=40, t=10, b=40),
             xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
             yaxis=dict(categoryorder='total ascending', showgrid=False)
         )
@@ -214,12 +234,16 @@ if not df_kto_spend.empty:
             hole=0.4,
             color_discrete_sequence=["#3182CE", "#319795", "#ED8936", "#ECC94B", "#48BB78", "#9F7AEA"]
         )
-        fig_pie_spend.update_traces(textposition='inside', textinfo='percent+label')
+        fig_pie_spend.update_traces(
+            textposition='inside', 
+            textinfo='percent+label',
+            hovertemplate="<b>업종</b>: %{label}<br><b>소비액</b>: %{value:,.0f}원 (%{percent})<extra></extra>"
+        )
         fig_pie_spend.update_layout(
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
             font=dict(family="Pretendard, sans-serif", size=12),
-            margin=dict(l=40, r=40, t=20, b=40)
+            margin=dict(l=40, r=40, t=10, b=40)
         )
         st.plotly_chart(fig_pie_spend, use_container_width=True)
         
@@ -234,12 +258,15 @@ if not df_kto_spend.empty:
             color="cardUseAmt",
             color_continuous_scale=["#C7D2FE", "#6366F1", "#3730A3"]
         )
+        fig_city_spend.update_traces(
+            hovertemplate="<b>시군구</b>: %{y}<br><b>카드 소비액</b>: %{x:,.0f}원<extra></extra>"
+        )
         fig_city_spend.update_layout(
             coloraxis_showscale=False,
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
             font=dict(family="Pretendard, sans-serif", size=12),
-            margin=dict(l=40, r=40, t=20, b=40),
+            margin=dict(l=40, r=40, t=10, b=40),
             xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
             yaxis=dict(categoryorder='total ascending', showgrid=False)
         )

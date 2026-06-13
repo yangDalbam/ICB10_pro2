@@ -53,7 +53,6 @@ if not df_demand.empty:
         color="cityType",
         hover_name="signguNm",
         text="signguNm",
-        title="관광 관심도(SNS) vs 실제 방문도(내비게이션 검색)",
         labels={
             "snsMentionCo": "SNS 언급량 (온라인 관심도)", 
             "naviSearchCo": "내비게이션 검색수 (실제 방문도)",
@@ -65,36 +64,53 @@ if not df_demand.empty:
     # 텍스트 라벨 가독성 조정
     fig.update_traces(
         textposition='top center', 
-        marker=dict(size=14, opacity=0.85, line=dict(width=1.5, color='white'))
+        marker=dict(size=14, opacity=0.85, line=dict(width=1.5, color='white')),
+        hovertemplate="<b>시군구</b>: %{hovertext}<br>도시 유형: %{legendgroup}<br>SNS 언급량: %{x:,.0f}건<br>내비 검색수: %{y:,.0f}건<extra></extra>"
     )
     
     # 사분면 가이드 라인 추가 (단정한 슬레이트 색상으로 변경)
     fig.add_vline(x=median_sns, line_width=1.5, line_dash="dash", line_color="#94A3B8")
     fig.add_hline(y=median_navi, line_width=1.5, line_dash="dash", line_color="#94A3B8")
     
+    # [개선 13] 가이드라인 옆 텍스트 주석 추가
+    max_y = df_demand["naviSearchCo"].max()
+    max_x = df_demand["snsMentionCo"].max()
+    fig.add_annotation(x=median_sns * 1.15, y=max_y * 0.9, text="← SNS 언급량 중앙값", showarrow=False, font=dict(color="#64748B", size=11))
+    fig.add_annotation(x=max_x * 0.85, y=median_navi * 1.25, text="내비 검색수 중앙값 ↑", showarrow=False, font=dict(color="#64748B", size=11))
+    
     fig.update_layout(
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
         font=dict(family="Pretendard, sans-serif", size=12),
-        margin=dict(l=40, r=40, t=60, b=40),
+        margin=dict(l=40, r=40, t=20, b=40),
         xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
         yaxis=dict(showgrid=True, gridcolor="#F1F5F9")
     )
     
     st.plotly_chart(fig, use_container_width=True)
     
-    # 사분면 설명 UI 구성
+    # [개선 14] 사분면 설명 UI를 카드형 디자인으로 교체
     col_explain1, col_explain2 = st.columns(2)
     with col_explain1:
         st.markdown(f"""
-        * **🟢 수직 기준선 (SNS 중앙값)**: `{median_sns:,.0f}`
-        * **🟢 수평 기준선 (내비 중앙값)**: `{median_navi:,.0f}`
-        """)
+        <div style="background-color:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:1.25rem; height:120px; box-shadow:0 2px 4px rgba(0,0,0,0.01);">
+            <h4 style="margin:0 0 8px 0; color:#475569; font-size:1rem; font-weight:700;">🟢 매트릭스 기준선 정보 (2024.01 기준)</h4>
+            <p style="margin:0; font-size:0.9rem; color:#64748B; line-height:1.6;">
+                • <strong>SNS 언급량 중앙값</strong>: {median_sns:,.0f} 건<br>
+                • <strong>내비게이션 검색수 중앙값</strong>: {median_navi:,.0f} 건
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
     with col_explain2:
         st.markdown("""
-        * **🔴 도시 1 영역 (우상분면)**: 관심도와 방문도 모두 높은 성공적인 관광 거점 도시
-        * **🔵 도시 2 영역 (우하분면)**: 온라인 관심은 뜨거우나 실제 방문 전환율이 저조한 잠재적 개선 도시
-        """)
+        <div style="background-color:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:1.25rem; height:120px; box-shadow:0 2px 4px rgba(0,0,0,0.01);">
+            <h4 style="margin:0 0 8px 0; color:#475569; font-size:1rem; font-weight:700;">🧩 주요 분석 도시 유형 정보</h4>
+            <p style="margin:0; font-size:0.9rem; color:#64748B; line-height:1.6;">
+                • <span style="color:#EF4444; font-weight:700;">🔴 도시 1 (우상분면)</span>: 관심도와 방문도 모두 높은 성공 관광지<br>
+                • <span style="color:#3B82F6; font-weight:700;">🔵 도시 2 (우하분면)</span>: 관심은 높으나 실제 방문도가 낮은 잠재 개선지
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
         
     st.markdown("---")
     
@@ -114,9 +130,17 @@ if not df_demand.empty:
         selected_city1 = st.selectbox("📍 비교 기준 성공 도시 (도시 1 - 우상분면 권장)", city_list, index=default_idx1)
         st.session_state.city_1 = selected_city1
         
-        # 선택한 도시의 간단 요약 카드
+        # [개선 15] 선택한 도시의 간단 요약 카드 (성공 도시: 파스텔 레드 카드)
         df_c1 = df_demand[df_demand["signguNm"] == selected_city1].iloc[0]
-        st.success(f"**{selected_city1}** ({df_c1['cityType']})\n\n* SNS 언급량: {df_c1['snsMentionCo']:,.0f}건\n* 내비 검색량: {df_c1['naviSearchCo']:,.0f}건")
+        st.markdown(f"""
+        <div style="background-color: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 12px; padding: 1.25rem; margin-top: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
+            <h4 style="margin: 0 0 6px 0; color: #991B1B; font-size: 1.1rem; font-weight: 700;">🔴 {selected_city1} <span style="font-size:0.8rem; font-weight:normal; background-color:#FEE2E2; padding:2px 6px; border-radius:4px; border:1px solid #FCA5A5;">{df_c1['cityType']}</span></h4>
+            <p style="margin: 0; font-size: 0.9rem; color: #B91C1C; line-height: 1.6;">
+                • <strong>SNS 언급량</strong>: {df_c1['snsMentionCo']:,.0f}건<br>
+                • <strong>내비게이션 검색량</strong>: {df_c1['naviSearchCo']:,.0f}건
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
         
     with col_select2:
         # 도시 2
@@ -124,9 +148,17 @@ if not df_demand.empty:
         selected_city2 = st.selectbox("📍 분석 및 개선 잠재 도시 (도시 2 - 우하분면 권장)", city_list, index=default_idx2)
         st.session_state.city_2 = selected_city2
         
-        # 선택한 도시의 간단 요약 카드
+        # [개선 15] 선택한 도시의 간단 요약 카드 (개선 도시: 파스텔 블루 카드)
         df_c2 = df_demand[df_demand["signguNm"] == selected_city2].iloc[0]
-        st.info(f"**{selected_city2}** ({df_c2['cityType']})\n\n* SNS 언급량: {df_c2['snsMentionCo']:,.0f}건\n* 내비 검색량: {df_c2['naviSearchCo']:,.0f}건")
+        st.markdown(f"""
+        <div style="background-color: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 12px; padding: 1.25rem; margin-top: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
+            <h4 style="margin: 0 0 6px 0; color: #1E40AF; font-size: 1.1rem; font-weight: 700;">🔵 {selected_city2} <span style="font-size:0.8rem; font-weight:normal; background-color:#DBEAFE; padding:2px 6px; border-radius:4px; border:1px solid #BFDBFE;">{df_c2['cityType']}</span></h4>
+            <p style="margin: 0; font-size: 0.9rem; color: #1E3A8A; line-height: 1.6;">
+                • <strong>SNS 언급량</strong>: {df_c2['snsMentionCo']:,.0f}건<br>
+                • <strong>내비게이션 검색량</strong>: {df_c2['naviSearchCo']:,.0f}건
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
     st.markdown("---")
     st.info("💡 도시 선정을 마쳤다면, 왼쪽 사이드바에서 **'3_Demand_Analysis'** 페이지로 이동하여 두 도시의 1:1 비교 보고서를 확인해 보세요!")
