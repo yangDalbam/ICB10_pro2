@@ -23,6 +23,10 @@ from api.kto_api import (
     get_area_service_demand,
     get_area_spend_diversity
 )
+try:
+    from src.styles import apply_custom_style
+except ModuleNotFoundError:
+    from styles import apply_custom_style
 
 # 페이지 환경설정 (고급 에스테틱 테마 적용)
 st.set_page_config(
@@ -31,6 +35,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# 커스텀 CSS 스타일 적용
+apply_custom_style()
 
 # 메인 헤더
 st.title("🗺️ Korea Trip Data랩")
@@ -99,9 +106,21 @@ if not df_foreigner.empty:
         title="방한 외래객 월별 추이 (2023-2024)",
         labels={"인원수": "관광객 수(명)", "기준연월": "연월"},
         markers=True,
-        color_discrete_sequence=["#2E86C1"]
+        color_discrete_sequence=["#3182CE"]
     )
-    fig.update_layout(hovermode="x unified", plot_bgcolor="rgba(0,0,0,0)")
+    fig.update_traces(
+        line=dict(width=3),
+        marker=dict(size=8, symbol="circle", line=dict(width=2, color="white"))
+    )
+    fig.update_layout(
+        hovermode="x unified",
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Pretendard, sans-serif", size=12),
+        margin=dict(l=40, r=40, t=60, b=40),
+        xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
+        yaxis=dict(showgrid=True, gridcolor="#F1F5F9")
+    )
     st.plotly_chart(fig, use_container_width=True)
 else:
     st.warning("방한 외래객 데이터를 불러올 수 없습니다.")
@@ -137,9 +156,18 @@ if not df_kto_demand.empty:
             orientation="h",
             labels={"snsMentionCo": "SNS 언급량 (건)", "signguNm": "시군구"},
             color="snsMentionCo",
-            color_continuous_scale="Reds"
+            color_continuous_scale=["#FCA5A5", "#EF4444", "#991B1B"]
         )
-        fig_sns.update_layout(yaxis={'categoryorder':'total ascending'}, showlegend=False, coloraxis_showscale=False)
+        fig_sns.update_layout(
+            showlegend=False, 
+            coloraxis_showscale=False,
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(family="Pretendard, sans-serif", size=12),
+            margin=dict(l=40, r=40, t=20, b=40),
+            xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
+            yaxis=dict(categoryorder='total ascending', showgrid=False)
+        )
         st.plotly_chart(fig_sns, use_container_width=True)
         
     with col_chart2:
@@ -150,9 +178,18 @@ if not df_kto_demand.empty:
             orientation="h",
             labels={"naviSearchCo": "내비게이션 검색수 (건)", "signguNm": "시군구"},
             color="naviSearchCo",
-            color_continuous_scale="Blues"
+            color_continuous_scale=["#93C5FD", "#3B82F6", "#1E3A8A"]
         )
-        fig_navi.update_layout(yaxis={'categoryorder':'total ascending'}, showlegend=False, coloraxis_showscale=False)
+        fig_navi.update_layout(
+            showlegend=False, 
+            coloraxis_showscale=False,
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(family="Pretendard, sans-serif", size=12),
+            margin=dict(l=40, r=40, t=20, b=40),
+            xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
+            yaxis=dict(categoryorder='total ascending', showgrid=False)
+        )
         st.plotly_chart(fig_navi, use_container_width=True)
 else:
     st.warning("관광 서비스 수요 데이터를 불러올 수 없습니다.")
@@ -175,9 +212,15 @@ if not df_kto_spend.empty:
         fig_pie_spend = px.pie(
             df_ind_spend, values="cardUseAmt", names="indutyNm",
             hole=0.4,
-            color_discrete_sequence=px.colors.qualitative.Pastel
+            color_discrete_sequence=["#3182CE", "#319795", "#ED8936", "#ECC94B", "#48BB78", "#9F7AEA"]
         )
         fig_pie_spend.update_traces(textposition='inside', textinfo='percent+label')
+        fig_pie_spend.update_layout(
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(family="Pretendard, sans-serif", size=12),
+            margin=dict(l=40, r=40, t=20, b=40)
+        )
         st.plotly_chart(fig_pie_spend, use_container_width=True)
         
     with col_sp2:
@@ -189,9 +232,17 @@ if not df_kto_spend.empty:
             orientation="h",
             labels={"cardUseAmt": "카드 소비액 (원)", "signguNm": "시군구"},
             color="cardUseAmt",
-            color_continuous_scale="Purples"
+            color_continuous_scale=["#C7D2FE", "#6366F1", "#3730A3"]
         )
-        fig_city_spend.update_layout(yaxis={'categoryorder':'total ascending'}, coloraxis_showscale=False)
+        fig_city_spend.update_layout(
+            coloraxis_showscale=False,
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(family="Pretendard, sans-serif", size=12),
+            margin=dict(l=40, r=40, t=20, b=40),
+            xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
+            yaxis=dict(categoryorder='total ascending', showgrid=False)
+        )
         st.plotly_chart(fig_city_spend, use_container_width=True)
         
     food_ratio = df_ind_spend.loc[df_ind_spend["indutyNm"] == "식음료", "비율"].values[0] if "식음료" in df_ind_spend["indutyNm"].values else 0

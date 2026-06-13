@@ -15,6 +15,7 @@ def build():
     # 패키징할 가상 파일 매핑 정의 (가상 경로, 실제 경로)
     files_to_collect = [
         ("app.py", os.path.join(src_dir, "app.py")),
+        ("styles.py", os.path.join(src_dir, "styles.py")),
         ("api/__init__.py", os.path.join(src_dir, "api", "__init__.py")),
         ("api/odcloud_api.py", os.path.join(src_dir, "api", "odcloud_api.py")),
         ("api/kto_api.py", os.path.join(src_dir, "api", "kto_api.py")),

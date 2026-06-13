@@ -26,8 +26,15 @@ from api.kto_api import (
     get_area_service_demand,
     get_area_cultural_demand
 )
+try:
+    from src.styles import apply_custom_style
+except ModuleNotFoundError:
+    from styles import apply_custom_style
 
 st.set_page_config(page_title="성공 도시 vs 잠재 도시 1:1 비교 분석", page_icon="⚖️", layout="wide")
+
+# 커스텀 CSS 스타일 적용
+apply_custom_style()
 
 st.title("⚖️ 도시 1:1 심층 비교 및 벤치마킹 제언")
 st.markdown("선택된 두 도시의 관광객 특징, 카드 소비 형태, 목적지 선호도 등 세부 인프라 지표를 심층 대조하여 활성화 개선점을 도출합니다.")
@@ -97,14 +104,21 @@ if not d_c1.empty and not d_c2.empty:
     # Plotly 레이더 플롯 그리기
     fig_radar = go.Figure()
     fig_radar.add_trace(go.Scatterpolar(
-        r=val_c1, theta=labels, fill='toself', name=city_1, line_color='red'
+        r=val_c1, theta=labels, fill='toself', name=city_1, line_color='#EF4444', fillcolor='rgba(239, 68, 68, 0.15)'
     ))
     fig_radar.add_trace(go.Scatterpolar(
-        r=val_c2, theta=labels, fill='toself', name=city_2, line_color='blue'
+        r=val_c2, theta=labels, fill='toself', name=city_2, line_color='#3B82F6', fillcolor='rgba(59, 130, 246, 0.15)'
     ))
     fig_radar.update_layout(
-        polar=dict(radialaxis=dict(visible=True, range=[0, 1])),
+        polar=dict(
+            radialaxis=dict(visible=True, range=[0, 1], gridcolor="#E2E8F0", labelside="end"),
+            angularaxis=dict(gridcolor="#E2E8F0")
+        ),
         showlegend=True,
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Pretendard, sans-serif", size=12),
+        margin=dict(l=80, r=80, t=60, b=40),
         title=f"{city_1} vs {city_2} 5대 차원 평가 지표"
     )
     st.plotly_chart(fig_radar, use_container_width=True)
@@ -121,7 +135,15 @@ if not d_c1.empty and not d_c2.empty:
         title="두 도시의 관광 카드 결제 업종 구성 비교",
         labels={"cardUseAmt": "카드 총 매출액(원)", "signguNm": "도시명", "indutyNm": "소비 업종"},
         orientation="h",
-        color_discrete_sequence=px.colors.qualitative.Set1
+        color_discrete_sequence=["#3182CE", "#319795", "#ED8936", "#ECC94B", "#48BB78", "#9F7AEA"]
+    )
+    fig_spend.update_layout(
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Pretendard, sans-serif", size=12),
+        margin=dict(l=40, r=40, t=60, b=40),
+        xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
+        yaxis=dict(showgrid=False)
     )
     st.plotly_chart(fig_spend, use_container_width=True)
     
@@ -170,7 +192,15 @@ if not d_c1.empty and not d_c2.empty:
             title="방문객 연령대 분포 비교",
             labels={"visitorCo": "방문객 수(명)", "signguNm": "도시명", "ageGrp": "연령대"},
             orientation="h",
-            color_discrete_sequence=px.colors.qualitative.Set3
+            color_discrete_sequence=["#CBD5E1", "#94A3B8", "#64748B", "#475569", "#334155", "#1E293B"]
+        )
+        fig_vis.update_layout(
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(family="Pretendard, sans-serif", size=12),
+            margin=dict(l=40, r=40, t=60, b=40),
+            xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
+            yaxis=dict(showgrid=False)
         )
         st.plotly_chart(fig_vis, use_container_width=True)
         
@@ -182,7 +212,15 @@ if not d_c1.empty and not d_c2.empty:
             title="내비게이션 목적지 카테고리 비교",
             labels={"searchCo": "목적지 검색수", "signguNm": "도시명", "clNm": "목적지 분류"},
             orientation="h",
-            color_discrete_sequence=px.colors.qualitative.Set2
+            color_discrete_sequence=["#3182CE", "#319795", "#ED8936", "#ECC94B", "#48BB78", "#9F7AEA"]
+        )
+        fig_cult.update_layout(
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(family="Pretendard, sans-serif", size=12),
+            margin=dict(l=40, r=40, t=60, b=40),
+            xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
+            yaxis=dict(showgrid=False)
         )
         st.plotly_chart(fig_cult, use_container_width=True)
 

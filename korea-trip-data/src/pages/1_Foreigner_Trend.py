@@ -17,8 +17,15 @@ import plotly.express as px
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from api.odcloud_api import get_foreigner_monthly_data
+try:
+    from src.styles import apply_custom_style
+except ModuleNotFoundError:
+    from styles import apply_custom_style
 
 st.set_page_config(page_title="방한 외래객 트렌드 분석", page_icon="📈", layout="wide")
+
+# 커스텀 CSS 스타일 적용
+apply_custom_style()
 
 st.title("📈 방한 외래관광객 트렌드 분석")
 st.markdown("글로벌 외래 관광객의 입국 트렌드와 인구통계학적 세그먼트 분석을 제공합니다.")
@@ -50,7 +57,15 @@ if not df_foreigner.empty:
             title=f"{selected_year}년 연령대별 방한 외래객 수 (성별 누적)",
             labels={"인원수": "관광객 수(명)", "연령별": "연령대"},
             barmode="group",
-            color_discrete_map={"여성": "#FF8C94", "남성": "#61A5C2"}
+            color_discrete_map={"여성": "#EF4444", "남성": "#3B82F6"}
+        )
+        fig_gender_age.update_layout(
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(family="Pretendard, sans-serif", size=12),
+            margin=dict(l=40, r=40, t=60, b=40),
+            xaxis=dict(showgrid=False),
+            yaxis=dict(showgrid=True, gridcolor="#F1F5F9")
         )
         st.plotly_chart(fig_gender_age, use_container_width=True)
         
@@ -68,7 +83,13 @@ if not df_foreigner.empty:
             df_share, values="인원수", names=target_col,
             title=f"{selected_year}년 방한 외래객 {target_col} 비율",
             hole=0.4,
-            color_discrete_sequence=px.colors.qualitative.Pastel
+            color_discrete_sequence=["#3182CE", "#319795", "#ED8936", "#ECC94B", "#48BB78", "#9F7AEA"]
+        )
+        fig_share.update_layout(
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(family="Pretendard, sans-serif", size=12),
+            margin=dict(l=40, r=40, t=60, b=40)
         )
         st.plotly_chart(fig_share, use_container_width=True)
         
@@ -85,7 +106,20 @@ if not df_foreigner.empty:
         df_monthly_purpose, x="월", y="인원수", color="목적별",
         title=f"{selected_year}년 월별 입국 목적에 따른 시계열 트렌드",
         labels={"인원수": "관광객 수(명)"},
-        markers=True
+        markers=True,
+        color_discrete_sequence=["#3182CE", "#319795", "#ED8936", "#ECC94B", "#48BB78", "#9F7AEA"]
+    )
+    fig_monthly.update_traces(
+        line=dict(width=2.5),
+        marker=dict(size=6, line=dict(width=1, color="white"))
+    )
+    fig_monthly.update_layout(
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Pretendard, sans-serif", size=12),
+        margin=dict(l=40, r=40, t=60, b=40),
+        xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
+        yaxis=dict(showgrid=True, gridcolor="#F1F5F9")
     )
     st.plotly_chart(fig_monthly, use_container_width=True)
     

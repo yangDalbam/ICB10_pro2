@@ -17,8 +17,15 @@ import plotly.express as px
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from api.kto_api import get_area_service_demand
+try:
+    from src.styles import apply_custom_style
+except ModuleNotFoundError:
+    from styles import apply_custom_style
 
 st.set_page_config(page_title="관광지 관심도 vs 실제 방문 매트릭스", page_icon="🧩", layout="wide")
+
+# 커스텀 CSS 스타일 적용
+apply_custom_style()
 
 st.title("🧩 관심도 vs 실제 방문 매트릭스 및 도시 분류")
 st.markdown("온라인 관심도(SNS 언급량)와 물리적 실제 방문량(내비게이션 검색량) 데이터를 기준으로 시군구별 위치를 확인하고 비교 분석할 도시를 선정합니다.")
@@ -52,20 +59,26 @@ if not df_demand.empty:
             "naviSearchCo": "내비게이션 검색수 (실제 방문도)",
             "cityType": "도시 유형"
         },
-        color_discrete_map={"도시1": "#E74C3C", "도시2": "#3498DB", "일반": "#95A5A6"}
+        color_discrete_map={"도시1": "#EF4444", "도시2": "#3B82F6", "일반": "#94A3B8"}
     )
     
     # 텍스트 라벨 가독성 조정
-    fig.update_traces(textposition='top center', marker=dict(size=15, line=dict(width=1.5, color='black')))
+    fig.update_traces(
+        textposition='top center', 
+        marker=dict(size=14, opacity=0.85, line=dict(width=1.5, color='white'))
+    )
     
-    # 사분면 가이드 라인 추가
-    fig.add_vline(x=median_sns, line_width=1.5, line_dash="dash", line_color="green")
-    fig.add_hline(y=median_navi, line_width=1.5, line_dash="dash", line_color="green")
+    # 사분면 가이드 라인 추가 (단정한 슬레이트 색상으로 변경)
+    fig.add_vline(x=median_sns, line_width=1.5, line_dash="dash", line_color="#94A3B8")
+    fig.add_hline(y=median_navi, line_width=1.5, line_dash="dash", line_color="#94A3B8")
     
     fig.update_layout(
-        plot_bgcolor="rgba(240, 244, 248, 0.4)",
-        xaxis=dict(gridcolor="white"),
-        yaxis=dict(gridcolor="white")
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Pretendard, sans-serif", size=12),
+        margin=dict(l=40, r=40, t=60, b=40),
+        xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
+        yaxis=dict(showgrid=True, gridcolor="#F1F5F9")
     )
     
     st.plotly_chart(fig, use_container_width=True)
