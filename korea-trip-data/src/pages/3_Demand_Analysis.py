@@ -182,7 +182,7 @@ if not d_c1.empty and not d_c2.empty:
             title="내비게이션 목적지 카테고리 비교",
             labels={"searchCo": "목적지 검색수", "signguNm": "도시명", "clNm": "목적지 분류"},
             orientation="h",
-            color_discrete_sequence=px.colors.qualitative.Accent
+            color_discrete_sequence=px.colors.qualitative.Set2
         )
         st.plotly_chart(fig_cult, use_container_width=True)
 
