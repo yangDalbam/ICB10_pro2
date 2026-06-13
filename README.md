@@ -1,3 +1,25 @@
+# 📈 Naver API Search Trend 분석 프로젝트
+
+> **Streamlit 배포 주소**: [바로가기 (Search_Trend)](https://icb10pro2-xfw9q2z8kznmkq6r4scv2f.streamlit.app/Search_Trend)
+
+---
+
+## 🛠️ 최근 프로젝트 작업 내용 (최신 업데이트)
+
+### 1. 프로젝트 구조 개선 및 의존성 정리
+* 의존성 관리 파일인 `requirements.txt`를 `naver-api-app/` 내부 경로로 이동하였습니다. ([naver-api-app/requirements.txt](file:///C:/Users/user1/Downloads/ICB10_proj2/naver-api-app/requirements.txt))
+* Streamlit 애플리케이션의 구동 환경과 의존성을 보다 직관적으로 관리할 수 있도록 구조를 정비했습니다.
+
+### 2. 형상 관리 자동화 (Git Hook 도입)
+* 변경사항 발생 시 실시간으로 동기화될 수 있도록 `post-commit` 훅을 설정했습니다.
+* 이제 로컬에서 `git commit`을 실행하면, 스크립트가 현재 브랜치 이름을 동적으로 확인하여 자동으로 원격 저장소(`origin/<branch>`)에 푸시(`git push`)를 수행합니다.
+
+### 3. Streamlit 서비스 구동 및 클라우드 배포
+* 로컬 환경에서 Streamlit 서버를 안정적으로 구동하였습니다.
+* 상용 클라우드 배포 처리가 완료되어, 외부에서도 웹 브라우저를 통해 실시간 대시보드에 접근할 수 있습니다. (배포 링크: [Streamlit App](https://icb10pro2-xfw9q2z8kznmkq6r4scv2f.streamlit.app/Search_Trend))
+
+---
+
 ## STEP 0. 팀 구성 및 협업 환경 세팅
 
 ### 슬랙 세팅
