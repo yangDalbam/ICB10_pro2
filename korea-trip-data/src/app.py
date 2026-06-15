@@ -57,26 +57,20 @@ st.markdown("""
 
 # 5단계 분석 프레임워크 요약 안내
 st.markdown("### 🧭 5단계 분석 프레임워크 요약")
-col_step1, col_step2, col_step3, col_step4, col_step5 = st.columns(5)
 
 step_card_style = """
-<div style="background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 0.8rem; min-height: 180px; box-sizing: border-box; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: flex-start; transition: transform 0.2s;">
-    <span style="background-color: {color}; color: #FFFFFF; font-size: 0.7rem; font-weight: 700; padding: 2px 6px; border-radius: 9999px; width: fit-content; margin-bottom: 8px;">{step}</span>
-    <h4 style="margin: 0 0 6px 0; color: #1E293B; font-size: 0.85rem; font-weight: 700; white-space: nowrap; letter-spacing: -0.5px;">{title}</h4>
-    <p style="margin: 0; color: #64748B; font-size: 0.75rem; line-height: 1.4; word-break: keep-all;">{desc}</p>
+<div style="background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; box-sizing: border-box; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); display: flex; flex-direction: row; align-items: center; gap: 1.5rem; transition: transform 0.2s;">
+    <span style="background-color: {color}; color: #FFFFFF; font-size: 0.9rem; font-weight: 700; padding: 6px 12px; border-radius: 9999px; white-space: nowrap; min-width: 60px; text-align: center;">{step}</span>
+    <h4 style="margin: 0; color: #1E293B; font-size: 1.05rem; font-weight: 700; white-space: nowrap; width: 160px;">{title}</h4>
+    <p style="margin: 0; color: #64748B; font-size: 0.95rem; line-height: 1.5; word-break: keep-all;">{desc}</p>
 </div>
 """
 
-with col_step1:
-    st.markdown(step_card_style.format(step="1단계", color="#3B82F6", title="🔍 관심도 분석", desc="외국인이 주목하는 인기 관심 도시 랭킹 파악"), unsafe_allow_html=True)
-with col_step2:
-    st.markdown(step_card_style.format(step="2단계", color="#10B981", title="🚗 실제 방문 대조", desc="온라인의 관심이 오프라인 방문으로 연결되는지 분석"), unsafe_allow_html=True)
-with col_step3:
-    st.markdown(step_card_style.format(step="3단계", color="#F59E0B", title="🧩 도시 매트릭스", desc="성공 도시(도시1) vs 잠재 도시(도시2) 분류"), unsafe_allow_html=True)
-with col_step4:
-    st.markdown(step_card_style.format(step="4단계", color="#EF4444", title="💳 인프라 분석", desc="소비 패턴 및 연령/국적별 다양성 격차 규명"), unsafe_allow_html=True)
-with col_step5:
-    st.markdown(step_card_style.format(step="5단계", color="#8B5CF6", title="💡 벤치마킹", desc="성공 요소를 바탕으로 한 활성화 솔루션 도출"), unsafe_allow_html=True)
+st.markdown(step_card_style.format(step="1단계", color="#3B82F6", title="🔍 관심도 분석", desc="외국인이 주목하는 인기 관심 도시 랭킹 파악"), unsafe_allow_html=True)
+st.markdown(step_card_style.format(step="2단계", color="#10B981", title="🚗 실제 방문 대조", desc="온라인의 관심이 오프라인 방문으로 연결되는지 분석"), unsafe_allow_html=True)
+st.markdown(step_card_style.format(step="3단계", color="#F59E0B", title="🧩 도시 매트릭스", desc="성공 도시(도시1) vs 잠재 도시(도시2) 분류"), unsafe_allow_html=True)
+st.markdown(step_card_style.format(step="4단계", color="#EF4444", title="💳 인프라 분석", desc="소비 패턴 및 연령/국적별 다양성 격차 규명"), unsafe_allow_html=True)
+st.markdown(step_card_style.format(step="5단계", color="#8B5CF6", title="💡 벤치마킹", desc="성공 요소를 바탕으로 한 활성화 솔루션 도출"), unsafe_allow_html=True)
 
 st.markdown("---")
 
