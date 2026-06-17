@@ -39,7 +39,7 @@ st.set_page_config(
 # 커스텀 CSS 스타일 적용
 apply_custom_style()
 
-# 메인 헤더
+# 메인 헤더 영역
 st.title("🗺️ Korea Trip Data랩")
 st.subheader("인바운드 관광 트렌드 및 지역 관광 활성화 분석 대시보드")
 st.markdown("---")
@@ -79,15 +79,15 @@ st.markdown("### 📊 방한 외래객 유입 현황 요약 (API 1 연동)")
 df_foreigner = get_foreigner_monthly_data()
 
 if not df_foreigner.empty:
-    # 2024년 데이터 추출
-    df_2024 = df_foreigner[df_foreigner["기준연월"].str.startswith("2024", na=False)]
-    total_foreigner_2024 = df_2024["인원수"].sum()
+    # 2026년 데이터 추출
+    df_2026 = df_foreigner[df_foreigner["기준연월"].str.startswith("2026", na=False)]
+    total_foreigner_2026 = df_2026["인원수"].sum()
     
-    # 2023년 데이터 추출 및 증감율 계산
-    df_2023 = df_foreigner[df_foreigner["기준연월"].str.startswith("2023", na=False)]
-    total_foreigner_2023 = df_2023["인원수"].sum()
+    # 2025년 데이터 추출 및 증감율 계산
+    df_2025 = df_foreigner[df_foreigner["기준연월"].str.startswith("2025", na=False)]
+    total_foreigner_2025 = df_2025["인원수"].sum()
     
-    growth_rate = ((total_foreigner_2024 - total_foreigner_2023) / total_foreigner_2023) * 100 if total_foreigner_2023 > 0 else 0
+    growth_rate = ((total_foreigner_2026 - total_foreigner_2025) / total_foreigner_2025) * 100 if total_foreigner_2025 > 0 else 0
     
     # 대표 목적지 (가장 많은 목적/성별/연령)
     top_purpose = df_foreigner.groupby("목적별")["인원수"].sum().idxmax()
@@ -97,8 +97,8 @@ if not df_foreigner.empty:
     kpi_col1, kpi_col2, kpi_col3 = st.columns(3)
     with kpi_col1:
         st.metric(
-            label="2024년 방한 외래객 총수", 
-            value=f"{total_foreigner_2024:,.0f} 명", 
+            label="2026년 방한 외래객 총수", 
+            value=f"{total_foreigner_2026:,.0f} 명", 
             delta=f"전년 대비 {growth_rate:.1f}% 증가" if growth_rate > 0 else f"{growth_rate:.1f}%"
         )
     with kpi_col2:
@@ -137,7 +137,7 @@ st.markdown("---")
 
 # 한국관광공사 API 추가 연동 섹션 1: 관심도 vs 실제 방문도
 st.markdown("### 🗺️ 전국 지역별 관광 관심도 및 방문도 현황 (API 3 - AreaTarResDemService 연동)")
-df_kto_demand = get_area_service_demand("202401")
+df_kto_demand = get_area_service_demand("202601")
 
 if not df_kto_demand.empty:
     avg_sns = df_kto_demand["snsMentionCo"].mean()
@@ -212,7 +212,7 @@ st.markdown("---")
 
 # 한국관광공사 API 추가 연동 섹션 2: 카드 소비 다양성
 st.markdown("### 💳 전국 관광 카드 소비 다양성 및 업종별 비중 (API 2 - AreaTarDivService 연동)")
-df_kto_spend = get_area_spend_diversity("202401")
+df_kto_spend = get_area_spend_diversity("202601")
 
 if not df_kto_spend.empty:
     df_ind_spend = df_kto_spend.groupby("indutyNm")["cardUseAmt"].sum().reset_index()

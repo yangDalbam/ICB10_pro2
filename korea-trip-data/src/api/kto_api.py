@@ -52,7 +52,7 @@ def _request_kto_api(base_url: str, operation: str, params: dict) -> list:
     return []
 
 @st.cache_data(show_spinner="지역별 관광 다양성 데이터를 불러오는 중...")
-def get_area_visitor_diversity(base_ym: str = "202401") -> pd.DataFrame:
+def get_area_visitor_diversity(base_ym: str = "202601") -> pd.DataFrame:
     """
     지역별 관광객 다양성 정보(연령별 방문자 등)를 조회합니다.
     """
@@ -65,7 +65,7 @@ def get_area_visitor_diversity(base_ym: str = "202401") -> pd.DataFrame:
     return _generate_mock_visitor_div_data(base_ym)
 
 @st.cache_data(show_spinner="지역별 관광 소비 다양성 데이터를 불러오는 중...")
-def get_area_spend_diversity(base_ym: str = "202401") -> pd.DataFrame:
+def get_area_spend_diversity(base_ym: str = "202601") -> pd.DataFrame:
     """
     지역별 관광 소비 다양성 정보(업종별/연령별 소비액)를 조회합니다.
     """
@@ -78,7 +78,7 @@ def get_area_spend_diversity(base_ym: str = "202401") -> pd.DataFrame:
     return _generate_mock_spend_div_data(base_ym)
 
 @st.cache_data(show_spinner="지역별 국제 다양성 데이터를 불러오는 중...")
-def get_area_intl_diversity(base_ym: str = "202401") -> pd.DataFrame:
+def get_area_intl_diversity(base_ym: str = "202601") -> pd.DataFrame:
     """
     지역별 국제 다양성 정보(외국인 소비 및 방문 국적 다양성)를 조회합니다.
     """
@@ -91,7 +91,7 @@ def get_area_intl_diversity(base_ym: str = "202401") -> pd.DataFrame:
     return _generate_mock_intl_div_data(base_ym)
 
 @st.cache_data(show_spinner="지역별 관광 서비스 수요 데이터를 불러오는 중...")
-def get_area_service_demand(base_ym: str = "202401") -> pd.DataFrame:
+def get_area_service_demand(base_ym: str = "202601") -> pd.DataFrame:
     """
     지역별 관광 서비스 수요 정보(SNS 언급량, 검색량 등 관심도)를 조회합니다.
     """
@@ -104,7 +104,7 @@ def get_area_service_demand(base_ym: str = "202401") -> pd.DataFrame:
     return _generate_mock_service_demand_data(base_ym)
 
 @st.cache_data(show_spinner="지역별 문화 자원 수요 데이터를 불러오는 중...")
-def get_area_cultural_demand(base_ym: str = "202401") -> pd.DataFrame:
+def get_area_cultural_demand(base_ym: str = "202601") -> pd.DataFrame:
     """
     지역별 문화 자원 수요 정보(내비게이션 유형별 목적지 검색량)를 조회합니다.
     """

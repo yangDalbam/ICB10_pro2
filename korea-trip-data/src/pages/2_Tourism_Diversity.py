@@ -38,7 +38,7 @@ if "city_2" not in st.session_state:
     st.session_state.city_2 = "강원 삼척시"
 
 # 데이터 로드
-df_demand = get_area_service_demand("202401")
+df_demand = get_area_service_demand("202601")
 
 if not df_demand.empty:
     st.markdown("### 1. 시군구별 온-오프라인 매트릭스 2x2 분포")
@@ -94,7 +94,7 @@ if not df_demand.empty:
     with col_explain1:
         st.markdown(f"""
         <div style="background-color:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:1.25rem; height:120px; box-shadow:0 2px 4px rgba(0,0,0,0.01);">
-            <h4 style="margin:0 0 8px 0; color:#475569; font-size:1rem; font-weight:700;">🟢 매트릭스 기준선 정보 (2024.01 기준)</h4>
+            <h4 style="margin:0 0 8px 0; color:#475569; font-size:1rem; font-weight:700;">🟢 매트릭스 기준선 정보 (2026.01 기준)</h4>
             <p style="margin:0; font-size:0.9rem; color:#64748B; line-height:1.6;">
                 • <strong>SNS 언급량 중앙값</strong>: {median_sns:,.0f} 건<br>
                 • <strong>내비게이션 검색수 중앙값</strong>: {median_navi:,.0f} 건

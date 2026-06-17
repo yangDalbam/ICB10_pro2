@@ -55,11 +55,11 @@ def get_foreigner_monthly_data(page: int = 1, per_page: int = 10000) -> pd.DataF
 
 def _generate_mock_foreigner_data() -> pd.DataFrame:
     """
-    API 호출 실패 시 사용할 2023-2024년 방한 외래관광객 Mock 데이터를 생성합니다.
+    API 호출 실패 시 사용할 2025-2026년 방한 외래관광객 Mock 데이터를 생성합니다.
     """
     import numpy as np
     
-    dates = pd.date_range(start="2023-01-01", end="2024-12-01", freq="MS")
+    dates = pd.date_range(start="2025-01-01", end="2026-12-01", freq="MS")
     countries = ["중국", "일본", "미국", "대만", "홍콩", "기타"]
     genders = ["여성", "남성"]
     ages = ["20대 이하", "20대", "30대", "40대", "50대", "60대 이상"]

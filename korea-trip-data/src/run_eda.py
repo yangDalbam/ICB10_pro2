@@ -90,7 +90,7 @@ def run_analysis():
     plt.figure(figsize=(10, 5))
     df_foreigner_grouped = df_foreigner.groupby("기준연월")["인원수"].sum().reset_index()
     plt.plot(df_foreigner_grouped["기준연월"], df_foreigner_grouped["인원수"], marker='o', color='#1f77b4', linewidth=2)
-    plt.title("방한 외래관광객 월별 유입 추이 (2023-2024)", fontsize=14, fontweight='bold')
+    plt.title("방한 외래관광객 월별 유입 추이 (2025-2026)", fontsize=14, fontweight='bold')
     plt.xlabel("기준연월")
     plt.ylabel("방문객 수 (명)")
     plt.xticks(rotation=45)
@@ -105,7 +105,7 @@ def run_analysis():
     report_content.append("**[교차표 및 기술 통계]**\n")
     report_content.append(df_foreigner_grouped.describe().to_markdown() + "\n\n")
     report_content.append("**[시각화 해석 (50자 이상)]**\n")
-    report_content.append("> 2023년부터 2024년까지의 월별 외래 관광객 유입 흐름은 계절적 요인(봄/가을 성수기)에 따라 주기적인 상승과 하강 패턴을 반복하고 있으며, 전체적으로 방한 외래 관광객 규모가 우상향하며 점진적으로 회복 및 성장하고 있는 추세를 보입니다.\n\n")
+    report_content.append("> 2025년부터 2026년까지의 월별 외래 관광객 유입 흐름은 계절적 요인(봄/가을 성수기)에 따라 주기적인 상승과 하강 패턴을 반복하고 있으며, 전체적으로 방한 외래 관광객 규모가 우상향하며 점진적으로 회복 및 성장하고 있는 추세를 보입니다.\n\n")
     
     # 그래프 2: 방한 외래객 국가별 또는 목적별 비율 (범주형)
     plt.figure(figsize=(7, 7))

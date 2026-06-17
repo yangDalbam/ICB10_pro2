@@ -123,20 +123,55 @@ def apply_custom_style():
             font-size: 0.95rem !important;
             font-weight: 500 !important;
             color: #64748B !important;
+        /* stMetricValue와 stMetricDelta를 한 줄에 강제 배치 (모든 Streamlit 버전 대응) */
+        div[data-testid="stMetric"] > div {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            align-items: baseline !important;
+        }
+
+        /* Label 래퍼는 100% 너비를 차지하게 하여 다음 줄로 넘기기 */
+        div[data-testid="stMetric"] > div > div[data-testid="stMetricLabel"],
+        div[data-testid="stMetricLabel"] {
+            width: 100% !important;
+            flex-basis: 100% !important;
             margin-bottom: 0.35rem !important;
         }
 
+        /* Value 영역 인라인 처리 */
         div[data-testid="stMetricValue"] {
             font-size: 1.75rem !important;
             font-weight: 700 !important;
             color: #0F172A !important;
             letter-spacing: -0.02em !important;
+            display: inline-block !important;
+            margin-right: 0.5rem !important;
+            width: auto !important;
         }
 
+        /* Delta 영역 인라인 및 크기 조절 */
         div[data-testid="stMetricDelta"] {
-            font-size: 0.9rem !important;
+            font-size: 0.85rem !important;
             font-weight: 600 !important;
-            margin-top: 0.25rem !important;
+            margin-top: 0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            width: auto !important;
+        }
+
+        /* 혹시나 Streamlit 최신 버전에서 중간 래퍼 없이 직접 자식인 경우 */
+        div[data-testid="stMetric"] {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            align-items: baseline !important;
+            background-color: #FFFFFF !important;
+            border: 1px solid #E2E8F0 !important;
+            border-radius: 12px !important;
+            padding: 1.25rem !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01) !important;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
 
         /* [개선 9] 사이드바 스타일링 및 컴포넌트 간 여백 부여 */
