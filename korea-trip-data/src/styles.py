@@ -18,8 +18,24 @@ def apply_custom_style():
         html, body, [class*="css"], .stMarkdown {
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
             font-size: 16px;
-            color: #2D3748;
+            color: #2D3748; /* 차콜 그레이 기본 텍스트 */
             letter-spacing: -0.01em;
+        }
+
+        /* 전체 배경 깔끔하게 조정 (Streamlit 구/신버전 호환) */
+        .reportview-container, .main, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
+            background-color: #f8f9fa !important;
+        }
+
+        /* 카드 스타일 컨테이너 정의 */
+        .metric-card {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
+            word-break: keep-all;
+            overflow-wrap: break-word;
         }
 
         /* [개선 1] 메인 배경색 및 레이아웃 최상단 여백 최적화 */
@@ -104,79 +120,89 @@ def apply_custom_style():
         }
 
         /* [개선 5] Metric (지표 카드) 가독성 및 호버 모션 향상 */
-        div[data-testid="stMetric"] {
+        [data-testid="stMetric"] {
             background-color: #FFFFFF !important;
             border: 1px solid #E2E8F0 !important;
-            border-radius: 12px !important;
-            padding: 1.25rem !important;
+            border-radius: 16px !important;
+            padding: 1.5rem 1.25rem !important;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01) !important;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            word-break: keep-all !important;
+            overflow-wrap: break-word !important;
         }
         
-        div[data-testid="stMetric"]:hover {
+        [data-testid="stMetric"]:hover {
             transform: translateY(-4px) !important; /* 더 뚜렷한 리프트업 효과 */
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03) !important;
-            border-color: #3B82F6 !important; /* 블루 컬러로 보더 하이라이트 */
+            border-color: #2563EB !important; /* 비비드 블루로 보더 하이라이트 */
         }
 
-        div[data-testid="stMetricLabel"] {
-            font-size: 0.95rem !important;
+        /* Label 영역 스타일링 (보조 정보) */
+        [data-testid="stMetricLabel"], [data-testid="stMetricLabel"] * {
+            font-size: 15px !important;
             font-weight: 500 !important;
-            color: #64748B !important;
-        /* stMetricValue와 stMetricDelta를 한 줄에 강제 배치 (모든 Streamlit 버전 대응) */
-        div[data-testid="stMetric"] > div {
+            color: #94A3B8 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.02em !important;
+        }
+
+        /* stMetricValue와 stMetricDelta를 세로로 강제 배치 */
+        [data-testid="stMetric"] > div {
             display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: wrap !important;
-            align-items: baseline !important;
+            flex-direction: column !important;
+            flex-wrap: nowrap !important;
+            align-items: flex-start !important;
+            gap: 0.8rem !important; /* 제목과 수치 사이의 여백 넉넉하게 확보 */
         }
 
-        /* Label 래퍼는 100% 너비를 차지하게 하여 다음 줄로 넘기기 */
-        div[data-testid="stMetric"] > div > div[data-testid="stMetricLabel"],
-        div[data-testid="stMetricLabel"] {
+        /* Label 래퍼 속성 */
+        [data-testid="stMetric"] > div > [data-testid="stMetricLabel"],
+        [data-testid="stMetricLabel"] {
             width: 100% !important;
-            flex-basis: 100% !important;
-            margin-bottom: 0.35rem !important;
+            margin-bottom: 0.2rem !important;
         }
 
-        /* Value 영역 인라인 처리 */
-        div[data-testid="stMetricValue"] {
-            font-size: 1.75rem !important;
-            font-weight: 700 !important;
-            color: #0F172A !important;
+        /* Value 영역 크기 확대 (핵심 정보) */
+        [data-testid="stMetricValue"], [data-testid="stMetricValue"] * {
+            font-size: 36px !important; /* 32~40px 권장 사이즈 적용 */
+            font-weight: 800 !important; /* Bold 유지 */
+            color: #2563EB !important; /* 시선을 사로잡는 선명한 블루 계열 */
             letter-spacing: -0.02em !important;
-            display: inline-block !important;
-            margin-right: 0.5rem !important;
-            width: auto !important;
+            line-height: 1.1 !important;
         }
 
         /* Delta 영역 인라인 및 크기 조절 */
-        div[data-testid="stMetricDelta"] {
-            font-size: 0.85rem !important;
-            font-weight: 600 !important;
+        [data-testid="stMetricDelta"] {
+            font-size: 0.95rem !important;
+            font-weight: 700 !important;
             margin-top: 0 !important;
             display: inline-flex !important;
             align-items: center !important;
             width: auto !important;
+            padding-left: 0 !important;
         }
 
         /* 혹시나 Streamlit 최신 버전에서 중간 래퍼 없이 직접 자식인 경우 */
-        div[data-testid="stMetric"] {
+        [data-testid="stMetric"] {
             display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: wrap !important;
-            align-items: baseline !important;
+            flex-direction: column !important;
+            flex-wrap: nowrap !important;
+            align-items: flex-start !important;
+            gap: 0.2rem !important;
             background-color: #FFFFFF !important;
             border: 1px solid #E2E8F0 !important;
-            border-radius: 12px !important;
-            padding: 1.25rem !important;
+            border-radius: 16px !important;
+            padding: 1.5rem 1.25rem !important;
+            margin-bottom: 2.5rem !important; /* 지표와 하단 차트 간의 행간 여백 확보 */
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01) !important;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            word-break: keep-all !important;
+            overflow-wrap: break-word !important;
         }
 
         /* [개선 9] 사이드바 스타일링 및 컴포넌트 간 여백 부여 */
         section[data-testid="stSidebar"] {
-            background-color: #0F172A !important;
+            background-color: #08162A !important; /* Deep Dark Teal/Navy */
             color: #F8FAFC !important;
         }
         

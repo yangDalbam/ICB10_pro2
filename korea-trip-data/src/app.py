@@ -11,6 +11,7 @@
 
 import os
 import sys
+from datetime import datetime
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -40,39 +41,15 @@ st.set_page_config(
 apply_custom_style()
 
 # 메인 헤더 영역
-st.title("🗺️ Korea Trip Data랩")
-st.subheader("인바운드 관광 트렌드 및 지역 관광 활성화 분석 대시보드")
-st.markdown("---")
+col_title, col_date = st.columns([4, 1])
+with col_title:
+    st.title("🇰🇷 한국 관광 데이터 대시보드")
+    st.caption("공공 데이터를 기반으로 한 국내 관광 트렌드 및 분석 현황 (온/오프라인 행동 융합)")
+with col_date:
+    today_str = datetime.today().strftime("%Y-%m-%d")
+    st.markdown(f"<div style='text-align: right; color: #64748B; padding-top: 2rem; font-size: 0.9rem;'>Data updated: {today_str}</div>", unsafe_allow_html=True)
 
-# 기획 의도 소개 (Rich UI 카드 형태)
-st.markdown("""
-<div style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border-left: 5px solid #2563EB; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-    <h3 style="margin-top:0; color:#1E3A8A; font-size:1.3rem; font-weight:700; display:flex; align-items:center; gap:8px;">🎯 프로젝트 기획 의도</h3>
-    <p style="margin:0; color:#1E40AF; font-size:1.05rem; line-height:1.7;">
-        방한 외국인 관광객들의 <strong>특정 대도시(서울, 제주 등) 편중 현상</strong>을 해결하고, 잠재력 있는 지역 도시들의 관광 활성화를 모색합니다.<br>
-        본 대시보드는 온라인 상의 <strong>관심도(SNS/검색)</strong>와 오프라인의 <strong>실제 행동(내비게이션 행선지/신용카드 소비)</strong> 데이터를 융합하여 분석을 전개합니다.
-    </p>
-</div>
-""", unsafe_allow_html=True)
-
-# 5단계 분석 프레임워크 요약 안내
-st.markdown("### 🧭 5단계 분석 프레임워크 요약")
-
-step_card_style = """
-<div style="background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; box-sizing: border-box; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); display: flex; flex-direction: row; align-items: center; gap: 1.5rem; transition: transform 0.2s;">
-    <span style="background-color: {color}; color: #FFFFFF; font-size: 0.9rem; font-weight: 700; padding: 6px 12px; border-radius: 9999px; white-space: nowrap; min-width: 60px; text-align: center;">{step}</span>
-    <h4 style="margin: 0; color: #1E293B; font-size: 1.05rem; font-weight: 700; white-space: nowrap; width: 160px;">{title}</h4>
-    <p style="margin: 0; color: #64748B; font-size: 0.95rem; line-height: 1.5; word-break: keep-all;">{desc}</p>
-</div>
-"""
-
-st.markdown(step_card_style.format(step="1단계", color="#3B82F6", title="🔍 관심도 분석", desc="외국인이 주목하는 인기 관심 도시 랭킹 파악"), unsafe_allow_html=True)
-st.markdown(step_card_style.format(step="2단계", color="#10B981", title="🚗 실제 방문 대조", desc="온라인의 관심이 오프라인 방문으로 연결되는지 분석"), unsafe_allow_html=True)
-st.markdown(step_card_style.format(step="3단계", color="#F59E0B", title="🧩 도시 매트릭스", desc="성공 도시(도시1) vs 잠재 도시(도시2) 분류"), unsafe_allow_html=True)
-st.markdown(step_card_style.format(step="4단계", color="#EF4444", title="💳 인프라 분석", desc="소비 패턴 및 연령/국적별 다양성 격차 규명"), unsafe_allow_html=True)
-st.markdown(step_card_style.format(step="5단계", color="#8B5CF6", title="💡 벤치마킹", desc="성공 요소를 바탕으로 한 활성화 솔루션 도출"), unsafe_allow_html=True)
-
-st.markdown("---")
+st.write("---")
 
 # 메인 요약 KPI (방한 외래객 통계 연동)
 st.markdown("### 📊 방한 외래객 유입 현황 요약 (API 1 연동)")
@@ -98,8 +75,7 @@ if not df_foreigner.empty:
     with kpi_col1:
         st.metric(
             label="2026년 방한 외래객 총수", 
-            value=f"{total_foreigner_2026:,.0f} 명", 
-            delta=f"전년 대비 {growth_rate:.1f}% 증가" if growth_rate > 0 else f"{growth_rate:.1f}%"
+            value=f"{total_foreigner_2026:,.0f} 명"
         )
     with kpi_col2:
         st.metric(label="핵심 입국 목적", value=top_purpose)
@@ -107,29 +83,30 @@ if not df_foreigner.empty:
         st.metric(label="주요 방문 연령층", value=top_age)
 
     # 간단한 라인 차트 시각화
-    st.markdown("#### 월별 외래 관광객 유입 추이")
-    df_trend = df_foreigner.groupby("기준연월")["인원수"].sum().reset_index()
-    fig = px.line(
-        df_trend, x="기준연월", y="인원수", 
-        labels={"인원수": "관광객 수(명)", "기준연월": "연월"},
-        markers=True,
-        color_discrete_sequence=["#3182CE"]
-    )
-    fig.update_traces(
-        line=dict(width=3),
-        marker=dict(size=8, symbol="circle", line=dict(width=2, color="white")),
-        hovertemplate="<b>기준연월</b>: %{x}<br><b>관광객 수</b>: %{y:,.0f}명<extra></extra>"
-    )
-    fig.update_layout(
-        hovermode="x unified",
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Pretendard, sans-serif", size=12),
-        margin=dict(l=40, r=40, t=20, b=40),
-        xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
-        yaxis=dict(showgrid=True, gridcolor="#F1F5F9")
-    )
-    st.plotly_chart(fig, use_container_width=True)
+    with st.container():
+        st.markdown("#### 월별 외래 관광객 유입 추이")
+        df_trend = df_foreigner.groupby("기준연월")["인원수"].sum().reset_index()
+        fig = px.line(
+            df_trend, x="기준연월", y="인원수", 
+            labels={"인원수": "관광객 수(명)", "기준연월": "연월"},
+            markers=True,
+            color_discrete_sequence=["#1E3A8A"] # Dark Navy
+        )
+        fig.update_traces(
+            line=dict(width=3),
+            marker=dict(size=8, symbol="circle", line=dict(width=2, color="white")),
+            hovertemplate="<b>기준연월</b>: %{x}<br><b>관광객 수</b>: %{y:,.0f}명<extra></extra>"
+        )
+        fig.update_layout(
+            hovermode="x unified",
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(family="Pretendard, sans-serif", size=12, color="#4A5568"),
+            margin=dict(l=40, r=40, t=20, b=40),
+            xaxis=dict(showgrid=False, zeroline=False),
+            yaxis=dict(showgrid=True, gridcolor="rgba(0,0,0,0.05)", zeroline=False)
+        )
+        st.plotly_chart(fig, use_container_width=True)
 else:
     st.warning("방한 외래객 데이터를 불러올 수 없습니다.")
 
@@ -155,56 +132,59 @@ if not df_kto_demand.empty:
     with col_dem4:
         st.metric(label="최고 방문 도시 (내비)", value=max_navi_city)
         
-    col_chart1, col_chart2 = st.columns(2)
-    with col_chart1:
-        st.markdown("#### 🔥 온라인 관심도 (SNS 언급량) Top 5")
-        df_top_sns = df_kto_demand.nlargest(5, "snsMentionCo")
-        fig_sns = px.bar(
-            df_top_sns, x="snsMentionCo", y="signguNm",
-            orientation="h",
-            labels={"snsMentionCo": "SNS 언급량 (건)", "signguNm": "시군구"},
-            color="snsMentionCo",
-            color_continuous_scale=["#FCA5A5", "#EF4444", "#991B1B"]
-        )
-        fig_sns.update_traces(
-            hovertemplate="<b>시군구</b>: %{y}<br><b>SNS 언급량</b>: %{x:,.0f}건<extra></extra>"
-        )
-        fig_sns.update_layout(
-            showlegend=False, 
-            coloraxis_showscale=False,
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="Pretendard, sans-serif", size=12),
-            margin=dict(l=40, r=40, t=10, b=40),
-            xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
-            yaxis=dict(categoryorder='total ascending', showgrid=False)
-        )
-        st.plotly_chart(fig_sns, use_container_width=True)
-        
-    with col_chart2:
-        st.markdown("#### 🚗 실제 방문도 (내비게이션 검색수) Top 5")
-        df_top_navi = df_kto_demand.nlargest(5, "naviSearchCo")
-        fig_navi = px.bar(
-            df_top_navi, x="naviSearchCo", y="signguNm",
-            orientation="h",
-            labels={"naviSearchCo": "내비게이션 검색수 (건)", "signguNm": "시군구"},
-            color="naviSearchCo",
-            color_continuous_scale=["#93C5FD", "#3B82F6", "#1E3A8A"]
-        )
-        fig_navi.update_traces(
-            hovertemplate="<b>시군구</b>: %{y}<br><b>내비 검색수</b>: %{x:,.0f}건<extra></extra>"
-        )
-        fig_navi.update_layout(
-            showlegend=False, 
-            coloraxis_showscale=False,
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="Pretendard, sans-serif", size=12),
-            margin=dict(l=40, r=40, t=10, b=40),
-            xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
-            yaxis=dict(categoryorder='total ascending', showgrid=False)
-        )
-        st.plotly_chart(fig_navi, use_container_width=True)
+    with st.container():
+        col_chart1, col_chart2 = st.columns(2)
+        with col_chart1:
+            st.markdown("#### 🔥 온라인 관심도 (SNS)")
+            df_top_sns = df_kto_demand.nlargest(5, "snsMentionCo")
+            fig_sns = px.bar(
+                df_top_sns, x="snsMentionCo", y="signguNm",
+                orientation="h",
+                labels={"snsMentionCo": "SNS 언급량 (건)", "signguNm": "시군구"},
+                color="snsMentionCo",
+                color_continuous_scale=["#93C5FD", "#3B82F6", "#2563EB"] # Vibrant Blue
+            )
+            fig_sns.update_traces(
+                hovertemplate="<b>시군구</b>: %{y}<br><b>SNS 언급량</b>: %{x:,.0f}건<extra></extra>",
+                texttemplate='%{x:,.0f}', textposition='outside'
+            )
+            fig_sns.update_layout(
+                showlegend=False, 
+                coloraxis_showscale=False,
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)",
+                font=dict(family="Pretendard, sans-serif", size=12, color="#4A5568"),
+                margin=dict(l=40, r=40, t=10, b=40),
+                xaxis=dict(showgrid=False, zeroline=False, visible=False),
+                yaxis=dict(categoryorder='total ascending', showgrid=False)
+            )
+            st.plotly_chart(fig_sns, use_container_width=True)
+            
+        with col_chart2:
+            st.markdown("#### 🚗 실제 방문도 (내비)")
+            df_top_navi = df_kto_demand.nlargest(5, "naviSearchCo")
+            fig_navi = px.bar(
+                df_top_navi, x="naviSearchCo", y="signguNm",
+                orientation="h",
+                labels={"naviSearchCo": "내비게이션 검색수 (건)", "signguNm": "시군구"},
+                color="naviSearchCo",
+                color_continuous_scale=["#A7F3D0", "#10B981", "#059669"] # Vibrant Emerald
+            )
+            fig_navi.update_traces(
+                hovertemplate="<b>시군구</b>: %{y}<br><b>내비 검색수</b>: %{x:,.0f}건<extra></extra>",
+                texttemplate='%{x:,.0f}', textposition='outside'
+            )
+            fig_navi.update_layout(
+                showlegend=False, 
+                coloraxis_showscale=False,
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)",
+                font=dict(family="Pretendard, sans-serif", size=12, color="#4A5568"),
+                margin=dict(l=40, r=40, t=10, b=40),
+                xaxis=dict(showgrid=False, zeroline=False, visible=False),
+                yaxis=dict(categoryorder='total ascending', showgrid=False)
+            )
+            st.plotly_chart(fig_navi, use_container_width=True)
 else:
     st.warning("관광 서비스 수요 데이터를 불러올 수 없습니다.")
 
@@ -219,52 +199,55 @@ if not df_kto_spend.empty:
     total_amt = df_ind_spend["cardUseAmt"].sum()
     df_ind_spend["비율"] = (df_ind_spend["cardUseAmt"] / total_amt) * 100
     
-    col_sp1, col_sp2 = st.columns([1, 2])
-    
-    with col_sp1:
-        st.markdown("#### 🛍️ 전국 관광 카드 소비 업종별 비중")
-        fig_pie_spend = px.pie(
-            df_ind_spend, values="cardUseAmt", names="indutyNm",
-            hole=0.4,
-            color_discrete_sequence=["#3182CE", "#319795", "#ED8936", "#ECC94B", "#48BB78", "#9F7AEA"]
-        )
-        fig_pie_spend.update_traces(
-            textposition='inside', 
-            textinfo='percent+label',
-            hovertemplate="<b>업종</b>: %{label}<br><b>소비액</b>: %{value:,.0f}원 (%{percent})<extra></extra>"
-        )
-        fig_pie_spend.update_layout(
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="Pretendard, sans-serif", size=12),
-            margin=dict(l=40, r=40, t=10, b=40)
-        )
-        st.plotly_chart(fig_pie_spend, use_container_width=True)
+    with st.container():
+        col_sp1, col_sp2 = st.columns([1, 2])
         
-    with col_sp2:
-        st.markdown("#### 💰 전국 시군구별 관광 카드 총 소비 규모 Top 5")
-        df_city_spend = df_kto_spend.groupby("signguNm")["cardUseAmt"].sum().reset_index()
-        df_top_city_spend = df_city_spend.nlargest(5, "cardUseAmt")
-        fig_city_spend = px.bar(
-            df_top_city_spend, x="cardUseAmt", y="signguNm",
-            orientation="h",
-            labels={"cardUseAmt": "카드 소비액 (원)", "signguNm": "시군구"},
-            color="cardUseAmt",
-            color_continuous_scale=["#C7D2FE", "#6366F1", "#3730A3"]
-        )
-        fig_city_spend.update_traces(
-            hovertemplate="<b>시군구</b>: %{y}<br><b>카드 소비액</b>: %{x:,.0f}원<extra></extra>"
-        )
-        fig_city_spend.update_layout(
-            coloraxis_showscale=False,
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="Pretendard, sans-serif", size=12),
-            margin=dict(l=40, r=40, t=10, b=40),
-            xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
-            yaxis=dict(categoryorder='total ascending', showgrid=False)
-        )
-        st.plotly_chart(fig_city_spend, use_container_width=True)
+        with col_sp1:
+            st.markdown("#### 🛍️ 전국 관광 소비 비중")
+            fig_pie_spend = px.pie(
+                df_ind_spend, values="cardUseAmt", names="indutyNm",
+                hole=0.4,
+                color_discrete_sequence=["#2563EB", "#0EA5E9", "#10B981", "#F59E0B", "#8B5CF6", "#64748B"] # Vibrant palette
+            )
+            fig_pie_spend.update_traces(
+                textposition='inside', 
+                textinfo='percent+label',
+                hovertemplate="<b>업종</b>: %{label}<br><b>소비액</b>: %{value:,.0f}원 (%{percent})<extra></extra>"
+            )
+            fig_pie_spend.update_layout(
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)",
+                font=dict(family="Pretendard, sans-serif", size=12, color="#4A5568"),
+                margin=dict(l=40, r=40, t=10, b=40),
+                showlegend=False # 깔끔하게 숨기고 inside label로 처리
+            )
+            st.plotly_chart(fig_pie_spend, use_container_width=True)
+            
+        with col_sp2:
+            st.markdown("#### 💰 전국 관광 총 소비 규모 Top 5")
+            df_city_spend = df_kto_spend.groupby("signguNm")["cardUseAmt"].sum().reset_index()
+            df_top_city_spend = df_city_spend.nlargest(5, "cardUseAmt")
+            fig_city_spend = px.bar(
+                df_top_city_spend, x="cardUseAmt", y="signguNm",
+                orientation="h",
+                labels={"cardUseAmt": "카드 소비액 (원)", "signguNm": "시군구"},
+                color="cardUseAmt",
+                color_continuous_scale=["#93C5FD", "#3B82F6", "#2563EB"] # Vibrant Blue
+            )
+            fig_city_spend.update_traces(
+                hovertemplate="<b>시군구</b>: %{y}<br><b>카드 소비액</b>: %{x:,.0f}원<extra></extra>",
+                texttemplate='%{x:,.0f}', textposition='outside'
+            )
+            fig_city_spend.update_layout(
+                coloraxis_showscale=False,
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)",
+                font=dict(family="Pretendard, sans-serif", size=12, color="#4A5568"),
+                margin=dict(l=40, r=40, t=10, b=40),
+                xaxis=dict(showgrid=False, zeroline=False, visible=False),
+                yaxis=dict(categoryorder='total ascending', showgrid=False)
+            )
+            st.plotly_chart(fig_city_spend, use_container_width=True)
         
     food_ratio = df_ind_spend.loc[df_ind_spend["indutyNm"] == "식음료", "비율"].values[0] if "식음료" in df_ind_spend["indutyNm"].values else 0
     shopping_ratio = df_ind_spend.loc[df_ind_spend["indutyNm"] == "쇼핑", "비율"].values[0] if "쇼핑" in df_ind_spend["indutyNm"].values else 0

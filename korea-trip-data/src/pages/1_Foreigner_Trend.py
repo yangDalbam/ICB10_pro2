@@ -72,6 +72,7 @@ if not df_foreigner.empty:
         st.plotly_chart(fig_gender_age, use_container_width=True)
         
         # 교차 피봇테이블 출력
+        st.markdown("<br><br>", unsafe_allow_html=True)
         pivot_gender_age = df_filtered.pivot_table(index="연령별", columns="성별", values="인원수", aggfunc="sum")
         st.markdown("**[성별/연령별 관광객 히트맵 테이블]**")
         st.dataframe(pivot_gender_age.style.format("{:,.0f}").background_gradient(cmap="Blues", axis=None))
@@ -99,6 +100,7 @@ if not df_foreigner.empty:
         st.plotly_chart(fig_share, use_container_width=True)
         
         # 통계표 출력
+        st.markdown("<br><br>", unsafe_allow_html=True)
         st.markdown(f"**[{target_col}별 관광객 통계]**")
         st.dataframe(df_share.sort_values(by="인원수", ascending=False).style.format({"인원수": "{:,.0f}"}))
 
