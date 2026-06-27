@@ -38,13 +38,13 @@ def apply_custom_style():
             overflow-wrap: break-word;
         }
 
-        /* [개선 1] 메인 배경색 및 레이아웃 최상단 여백 최적화 */
+        /* [개선 1] 메인 배경색 및 레이아웃 최상단 여백 최적화 (Wide Layout) */
         .main .block-container {
-            padding-top: 1.5rem !important; /* 상단 여백 대폭 감소 */
+            padding-top: 1.5rem !important; 
             padding-bottom: 3rem;
-            padding-left: 5%;
-            padding-right: 5%;
-            max-width: 1200px;
+            padding-left: 3%;
+            padding-right: 3%;
+            max-width: 100%; /* layout='wide'를 최대한 활용하도록 변경 */
         }
 
         /* [개선 21] Streamlit 상단 고정 헤더 영역의 빈 공간 제거 */
@@ -119,31 +119,40 @@ def apply_custom_style():
             margin: 0 !important;
         }
 
-        /* [개선 5] Metric (지표 카드) 가독성 및 호버 모션 향상 */
+        /* [개선 5] Metric (지표 카드) 가독성 및 호버 모션 향상 - 세련된 다크 테마 적용 */
         [data-testid="stMetric"] {
-            background-color: #FFFFFF !important;
-            border: 1px solid #E2E8F0 !important;
-            border-radius: 16px !important;
-            padding: 1.5rem 1.25rem !important;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01) !important;
+            background-color: #1F2937 !important; /* 세련된 어두운 회색 배경 */
+            border: 1px solid #374151 !important;
+            border-radius: 16px !important; /* 둥근 모서리 */
+            padding: 1.5rem 1.25rem !important; /* 패딩 */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-            word-break: keep-all !important;
-            overflow-wrap: break-word !important;
+            
+            /* [핵심] 카드 내용 넘침 방지 (Overflow 방어) */
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
         }
         
         [data-testid="stMetric"]:hover {
             transform: translateY(-4px) !important; /* 더 뚜렷한 리프트업 효과 */
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03) !important;
-            border-color: #2563EB !important; /* 비비드 블루로 보더 하이라이트 */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1) !important;
+            border-color: #60A5FA !important; /* 호버 시 밝은 블루 보더 하이라이트 */
         }
 
         /* Label 영역 스타일링 (보조 정보) */
         [data-testid="stMetricLabel"], [data-testid="stMetricLabel"] * {
             font-size: 15px !important;
             font-weight: 500 !important;
-            color: #94A3B8 !important;
+            color: #9CA3AF !important; /* 다크 모드에 맞는 밝은 회색 */
             text-transform: uppercase !important;
             letter-spacing: 0.02em !important;
+            
+            /* 자식 요소 넘침 방지 */
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            max-width: 100% !important;
         }
 
         /* stMetricValue와 stMetricDelta를 세로로 강제 배치 */
@@ -153,6 +162,8 @@ def apply_custom_style():
             flex-wrap: nowrap !important;
             align-items: flex-start !important;
             gap: 0.8rem !important; /* 제목과 수치 사이의 여백 넉넉하게 확보 */
+            width: 100% !important;
+            overflow: hidden !important;
         }
 
         /* Label 래퍼 속성 */
@@ -166,9 +177,15 @@ def apply_custom_style():
         [data-testid="stMetricValue"], [data-testid="stMetricValue"] * {
             font-size: 36px !important; /* 32~40px 권장 사이즈 적용 */
             font-weight: 800 !important; /* Bold 유지 */
-            color: #2563EB !important; /* 시선을 사로잡는 선명한 블루 계열 */
+            color: #F9FAFB !important; /* 다크 모드에 어울리는 선명한 흰색 계열 */
             letter-spacing: -0.02em !important;
             line-height: 1.1 !important;
+            
+            /* 자식 요소 넘침 방지 */
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            max-width: 100% !important;
         }
 
         /* Delta 영역 인라인 및 크기 조절 */
@@ -189,15 +206,18 @@ def apply_custom_style():
             flex-wrap: nowrap !important;
             align-items: flex-start !important;
             gap: 0.2rem !important;
-            background-color: #FFFFFF !important;
-            border: 1px solid #E2E8F0 !important;
+            background-color: #1F2937 !important; /* 세련된 어두운 회색 배경 */
+            border: 1px solid #374151 !important;
             border-radius: 16px !important;
             padding: 1.5rem 1.25rem !important;
             margin-bottom: 2.5rem !important; /* 지표와 하단 차트 간의 행간 여백 확보 */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01) !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-            word-break: keep-all !important;
-            overflow-wrap: break-word !important;
+            
+            /* 텍스트 넘침 짤림 처리 완벽 대응 */
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
         }
 
         /* [개선 9] 사이드바 스타일링 및 컴포넌트 간 여백 부여 */
@@ -232,6 +252,37 @@ def apply_custom_style():
             font-size: 0.85rem !important;
             color: #64748B !important;
             line-height: 1.5 !important;
+        }
+        /* 사이드바 토글 버튼 완전 숨김 (Single-page app 용) */
+        [data-testid="collapsedControl"] {
+            display: none !important;
+        }
+
+        /* st.tabs(탭) UI 쾌적하고 고급스럽게 디자인 개선 */
+        [data-baseweb="tab-list"] {
+            gap: 2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #E2E8F0 !important;
+        }
+        [data-baseweb="tab"] {
+            font-size: 1.15rem !important;
+            font-weight: 600 !important;
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
+            color: #64748B !important;
+            border-bottom: 3px solid transparent !important;
+            transition: all 0.2s ease-in-out !important;
+            background-color: transparent !important;
+        }
+        [data-baseweb="tab"]:hover {
+            color: #1A365D !important;
+        }
+        [data-baseweb="tab"][aria-selected="true"] {
+            color: #2563EB !important;
+            border-bottom: 3px solid #2563EB !important;
+        }
+        [data-baseweb="tab-highlight"] {
+            background-color: transparent !important; /* 기본 highlight 바 숨김 처리 (커스텀 border로 대체) */
         }
     </style>
     """
