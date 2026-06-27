@@ -22,9 +22,55 @@ def apply_custom_style():
             letter-spacing: -0.01em;
         }
 
-        /* 전체 배경 깔끔하게 조정 (Streamlit 구/신버전 호환) */
+        /* 전체 배경 깔끔하게 조정 (Apple/Stripe 스타일 라이트 그레이) */
         .reportview-container, .main, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
-            background-color: #f8f9fa !important;
+            background-color: #F8FAFC !important;
+        }
+
+        /* [신규] 탭 메뉴(st.tabs) 프리미엄 UI 커스텀 (Notion/Stripe 스타일) */
+        [data-testid="stTabs"] {
+            background-color: transparent !important;
+        }
+        
+        button[data-baseweb="tab"] {
+            font-size: 16px !important;
+            font-weight: 600 !important;
+            color: #64748B !important;
+            padding: 0.75rem 1.5rem !important;
+            border-radius: 8px !important;
+            margin-right: 0.5rem !important;
+            border: none !important;
+            background-color: transparent !important;
+            transition: all 0.2s ease-in-out !important;
+        }
+        
+        button[data-baseweb="tab"]:hover {
+            color: #2563EB !important;
+            background-color: #EFF6FF !important;
+        }
+        
+        button[data-baseweb="tab"][aria-selected="true"] {
+            color: #2563EB !important;
+            background-color: #FFFFFF !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+            border-bottom: 2px solid #2563EB !important;
+        }
+        
+        /* 탭 하단 기본 실선 제거 */
+        div[data-baseweb="tab-list"] {
+            border-bottom: none !important;
+            gap: 4px;
+            padding-bottom: 10px;
+        }
+        
+        /* 탭 전환 시 부드러운 Fade-in 애니메이션 */
+        div[data-baseweb="tab-panel"] {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* 카드 스타일 컨테이너 정의 */

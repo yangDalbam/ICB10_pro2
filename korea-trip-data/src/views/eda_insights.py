@@ -38,12 +38,21 @@ def render_eda_insights():
         fig = px.scatter(
             df_demand, x="snsMentionCo", y="naviSearchCo",
             color="cityType", hover_name="signguNm", text="signguNm",
-            color_discrete_map={"도시1": "#EF4444", "도시2": "#3B82F6", "일반": "#94A3B8"}
+            color_discrete_map={"도시1": "#F97316", "도시2": "#2563EB", "일반": "#94A3B8"}
         )
-        fig.update_traces(textposition='top center', marker=dict(size=14, opacity=0.85))
-        fig.add_vline(x=median_sns, line_width=1.5, line_dash="dash", line_color="#94A3B8")
-        fig.add_hline(y=median_navi, line_width=1.5, line_dash="dash", line_color="#94A3B8")
-        fig.update_layout(xaxis_title="SNS 언급량(관심도)", yaxis_title="내비게이션 검색(방문도)")
+        fig.update_traces(textposition='top center', marker=dict(size=14, opacity=0.85, line=dict(width=1, color='White')))
+        fig.add_vline(x=median_sns, line_width=1.5, line_dash="dash", line_color="#9CA3AF")
+        fig.add_hline(y=median_navi, line_width=1.5, line_dash="dash", line_color="#9CA3AF")
+        fig.update_layout(
+            xaxis_title="SNS 언급량(관심도)", yaxis_title="내비게이션 검색(방문도)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
+            hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+            margin=dict(l=20, r=20, t=20, b=20),
+            xaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0"),
+            yaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0")
+        )
         st.plotly_chart(fig, use_container_width=True)
 
         st.markdown("#### 벤치마킹 대상 도시 선택")
@@ -83,9 +92,20 @@ def render_eda_insights():
             val_c2 = [min(x, 1.0) for x in val_c2]
 
             fig_radar = go.Figure()
-            fig_radar.add_trace(go.Scatterpolar(r=val_c1, theta=labels, fill='toself', name=city_1, line_color='#EF4444'))
-            fig_radar.add_trace(go.Scatterpolar(r=val_c2, theta=labels, fill='toself', name=city_2, line_color='#3B82F6'))
-            fig_radar.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 1])))
+            fig_radar.add_trace(go.Scatterpolar(r=val_c1, theta=labels, fill='toself', name=city_1, line_color='#F97316', fillcolor='rgba(249, 115, 22, 0.4)'))
+            fig_radar.add_trace(go.Scatterpolar(r=val_c2, theta=labels, fill='toself', name=city_2, line_color='#2563EB', fillcolor='rgba(37, 99, 235, 0.4)'))
+            fig_radar.update_layout(
+                polar=dict(
+                    radialaxis=dict(visible=True, range=[0, 1], gridcolor="#E2E8F0", linecolor="#E2E8F0"),
+                    angularaxis=dict(gridcolor="#E2E8F0", linecolor="#E2E8F0"),
+                    bgcolor="rgba(0,0,0,0)"
+                ),
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)",
+                font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
+                hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+                margin=dict(l=40, r=40, t=40, b=40)
+            )
             st.plotly_chart(fig_radar, use_container_width=True)
 
             st.markdown("#### 활성화 벤치마킹 인사이트")

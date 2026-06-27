@@ -72,10 +72,11 @@ def render_home():
                 hovermode="x unified",
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(family="Pretendard, sans-serif", size=12, color="#4A5568"),
-                margin=dict(l=40, r=40, t=20, b=40),
-                xaxis=dict(showgrid=False, zeroline=False),
-                yaxis=dict(showgrid=True, gridcolor="rgba(0,0,0,0.05)", zeroline=False)
+                font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
+                hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+                margin=dict(l=20, r=20, t=30, b=20),
+                xaxis=dict(showgrid=False, zeroline=False, linecolor="#E2E8F0"),
+                yaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0")
             )
             st.plotly_chart(fig, use_container_width=True)
     else:

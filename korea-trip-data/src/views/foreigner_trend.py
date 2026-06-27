@@ -48,9 +48,17 @@ def render_foreigner_trend():
                 df_gender_age, x="연령별", y="인원수", color="성별",
                 labels={"인원수": "관광객 수(명)", "연령별": "연령대"},
                 barmode="group",
-                color_discrete_map={"여성": "#EF4444", "남성": "#3B82F6"}
+                color_discrete_map={"여성": "#F97316", "남성": "#2563EB"}
             )
-            fig_gender_age.update_layout(plot_bgcolor="rgba(0,0,0,0)")
+            fig_gender_age.update_layout(
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)",
+                font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
+                hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+                margin=dict(l=20, r=20, t=30, b=20),
+                xaxis=dict(showgrid=False, zeroline=False, linecolor="#E2E8F0"),
+                yaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0")
+            )
             st.plotly_chart(fig_gender_age, use_container_width=True)
 
         with col2:
@@ -61,7 +69,14 @@ def render_foreigner_trend():
             df_share = df_share.nlargest(7, "인원수")
             fig_share = px.pie(
                 df_share, names=target_col_label, values="인원수", hole=0.4,
-                color_discrete_sequence=px.colors.qualitative.Pastel
+                color_discrete_sequence=["#2563EB", "#0D9488", "#F97316", "#8B5CF6", "#64748B", "#38BDF8", "#FCD34D"]
+            )
+            fig_share.update_layout(
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)",
+                font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
+                hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+                margin=dict(l=20, r=20, t=20, b=20)
             )
             st.plotly_chart(fig_share, use_container_width=True)
             
@@ -75,8 +90,17 @@ def render_foreigner_trend():
             df_entry_top10 = df_entry.nlargest(10, '입국자 수(명)')
             fig4 = px.bar(df_entry_top10, x='입국자 수(명)', y='입국자 국적', orientation='h',
                           title="국적별 입국자 수 압도적 1위 중국 및 동아시아 강세",
-                          color='입국자 수(명)', color_continuous_scale='Purples')
-            fig4.update_layout(yaxis={'categoryorder': 'total ascending'})
+                          color='입국자 수(명)', color_continuous_scale='Blues')
+            fig4.update_layout(
+                yaxis={'categoryorder': 'total ascending'},
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)",
+                font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
+                hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+                margin=dict(l=20, r=20, t=40, b=20),
+                xaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0"),
+                yaxis_title=None
+            )
             st.plotly_chart(fig4, use_container_width=True)
         else:
             st.warning("입국자 국적 데이터를 확인할 수 없습니다.")
