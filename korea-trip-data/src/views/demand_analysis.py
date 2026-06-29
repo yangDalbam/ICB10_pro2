@@ -186,11 +186,11 @@ def render_demand_analysis():
             
         if not df_trends.empty:
             # 차트 시각화
-            st.subheader("지역별 검색량 추이")
-            df_trends_reset = df_trends.reset_index()
-            df_melt = df_trends_reset.melt(id_vars=['date'], value_vars=kw_list, var_name='지역 키워드', value_name='검색량(상대값)')
+            country_name = "전세계" if target_country == "" else {"US":"미국", "JP":"일본", "TW":"대만", "SG":"싱가포르", "GB":"영국"}.get(target_country, target_country)
+            st.subheader(f"📈 {country_name} 내 한국 주요 도시 검색 트렌드 (최근 1년)")
             
-            fig_trends = px.line(df_melt, x='date', y='검색량(상대값)', color='지역 키워드', markers=False,
+            fig_trends = px.line(df_trends, x=df_trends.index, y=kw_list, 
+                                 labels={'value': '검색 관심도 (0~100)', 'date': '날짜', 'variable': '지역명'},
                                  color_discrete_sequence=["#2563EB", "#0D9488", "#F97316", "#8B5CF6", "#E11D48"])
             fig_trends.update_layout(
                 plot_bgcolor="rgba(0,0,0,0)",
@@ -198,9 +198,9 @@ def render_demand_analysis():
                 font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
                 hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
                 margin=dict(l=20, r=20, t=20, b=20),
-                xaxis=dict(showgrid=False, zeroline=False, linecolor="#E2E8F0", title=None),
-                yaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0", title=None),
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                xaxis=dict(showgrid=False, zeroline=False, linecolor="#E2E8F0"),
+                yaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0"),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, title=None)
             )
             st.plotly_chart(fig_trends, use_container_width=True)
             
