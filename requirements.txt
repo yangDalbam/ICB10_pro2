@@ -6,3 +6,4 @@ python-dotenv
 koreanize-matplotlib
 matplotlib
 tabulate
+pytrends
