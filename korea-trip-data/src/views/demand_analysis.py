@@ -31,10 +31,10 @@ def render_demand_analysis():
         return df_visitor_region
 
     @st.cache_data(ttl=86400)
-    def fetch_google_trends_data(kw_list, timeframe='today 12-m'):
+    def fetch_google_trends_data(kw_list, geo='US', timeframe='today 12-m'):
         try:
-            pytrends = TrendReq(hl='ko-KR', tz=540)
-            pytrends.build_payload(kw_list, cat=0, timeframe=timeframe, geo='KR', gprop='')
+            pytrends = TrendReq(hl='en-US', tz=360)
+            pytrends.build_payload(kw_list, cat=0, timeframe=timeframe, geo=geo, gprop='')
             df = pytrends.interest_over_time()
             if not df.empty and 'isPartial' in df.columns:
                 df = df.drop(columns=['isPartial'])
@@ -43,10 +43,10 @@ def render_demand_analysis():
             return pd.DataFrame()
 
     @st.cache_data(ttl=86400)
-    def fetch_google_trends_related_queries(kw_list, timeframe='today 12-m'):
+    def fetch_google_trends_related_queries(kw_list, geo='US', timeframe='today 12-m'):
         try:
-            pytrends = TrendReq(hl='ko-KR', tz=540)
-            pytrends.build_payload(kw_list, cat=0, timeframe=timeframe, geo='KR', gprop='')
+            pytrends = TrendReq(hl='en-US', tz=360)
+            pytrends.build_payload(kw_list, cat=0, timeframe=timeframe, geo=geo, gprop='')
             related_queries = pytrends.related_queries()
             return related_queries
         except Exception as e:
@@ -154,21 +154,26 @@ def render_demand_analysis():
     st.info("데이터 파이프라인 취합 후 GetYourGuide, Klook, KKday 등의 플랫폼 인기 관광 상품 및 지역 데이터가 이곳에 표시될 예정입니다.")
 
     st.markdown("---")
-    st.header("4. 📈 구글 트렌드 기반 지역별 검색 추이 및 키워드")
-    st.markdown("최근 1년(12개월) 동안 주요 관광 지역에 대한 검색량 변화와 연관 검색어를 확인합니다.")
+    st.header("4. 📈 구글 트렌드 기반 지역별 검색 추이 및 키워드 (Inbound)")
+    st.markdown("최근 1년(12개월) 동안 **해외(외국인)** 관점에서의 주요 관광 지역 검색량 변화와 연관 검색어를 확인합니다.")
+    
+    target_country = st.selectbox(
+        "분석 대상 국가 선택", 
+        options=['US', 'JP', 'TW', 'SG', 'GB', ''], 
+        format_func=lambda x: "전세계 (전체)" if x == '' else {"US":"미국 (US)", "JP":"일본 (JP)", "TW":"대만 (TW)", "SG":"싱가포르 (SG)", "GB":"영국 (GB)"}[x]
+    )
     
     full_kw_list = [
-        "인천 여행", "대전 여행", "대구 여행", "광주 여행", "울산 여행", 
-        "충남 여행", "충북 여행", "강릉 여행", "춘천 여행", "속초 여행", 
-        "태안 여행", "경기도 여행", "전남 여행", "여수 여행", "남해 여행", 
-        "순천 여행", "전주 여행", "목포 여행"
+        "Seoul", "Busan", "Jeju", "Incheon", "Daegu", "Gwangju", "Daejeon", "Ulsan", 
+        "Sejong", "Gyeonggi", "Gangwon", "Chungbuk", "Chungnam", "Jeonbuk", "Jeonnam", 
+        "Gyeongbuk", "Gyeongnam", "Gangneung", "Sokcho", "Yeosu", "Jeonju", "Mokpo"
     ]
     
     st.info("💡 구글 트렌드 API 제한으로 인해 한 번에 최대 5개의 키워드까지만 비교할 수 있습니다.")
     kw_list = st.multiselect(
-        "비교할 지역 키워드를 선택해 주세요 (최대 5개)",
+        "비교할 지역 키워드(영문)를 선택해 주세요 (최대 5개)",
         options=full_kw_list,
-        default=["인천 여행", "강릉 여행", "여수 여행", "전주 여행"],
+        default=["Seoul", "Jeju", "Busan"],
         max_selections=5
     )
     
@@ -176,8 +181,8 @@ def render_demand_analysis():
         st.warning("키워드를 1개 이상 선택해 주세요.")
     else:
         with st.spinner('구글 트렌드 데이터를 불러오는 중입니다... (최초 로딩 시 다소 시간이 소요될 수 있습니다)'):
-            df_trends = fetch_google_trends_data(kw_list)
-            dict_related = fetch_google_trends_related_queries(kw_list)
+            df_trends = fetch_google_trends_data(kw_list, geo=target_country)
+            dict_related = fetch_google_trends_related_queries(kw_list, geo=target_country)
             
         if not df_trends.empty:
             # 차트 시각화
