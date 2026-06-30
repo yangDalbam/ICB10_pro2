@@ -255,12 +255,21 @@ def _generate_mock_service_demand_data(base_ym: str) -> pd.DataFrame:
         # 실제 방문지 내비게이션 검색량
         navi_search = int(8000 * city["visit_weight"] * np.random.uniform(0.9, 1.1))
         
+        # SNS 키워드 목업
+        if city["type"] == "도시1":
+            sns_keywords = "핫플, 인스타감성, 오션뷰, 맛집, 야경"
+        elif city["type"] == "도시2":
+            sns_keywords = "가족여행, 힐링, 특산물, 축제, 자연"
+        else:
+            sns_keywords = "당일치기, 주차장, 가성비, 산책, 역사"
+            
         rows.append({
             "baseYm": base_ym,
             "signguCd": city["signguCd"],
             "signguNm": city["signguNm"],
             "snsMentionCo": sns_mention,      # SNS 언급량 (관심도)
             "naviSearchCo": navi_search,      # 내비게이션 검색량 (방문도)
+            "snsKeywords": sns_keywords,      # SNS 검색 키워드
             "cityType": city["type"]
         })
     return pd.DataFrame(rows)

@@ -15,7 +15,7 @@ from pytrends.request import TrendReq
 import time
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from api.kto_api import get_area_service_demand
+from api.kto_api import get_area_service_demand, get_area_cultural_demand
 
 def render_demand_analysis():
     st.title("🗺️ 인기 관광 지역 분석")
@@ -80,6 +80,12 @@ def render_demand_analysis():
                 )
                 st.plotly_chart(fig_sns, use_container_width=True)
                 
+                # SNS 검색 키워드 테이블 추가
+                if "snsKeywords" in df_top_sns.columns:
+                    st.markdown("##### 📌 지역별 주요 SNS 검색 키워드")
+                    df_kwds = df_top_sns[["signguNm", "snsKeywords"]].rename(columns={"signguNm": "지역명", "snsKeywords": "핵심 키워드"})
+                    st.dataframe(df_kwds, use_container_width=True, hide_index=True)
+                
             with col_chart2:
                 st.markdown("#### 실제 방문도 (내비)")
                 df_top_navi = df_kto_demand.nlargest(5, "naviSearchCo")
@@ -100,6 +106,31 @@ def render_demand_analysis():
                     yaxis_title=None
                 )
                 st.plotly_chart(fig_navi, use_container_width=True)
+                
+                # 내비게이션 관광 목적 분류 차트 추가
+                df_cultural = get_area_cultural_demand("202601")
+                if not df_cultural.empty:
+                    st.markdown("##### 🧭 주요 방문 지역별 관광 목적(내비 검색)")
+                    top_navi_regions = df_top_navi["signguNm"].tolist()
+                    df_cult_top = df_cultural[df_cultural["signguNm"].isin(top_navi_regions)]
+                    if not df_cult_top.empty:
+                        fig_cult = px.bar(
+                            df_cult_top, x="searchCo", y="signguNm", color="clNm",
+                            orientation="h",
+                            color_discrete_sequence=px.colors.qualitative.Pastel
+                        )
+                        fig_cult.update_layout(
+                            yaxis=dict(categoryorder='total ascending'),
+                            plot_bgcolor="rgba(0,0,0,0)",
+                            paper_bgcolor="rgba(0,0,0,0)",
+                            font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
+                            hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+                            margin=dict(l=20, r=20, t=20, b=20),
+                            xaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0", title="목적별 내비 검색량"),
+                            yaxis_title=None,
+                            legend_title_text="관광 목적"
+                        )
+                        st.plotly_chart(fig_cult, use_container_width=True)
     else:
         st.warning("관광 서비스 수요 데이터를 불러올 수 없습니다.")
 
