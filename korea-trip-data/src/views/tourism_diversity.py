@@ -25,7 +25,7 @@ def render_tourism_diversity():
     def load_eda_data():
         df_consume_trend = pd.read_csv(os.path.join(data_dir, '20260620155141_업종별 관광소비 추이 CSV 다운로드.csv'))
         df_consume_country = pd.read_csv(os.path.join(data_dir, '20260620155314_국가별 관광소비 유형 CSV 다운로드.csv'))
-        df_consume_trend['기준년월일'] = df_consume_trend['기준년월일'].astype(str)
+        df_consume_trend['기준년월일'] = pd.to_datetime(df_consume_trend['기준년월일'].astype(str), format='%Y%m').dt.strftime('%Y-%m')
         return df_consume_trend, df_consume_country
 
     st.header("1. 🛍️ 업종별 및 국가별 관광 소비 트렌드")
@@ -39,14 +39,14 @@ def render_tourism_diversity():
                            markers=True, title="월별 주요 관광 소비 업종 매출 동향",
                            color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B"])
             fig1.update_layout(
-                xaxis_title="연월", yaxis_title="소비액(천원)", legend_title="업종",
+                xaxis_title="연월", yaxis_title="소비액(천원, Log Scale)", legend_title="업종",
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
                 font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
                 hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                 margin=dict(l=20, r=20, t=40, b=20),
-                xaxis=dict(showgrid=False, zeroline=False, linecolor="#334155"),
-                yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
+                xaxis=dict(showgrid=False, zeroline=False, linecolor="#334155", type="category"),
+                yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155", type="log")
             )
             st.plotly_chart(fig1, use_container_width=True)
             with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
@@ -55,10 +55,11 @@ def render_tourism_diversity():
         with col2:
             st.subheader("외국인 방문객 주요 소비국 비율")
             df_country_top10 = df_consume_country[df_consume_country['국가'] != '기타'].nlargest(10, '소비 비율')
-            fig2 = px.pie(df_country_top10, names='국가', values='소비 비율', hole=0.4,
-                          title="한국 관광 소비 주도 상위 10개국 비율",
-                          color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B", "#94A3B8", "#080D1A"])
-            fig2.update_traces(textposition='inside', textinfo='percent+label', marker=dict(line=dict(color='#121824', width=2)))
+            fig2 = px.treemap(df_country_top10, path=[px.Constant("전체"), '국가'], values='소비 비율',
+                              title="한국 관광 소비 주도 상위 10개국 비율",
+                              color='소비 비율',
+                              color_continuous_scale="Teal")
+            fig2.update_traces(textinfo='label+percent entry', textfont_size=14, marker=dict(line=dict(color='#121824', width=2)))
             fig2.update_layout(
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
