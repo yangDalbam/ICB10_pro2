@@ -1,8 +1,8 @@
 [theme]
-primaryColor = "#00c73c" # 네이버 상징색 초록색
-backgroundColor = "#ffffff"
-secondaryBackgroundColor = "#f0f2f6"
-textColor = "#31333F"
+primaryColor = "#00F0FF" # Neon Cyan
+backgroundColor = "#0B1120" # Dark Slate
+secondaryBackgroundColor = "#121824" # Charcoal Gray
+textColor = "#E2E8F0" # Light Slate
 font = "sans serif"
 
 [server]

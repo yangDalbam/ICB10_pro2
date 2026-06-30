@@ -145,7 +145,7 @@ def render_demand_analysis():
                     df_top_sns, x=x_col, y="signguNm",
                     orientation="h",
                     color=x_col,
-                    color_continuous_scale="Blues",
+                    color_continuous_scale="Teal",
                     custom_data=[kw_col]
                 )
                 fig_sns.update_traces(
@@ -156,10 +156,10 @@ def render_demand_analysis():
                     yaxis=dict(categoryorder='total ascending'),
                     plot_bgcolor="rgba(0,0,0,0)",
                     paper_bgcolor="rgba(0,0,0,0)",
-                    font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
-                    hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+                    font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+                    hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                     margin=dict(l=20, r=20, t=20, b=20),
-                    xaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0", title=x_axis_title),
+                    xaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155", title=x_axis_title),
                     yaxis_title=None
                 )
                 st.plotly_chart(fig_sns, use_container_width=True)
@@ -178,17 +178,17 @@ def render_demand_analysis():
                         fig_cult = px.bar(
                             df_cult_top, x="searchCo", y="signguNm", color="clNm",
                             orientation="h",
-                            color_discrete_sequence=px.colors.qualitative.Pastel
+                            color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B"]
                         )
                         fig_cult.update_layout(
                             height=400,
                             yaxis=dict(categoryorder='total ascending'),
                             plot_bgcolor="rgba(0,0,0,0)",
                             paper_bgcolor="rgba(0,0,0,0)",
-                            font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
-                            hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+                            font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+                            hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                             margin=dict(l=20, r=20, t=20, b=20),
-                            xaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0", title="총 내비 검색량 및 방문 목적"),
+                            xaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155", title="총 내비 검색량 및 방문 목적"),
                             yaxis_title=None,
                             legend_title_text="관광 목적"
                         )
@@ -236,15 +236,15 @@ def render_demand_analysis():
             
             fig_trends = px.line(df_trends, x=df_trends.index, y=kw_list, 
                                  labels={'value': '검색 관심도 (0~100)', 'date': '날짜', 'variable': '지역명'},
-                                 color_discrete_sequence=["#2563EB", "#0D9488", "#F97316", "#8B5CF6", "#E11D48"])
+                                 color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B"])
             fig_trends.update_layout(
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
-                hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+                font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+                hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                 margin=dict(l=20, r=20, t=20, b=20),
-                xaxis=dict(showgrid=False, zeroline=False, linecolor="#E2E8F0"),
-                yaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0"),
+                xaxis=dict(showgrid=False, zeroline=False, linecolor="#334155"),
+                yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155"),
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, title=None)
             )
             st.plotly_chart(fig_trends, use_container_width=True)
@@ -280,15 +280,15 @@ def render_demand_analysis():
             df_top5 = df_visitor_filtered[df_visitor_filtered['지역'].isin(top5_regions)]
             fig3 = px.line(df_top5, x='날짜', y='외국인 방문자수', color='지역', markers=True,
                            title="주요 관광 거점(상위 5개 지역) 쏠림 및 성장 추이",
-                           color_discrete_sequence=["#2563EB", "#0D9488", "#F97316", "#8B5CF6", "#64748B"])
+                           color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B"])
             fig3.update_layout(
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
-                hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+                font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+                hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                 margin=dict(l=20, r=20, t=40, b=20),
-                xaxis=dict(showgrid=False, zeroline=False, linecolor="#E2E8F0"),
-                yaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0")
+                xaxis=dict(showgrid=False, zeroline=False, linecolor="#334155"),
+                yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
             )
             st.plotly_chart(fig3, use_container_width=True)
             with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
@@ -301,15 +301,15 @@ def render_demand_analysis():
                 z=df_heatmap.values,
                 x=df_heatmap.columns,
                 y=df_heatmap.index,
-                colorscale='Oranges',
+                colorscale='Teal',
                 xgap=2, ygap=2
             ))
             fig5.update_layout(
                 title="전국 지자체별/월별 방한 외국인 규모 히트맵",
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
-                hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+                font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+                hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                 margin=dict(l=20, r=20, t=40, b=20)
             )
             st.plotly_chart(fig5, use_container_width=True)

@@ -114,20 +114,20 @@ def render_eda_insights():
         fig = px.scatter(
             df_demand, x=x_col, y="naviSearchCo",
             color="cityType", hover_name="signguNm", text="signguNm",
-            color_discrete_map={"도시1": "#F97316", "도시2": "#2563EB", "일반": "#94A3B8"}
+            color_discrete_map={"도시1": "#00F0FF", "도시2": "#38BDF8", "일반": "#64748B"}
         )
-        fig.update_traces(textposition='top center', marker=dict(size=14, opacity=0.85, line=dict(width=1, color='White')))
-        fig.add_vline(x=median_sns, line_width=1.5, line_dash="dash", line_color="#9CA3AF")
-        fig.add_hline(y=median_navi, line_width=1.5, line_dash="dash", line_color="#9CA3AF")
+        fig.update_traces(textposition='top center', marker=dict(size=14, opacity=0.85, line=dict(width=1, color='#121824')))
+        fig.add_vline(x=median_sns, line_width=1.5, line_dash="dash", line_color="#475569")
+        fig.add_hline(y=median_navi, line_width=1.5, line_dash="dash", line_color="#475569")
         fig.update_layout(
             xaxis_title=x_axis_title, yaxis_title="내비게이션 검색(방문도)",
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
-            hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+            font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+            hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
             margin=dict(l=20, r=20, t=20, b=20),
-            xaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0"),
-            yaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0")
+            xaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155"),
+            yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
         )
         st.plotly_chart(fig, use_container_width=True)
         with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
@@ -174,18 +174,18 @@ def render_eda_insights():
             val_c2 = [min(x, 1.0) for x in val_c2]
 
             fig_radar = go.Figure()
-            fig_radar.add_trace(go.Scatterpolar(r=val_c1, theta=labels, fill='toself', name=city_1, line_color='#F97316', fillcolor='rgba(249, 115, 22, 0.4)'))
-            fig_radar.add_trace(go.Scatterpolar(r=val_c2, theta=labels, fill='toself', name=city_2, line_color='#2563EB', fillcolor='rgba(37, 99, 235, 0.4)'))
+            fig_radar.add_trace(go.Scatterpolar(r=val_c1, theta=labels, fill='toself', name=city_1, line_color='#00F0FF', fillcolor='rgba(0, 240, 255, 0.4)'))
+            fig_radar.add_trace(go.Scatterpolar(r=val_c2, theta=labels, fill='toself', name=city_2, line_color='#38BDF8', fillcolor='rgba(56, 189, 248, 0.4)'))
             fig_radar.update_layout(
                 polar=dict(
-                    radialaxis=dict(visible=True, range=[0, 1], gridcolor="#E2E8F0", linecolor="#E2E8F0"),
-                    angularaxis=dict(gridcolor="#E2E8F0", linecolor="#E2E8F0"),
+                    radialaxis=dict(visible=True, range=[0, 1], gridcolor="#334155", linecolor="#334155"),
+                    angularaxis=dict(gridcolor="#334155", linecolor="#334155"),
                     bgcolor="rgba(0,0,0,0)"
                 ),
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
-                hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+                font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+                hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                 margin=dict(l=40, r=40, t=40, b=40)
             )
             st.plotly_chart(fig_radar, use_container_width=True)

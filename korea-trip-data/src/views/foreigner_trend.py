@@ -74,7 +74,7 @@ def render_foreigner_trend():
                 df_trend, x="기준연월", y="인원수", 
                 labels={"인원수": "관광객 수(명)", "기준연월": "연월"},
                 markers=True,
-                color_discrete_sequence=["#1E3A8A"] # Dark Navy
+                color_discrete_sequence=["#00F0FF"] # Neon Cyan
             )
             fig.update_traces(
                 line=dict(width=3),
@@ -85,11 +85,11 @@ def render_foreigner_trend():
                 hovermode="x unified",
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
-                hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+                font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+                hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                 margin=dict(l=20, r=20, t=30, b=20),
-                xaxis=dict(showgrid=False, zeroline=False, linecolor="#E2E8F0"),
-                yaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0")
+                xaxis=dict(showgrid=False, zeroline=False, linecolor="#334155"),
+                yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
             )
             st.plotly_chart(fig, use_container_width=True)
             with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
@@ -109,16 +109,16 @@ def render_foreigner_trend():
                 df_gender_age, x="연령별", y="인원수", color="성별",
                 labels={"인원수": "관광객 수(명)", "연령별": "연령대"},
                 barmode="group",
-                color_discrete_map={"여성": "#F97316", "남성": "#2563EB"}
+                color_discrete_map={"여성": "#38BDF8", "남성": "#2563EB"}
             )
             fig_gender_age.update_layout(
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
-                hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+                font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+                hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                 margin=dict(l=20, r=20, t=30, b=20),
-                xaxis=dict(showgrid=False, zeroline=False, linecolor="#E2E8F0"),
-                yaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0")
+                xaxis=dict(showgrid=False, zeroline=False, linecolor="#334155"),
+                yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
             )
             st.plotly_chart(fig_gender_age, use_container_width=True)
             with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
@@ -132,13 +132,13 @@ def render_foreigner_trend():
             df_share = df_share.nlargest(7, "인원수")
             fig_share = px.pie(
                 df_share, names=target_col_label, values="인원수", hole=0.4,
-                color_discrete_sequence=["#2563EB", "#0D9488", "#F97316", "#8B5CF6", "#64748B", "#38BDF8", "#FCD34D"]
+                color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B", "#94A3B8", "#080D1A"]
             )
             fig_share.update_layout(
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
-                hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+                font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+                hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                 margin=dict(l=20, r=20, t=20, b=20)
             )
             st.plotly_chart(fig_share, use_container_width=True)
@@ -177,13 +177,13 @@ def render_foreigner_trend():
                 geo=dict(
                     showframe=False,
                     showcoastlines=True,
-                    coastlinecolor="#CBD5E1",
+                    coastlinecolor="#334155",
                     bgcolor="rgba(0,0,0,0)"
                 ),
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
-                hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+                font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+                hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                 margin=dict(l=0, r=0, t=40, b=0)
             )
             st.plotly_chart(fig4, use_container_width=True)

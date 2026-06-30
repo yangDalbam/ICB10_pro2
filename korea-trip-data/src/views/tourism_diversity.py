@@ -37,16 +37,16 @@ def render_tourism_diversity():
             df_trend_pivot = df_consume_trend[df_consume_trend['업종별 구분'] != '전체']
             fig1 = px.line(df_trend_pivot, x='기준년월일', y='소비액(천원)', color='업종별 구분',
                            markers=True, title="월별 주요 관광 소비 업종 매출 동향",
-                           color_discrete_sequence=["#2563EB", "#0D9488", "#F97316", "#8B5CF6", "#64748B"])
+                           color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B"])
             fig1.update_layout(
                 xaxis_title="연월", yaxis_title="소비액(천원)", legend_title="업종",
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
-                hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+                font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+                hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                 margin=dict(l=20, r=20, t=40, b=20),
-                xaxis=dict(showgrid=False, zeroline=False, linecolor="#E2E8F0"),
-                yaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0")
+                xaxis=dict(showgrid=False, zeroline=False, linecolor="#334155"),
+                yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
             )
             st.plotly_chart(fig1, use_container_width=True)
             with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
@@ -57,13 +57,13 @@ def render_tourism_diversity():
             df_country_top10 = df_consume_country[df_consume_country['국가'] != '기타'].nlargest(10, '소비 비율')
             fig2 = px.pie(df_country_top10, names='국가', values='소비 비율', hole=0.4,
                           title="한국 관광 소비 주도 상위 10개국 비율",
-                          color_discrete_sequence=["#2563EB", "#0D9488", "#F97316", "#8B5CF6", "#64748B", "#38BDF8", "#FCD34D"])
-            fig2.update_traces(textposition='inside', textinfo='percent+label', marker=dict(line=dict(color='#FFFFFF', width=2)))
+                          color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B", "#94A3B8", "#080D1A"])
+            fig2.update_traces(textposition='inside', textinfo='percent+label', marker=dict(line=dict(color='#121824', width=2)))
             fig2.update_layout(
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
-                hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+                font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+                hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                 margin=dict(l=20, r=20, t=40, b=20)
             )
             st.plotly_chart(fig2, use_container_width=True)
@@ -95,15 +95,15 @@ def render_tourism_diversity():
                 fig_pie_spend = px.pie(
                     df_ind_spend, values="cardUseAmt", names="indutyNm",
                     hole=0.4,
-                    color_discrete_sequence=["#2563EB", "#0D9488", "#F97316", "#8B5CF6", "#64748B", "#38BDF8"]
+                    color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B", "#94A3B8"]
                 )
-                fig_pie_spend.update_traces(textposition='inside', textinfo='percent+label', marker=dict(line=dict(color='#FFFFFF', width=2)))
+                fig_pie_spend.update_traces(textposition='inside', textinfo='percent+label', marker=dict(line=dict(color='#121824', width=2)))
                 fig_pie_spend.update_layout(
                     showlegend=False,
                     plot_bgcolor="rgba(0,0,0,0)",
                     paper_bgcolor="rgba(0,0,0,0)",
-                    font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
-                    hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+                    font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+                    hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                     margin=dict(l=20, r=20, t=20, b=20)
                 )
                 st.plotly_chart(fig_pie_spend, use_container_width=True)
@@ -118,16 +118,16 @@ def render_tourism_diversity():
                     df_top_city_spend, x="cardUseAmt", y="signguNm",
                     orientation="h",
                     color="cardUseAmt",
-                    color_continuous_scale="Blues"
+                    color_continuous_scale="Teal"
                 )
                 fig_city_spend.update_layout(
                     yaxis=dict(categoryorder='total ascending'),
                     plot_bgcolor="rgba(0,0,0,0)",
                     paper_bgcolor="rgba(0,0,0,0)",
-                    font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
-                    hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
+                    font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+                    hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                     margin=dict(l=20, r=20, t=20, b=20),
-                    xaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0"),
+                    xaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155"),
                     yaxis_title=None
                 )
                 st.plotly_chart(fig_city_spend, use_container_width=True)
