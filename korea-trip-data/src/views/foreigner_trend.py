@@ -97,8 +97,7 @@ def render_foreigner_trend():
             
         st.markdown("---")
 
-        st.header("📊 데이터 필터")
-        selected_year = st.selectbox("연도 선택", sorted(df_foreigner["연도"].unique()), index=len(df_foreigner["연도"].unique())-1)
+        selected_year = "2026"
         df_filtered = df_foreigner[df_foreigner["연도"] == selected_year]
 
         col1, col2 = st.columns(2)
