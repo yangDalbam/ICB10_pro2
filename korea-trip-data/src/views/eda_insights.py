@@ -10,6 +10,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from pytrends.request import TrendReq
+import time
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from api.kto_api import (
@@ -36,11 +38,63 @@ def render_eda_insights():
 
     if not df_demand.empty:
         st.header("1. 🧩 시군구별 온-오프라인 매트릭스 2x2 진단")
-        median_sns = df_demand["snsMentionCo"].median()
+
+        @st.cache_data(ttl=86400)
+        def fetch_google_trends_data_all(kw_list):
+            try:
+                pytrends = TrendReq(hl='en-US', tz=360)
+                all_dfs = []
+                for i in range(0, len(kw_list), 5):
+                    chunk = kw_list[i:i+5]
+                    pytrends.build_payload(chunk, cat=0, timeframe='today 3-m', geo='', gprop='')
+                    df = pytrends.interest_over_time()
+                    if not df.empty and 'isPartial' in df.columns:
+                        df = df.drop(columns=['isPartial'])
+                    all_dfs.append(df)
+                if all_dfs:
+                    return pd.concat(all_dfs, axis=1)
+                return pd.DataFrame()
+            except Exception as e:
+                return pd.DataFrame()
+
+        region_mapping = {
+            "서울 마포구": "Seoul", "제주 제주시": "Jeju", "부산 해운대구": "Busan",
+            "서울 종로구": "Seoul", "전북 전주시": "Jeonju", "강원 삼척시": "Samcheok",
+            "경북 안동시": "Andong", "전남 여수시": "Yeosu", "경기 수원시": "Suwon",
+            "경기 성남시": "Seongnam", "강원 춘천시": "Chuncheon", "충남 천안시": "Cheonan",
+            "경남 창원시": "Changwon"
+        }
+
+        # 구글 트렌드 연동을 위한 키워드 매핑
+        df_demand["Keyword"] = df_demand["signguNm"].map(region_mapping).fillna("Seoul")
+        unique_kws = list(df_demand["Keyword"].unique())
+
+        with st.spinner("구글 트렌드 관심도 분석 중..."):
+            df_trends = fetch_google_trends_data_all(unique_kws)
+
+        if not df_trends.empty:
+            df_trends = df_trends.loc[:, ~df_trends.columns.duplicated()]
+            avg_interest = df_trends[unique_kws].mean().reset_index()
+            avg_interest.columns = ["Keyword", "avgInterest"]
+            
+            df_demand = df_demand.merge(avg_interest, on="Keyword", how="left")
+            df_demand["avgInterest"] = df_demand["avgInterest"].fillna(df_demand["snsMentionCo"] / df_demand["snsMentionCo"].max() * 100)
+            
+            df_demand["normSns"] = df_demand["snsMentionCo"] / df_demand["snsMentionCo"].max() * 100
+            df_demand["combinedScore"] = (df_demand["normSns"] * 0.5) + (df_demand["avgInterest"] * 0.5)
+            x_col = "combinedScore"
+            x_axis_title = "종합 관심도 (SNS 50% + 트렌드 50%)"
+        else:
+            st.warning("구글 트렌드 트래픽 제한으로 임시 데이터를 표시합니다.")
+            df_demand["combinedScore"] = df_demand["snsMentionCo"]
+            x_col = "combinedScore"
+            x_axis_title = "SNS 언급량(관심도)"
+
+        median_sns = df_demand[x_col].median()
         median_navi = df_demand["naviSearchCo"].median()
 
         fig = px.scatter(
-            df_demand, x="snsMentionCo", y="naviSearchCo",
+            df_demand, x=x_col, y="naviSearchCo",
             color="cityType", hover_name="signguNm", text="signguNm",
             color_discrete_map={"도시1": "#F97316", "도시2": "#2563EB", "일반": "#94A3B8"}
         )
@@ -48,7 +102,7 @@ def render_eda_insights():
         fig.add_vline(x=median_sns, line_width=1.5, line_dash="dash", line_color="#9CA3AF")
         fig.add_hline(y=median_navi, line_width=1.5, line_dash="dash", line_color="#9CA3AF")
         fig.update_layout(
-            xaxis_title="SNS 언급량(관심도)", yaxis_title="내비게이션 검색(방문도)",
+            xaxis_title=x_axis_title, yaxis_title="내비게이션 검색(방문도)",
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
             font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
@@ -59,7 +113,7 @@ def render_eda_insights():
         )
         st.plotly_chart(fig, use_container_width=True)
         with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
-            st.markdown("목적별 소비 지출액(신한/BC카드)과 외래관광객 실태조사 만족도 점수를 결합하여 상관관계를 도출한 산점도입니다.")
+            st.markdown("KTO 지역별 'SNS 언급량'을 100점 만점으로 정규화한 값(50%)과 구글 트렌드 API의 최근 3개월 지역별 평균 검색 관심도(50%)를 합산하여 산출한 종합 관심도와 실제 방문도(내비게이션)의 2x2 매트릭스 진단입니다.")
 
         st.markdown("#### 벤치마킹 대상 도시 선택")
         city_list = sorted(df_demand["signguNm"].unique().tolist())

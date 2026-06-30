@@ -195,17 +195,21 @@ def _generate_mock_spend_div_data(base_ym: str) -> pd.DataFrame:
         else:
             probs = [0.40, 0.20, 0.15, 0.10, 0.10, 0.05]
             
-        spend_amounts = np.random.multinomial(int(base_spend), probs)
-        
-        for ind, amount in zip(industries, spend_amounts):
-            rows.append({
-                "baseYm": base_ym,
-                "signguCd": city["signguCd"],
-                "signguNm": city["signguNm"],
-                "indutyNm": ind,
-                "cardUseAmt": amount,
-                "cityType": city["type"]
-            })
+        for tou_div_cd in ["1", "2", "3"]:
+            # 외국인(3)은 비중을 다르게 설정
+            weight_mod = 1.0 if tou_div_cd != "3" else 0.3
+            spend_amounts = np.random.multinomial(int(base_spend * weight_mod), probs)
+            
+            for ind, amount in zip(industries, spend_amounts):
+                rows.append({
+                    "baseYm": base_ym,
+                    "signguCd": city["signguCd"],
+                    "signguNm": city["signguNm"],
+                    "indutyNm": ind,
+                    "cardUseAmt": amount,
+                    "cityType": city["type"],
+                    "touDivCd": tou_div_cd
+                })
     return pd.DataFrame(rows)
 
 def _generate_mock_intl_div_data(base_ym: str) -> pd.DataFrame:
