@@ -173,11 +173,14 @@ def render_foreigner_trend():
                 projection="equirectangular"
             )
             
+            fig4.update_traces(marker_line_color="white", marker_line_width=1)
             fig4.update_layout(
                 geo=dict(
                     showframe=False,
                     showcoastlines=True,
-                    coastlinecolor="#334155",
+                    coastlinecolor="white",
+                    showcountries=True,
+                    countrycolor="white",
                     bgcolor="rgba(0,0,0,0)"
                 ),
                 plot_bgcolor="rgba(0,0,0,0)",
