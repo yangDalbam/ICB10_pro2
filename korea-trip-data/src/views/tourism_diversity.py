@@ -57,8 +57,8 @@ def render_tourism_diversity():
             df_country_top10 = df_consume_country[df_consume_country['국가'] != '기타'].nlargest(10, '소비 비율')
             fig2 = px.treemap(df_country_top10, path=[px.Constant("전체"), '국가'], values='소비 비율',
                               title="한국 관광 소비 주도 상위 10개국 비율",
-                              color='소비 비율',
-                              color_continuous_scale="Teal")
+                              color='국가',
+                              color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B", "#94A3B8", "#080D1A"])
             fig2.update_traces(textinfo='label+percent entry', textfont_size=14, marker=dict(line=dict(color='#121824', width=2)))
             fig2.update_layout(
                 plot_bgcolor="rgba(0,0,0,0)",
