@@ -78,7 +78,7 @@ def render_demand_analysis():
                     return pickle.load(f)
             return {}
 
-    st.header("1. 🚗 관심도 및 실제 방문도 (API 3 연동)")
+    st.header("1. 🚗 관심도 및 실제 방문도")
     df_kto_demand = get_area_service_demand("202602")
     if not df_kto_demand.empty:
         # 서울, 부산, 제주 제외 필터링

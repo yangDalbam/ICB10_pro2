@@ -38,7 +38,7 @@ def render_foreigner_trend():
         df_foreigner["월"] = df_foreigner["기준연월"].str.split("-").str[1]
 
         # 메인 요약 KPI (방한 외래객 통계 연동)
-        st.markdown("### 📊 방한 외래객 유입 현황 요약 (API 1 연동)")
+        st.markdown("### 📊 방한 외래객 유입 현황 요약")
         
         # 2026년 데이터 추출
         df_2026 = df_foreigner[df_foreigner["기준연월"].str.startswith("2026", na=False)]
@@ -58,7 +58,7 @@ def render_foreigner_trend():
         kpi_col1, kpi_col2, kpi_col3 = st.columns(3)
         with kpi_col1:
             st.metric(
-                label="2026년 방한 외래객 총수", 
+                label="방한 외래객 총수", 
                 value=f"{total_foreigner_2026:,.0f} 명"
             )
         with kpi_col2:
@@ -102,7 +102,7 @@ def render_foreigner_trend():
 
         col1, col2 = st.columns(2)
         with col1:
-            st.markdown(f"#### 1. {selected_year}년 성별/연령대별 교차 분포")
+            st.markdown("#### 1. 성별/연령대별 교차 분포")
             df_gender_age = df_filtered.groupby(["연령별", "성별"])["인원수"].sum().reset_index()
             fig_gender_age = px.bar(
                 df_gender_age, x="연령별", y="인원수", color="성별",
@@ -124,7 +124,7 @@ def render_foreigner_trend():
                 st.markdown("출처: 한국관광 데이터랩(KTO) 및 한국문화관광연구원. 월별/국가별/연령별 외래 관광객 실태조사 데이터를 기반으로 집계된 수치입니다.")
 
         with col2:
-            st.markdown(f"#### 2. {selected_year}년 방한 외래객 속성별 점유율")
+            st.markdown("#### 2. 방한 외래객 속성별 점유율")
             target_col_label = st.radio("점유율 분석 기준", ["목적별", "교통수단별"], horizontal=True)
             
             df_share = df_filtered.groupby(target_col_label)["인원수"].sum().reset_index()

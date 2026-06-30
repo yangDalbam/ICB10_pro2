@@ -74,7 +74,7 @@ def render_tourism_diversity():
         st.warning(f"소비 트렌드 CSV 데이터를 불러올 수 없습니다: {e}")
 
     st.markdown("---")
-    st.header("2. 💰 전국 관광 카드 소비 규모 현황 (API 2 연동)")
+    st.header("2. 💰 전국 관광 카드 소비 규모 현황")
     df_kto_spend = get_area_spend_diversity("202601")
 
     if not df_kto_spend.empty:
