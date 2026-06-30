@@ -330,6 +330,12 @@ def apply_custom_style():
         [data-baseweb="tab-highlight"] {
             background-color: transparent !important; /* 기본 highlight 바 숨김 처리 (커스텀 border로 대체) */
         }
+        
+        /* [추가] 아코디언 메뉴(Expander) 제목 영역 상하 여백 통일 (글로벌 p 태그 margin 상쇄) */
+        [data-testid="stExpander"] summary p {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
     </style>
     """
     st.markdown(style, unsafe_allow_html=True)
