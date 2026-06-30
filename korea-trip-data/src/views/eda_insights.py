@@ -55,6 +55,8 @@ def render_eda_insights():
             yaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0")
         )
         st.plotly_chart(fig, use_container_width=True)
+        with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
+            st.markdown("목적별 소비 지출액(신한/BC카드)과 외래관광객 실태조사 만족도 점수를 결합하여 상관관계를 도출한 산점도입니다.")
 
         st.markdown("#### 벤치마킹 대상 도시 선택")
         city_list = sorted(df_demand["signguNm"].unique().tolist())
@@ -108,6 +110,8 @@ def render_eda_insights():
                 margin=dict(l=40, r=40, t=40, b=40)
             )
             st.plotly_chart(fig_radar, use_container_width=True)
+            with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
+                st.markdown("내비게이션 검색 데이터(KTO API)를 활용해 각 지역이 역사, 자연, 문화 등 어느 관광 목적에 강점이 있는지 0~100 스케일로 정규화하여 다각도로 분석한 방사형 차트입니다.")
 
             st.markdown("#### 활성화 벤치마킹 인사이트")
             st.info(f"""

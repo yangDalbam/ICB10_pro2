@@ -54,63 +54,97 @@ def render_demand_analysis():
             return {}
 
     st.header("1. 🚗 관심도 및 실제 방문도 (API 3 연동)")
-    df_kto_demand = get_area_service_demand("202601")
+    df_kto_demand = get_area_service_demand("202602")
 
     if not df_kto_demand.empty:
         with st.container():
             col_chart1, col_chart2 = st.columns(2)
             with col_chart1:
-                st.markdown("#### 🔥 온라인 관심도 (SNS)")
+                st.markdown("#### 🔥 온라인 관심도 및 연관 검색어")
                 df_top_sns = df_kto_demand.nlargest(5, "snsMentionCo")
+                
+                # 1. 영문 매핑 (구글 트렌드 검색용)
+                region_mapping = {
+                    "서울 마포구": "Seoul", "제주 제주시": "Jeju", "부산 해운대구": "Busan",
+                    "서울 종로구": "Seoul", "전북 전주시": "Jeonju", "강원 삼척시": "Samcheok",
+                    "경북 안동시": "Andong", "전남 여수시": "Yeosu", "경기 수원시": "Suwon"
+                }
+                
+                kw_list = []
+                for name in df_top_sns["signguNm"]:
+                    kw_list.append(region_mapping.get(name, "Seoul"))
+                # 중복 제거 (순서 유지)
+                kw_list = list(dict.fromkeys(kw_list))[:5]
+                
+                # 2. 구글 트렌드 데이터 수집
+                with st.spinner("구글 트렌드 관심도 분석 중..."):
+                    df_trends = fetch_google_trends_data(kw_list, geo='', timeframe='today 3-m')
+                    dict_related = fetch_google_trends_related_queries(kw_list, geo='', timeframe='today 3-m')
+                
+                # 3. 데이터 병합 및 예외 처리
+                if not df_trends.empty:
+                    avg_interest = df_trends[kw_list].mean().reset_index()
+                    avg_interest.columns = ["Keyword", "avgInterest"]
+                    
+                    df_top_sns["Keyword"] = df_top_sns["signguNm"].map(region_mapping).fillna("Seoul")
+                    df_top_sns = df_top_sns.merge(avg_interest, on="Keyword", how="left")
+                    # 결측치 발생 시 기존 관심도 값을 스케일링하여 임시 사용
+                    df_top_sns["avgInterest"] = df_top_sns["avgInterest"].fillna(df_top_sns["snsMentionCo"] / df_top_sns["snsMentionCo"].max() * 100)
+                    
+                    new_keywords = []
+                    for kw in df_top_sns["Keyword"]:
+                        related = dict_related.get(kw, {})
+                        rising = related.get("rising") if related else None
+                        if rising is not None and not rising.empty:
+                            new_keywords.append(", ".join(rising["query"].head(3).tolist()))
+                        else:
+                            new_keywords.append("관련 검색어 없음")
+                    df_top_sns["snsKeywords_gt"] = new_keywords
+                    
+                    # KTO 데이터 정규화 (0~100) 및 50:50 가중치 적용
+                    df_top_sns["normSns"] = df_top_sns["snsMentionCo"] / df_top_sns["snsMentionCo"].max() * 100
+                    df_top_sns["combinedScore"] = (df_top_sns["normSns"] * 0.5) + (df_top_sns["avgInterest"] * 0.5)
+                    
+                    x_col = "combinedScore"
+                    kw_col = "snsKeywords_gt"
+                    x_axis_title = "종합 관심도 (SNS 50% + 트렌드 50%)"
+                else:
+                    st.warning("구글 트렌드 트래픽 제한으로 임시 데이터를 표시합니다.")
+                    x_col = "snsMentionCo"
+                    kw_col = "snsKeywords"
+                    x_axis_title = "관심도"
+
+                # 4. 막대 그래프 시각화 (툴팁에 키워드 내장)
                 fig_sns = px.bar(
-                    df_top_sns, x="snsMentionCo", y="signguNm",
+                    df_top_sns, x=x_col, y="signguNm",
                     orientation="h",
-                    color="snsMentionCo",
-                    color_continuous_scale="Blues"
+                    color=x_col,
+                    color_continuous_scale="Blues",
+                    custom_data=[kw_col]
+                )
+                fig_sns.update_traces(
+                    hovertemplate="<b>%{y}</b><br>관심도: %{x:.0f}<br>연관 검색어: %{customdata[0]}<extra></extra>"
                 )
                 fig_sns.update_layout(
+                    height=400,
                     yaxis=dict(categoryorder='total ascending'),
                     plot_bgcolor="rgba(0,0,0,0)",
                     paper_bgcolor="rgba(0,0,0,0)",
                     font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
                     hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
                     margin=dict(l=20, r=20, t=20, b=20),
-                    xaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0"),
+                    xaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0", title=x_axis_title),
                     yaxis_title=None
                 )
                 st.plotly_chart(fig_sns, use_container_width=True)
-                
-                # SNS 검색 키워드 테이블 추가
-                if "snsKeywords" in df_top_sns.columns:
-                    st.markdown("##### 📌 지역별 주요 SNS 검색 키워드")
-                    df_kwds = df_top_sns[["signguNm", "snsKeywords"]].rename(columns={"signguNm": "지역명", "snsKeywords": "핵심 키워드"})
-                    st.dataframe(df_kwds, use_container_width=True, hide_index=True)
-                
+                with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
+                    st.markdown("KTO 지역별 'SNS 언급량'을 100점 만점으로 정규화한 값(50%)과 구글 트렌드 API의 최근 3개월 지역별 평균 검색 관심도(50%)를 합산하여 산출했습니다. 연관 검색어는 구글 트렌드의 급상승 키워드를 추출했습니다.")
             with col_chart2:
-                st.markdown("#### 실제 방문도 (내비)")
+                st.markdown("#### 🧭 실제 방문도 및 방문 목적")
                 df_top_navi = df_kto_demand.nlargest(5, "naviSearchCo")
-                fig_navi = px.bar(
-                    df_top_navi, x="naviSearchCo", y="signguNm",
-                    orientation="h",
-                    color="naviSearchCo",
-                    color_continuous_scale="Teal"
-                )
-                fig_navi.update_layout(
-                    yaxis=dict(categoryorder='total ascending'),
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
-                    hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
-                    margin=dict(l=20, r=20, t=20, b=20),
-                    xaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0"),
-                    yaxis_title=None
-                )
-                st.plotly_chart(fig_navi, use_container_width=True)
                 
-                # 내비게이션 관광 목적 분류 차트 추가
-                df_cultural = get_area_cultural_demand("202601")
+                df_cultural = get_area_cultural_demand("202602")
                 if not df_cultural.empty:
-                    st.markdown("##### 🧭 주요 방문 지역별 관광 목적(내비 검색)")
                     top_navi_regions = df_top_navi["signguNm"].tolist()
                     df_cult_top = df_cultural[df_cultural["signguNm"].isin(top_navi_regions)]
                     if not df_cult_top.empty:
@@ -120,17 +154,20 @@ def render_demand_analysis():
                             color_discrete_sequence=px.colors.qualitative.Pastel
                         )
                         fig_cult.update_layout(
+                            height=400,
                             yaxis=dict(categoryorder='total ascending'),
                             plot_bgcolor="rgba(0,0,0,0)",
                             paper_bgcolor="rgba(0,0,0,0)",
                             font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
                             hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
                             margin=dict(l=20, r=20, t=20, b=20),
-                            xaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0", title="목적별 내비 검색량"),
+                            xaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0", title="총 내비 검색량 및 방문 목적"),
                             yaxis_title=None,
                             legend_title_text="관광 목적"
                         )
                         st.plotly_chart(fig_cult, use_container_width=True)
+                        with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
+                            st.markdown("한국관광공사 지역별 관광 자원 수요 API 데이터를 활용하여, 내비게이션 검색량을 목적별(역사, 자연, 휴양, 문화, 레저)로 세분화하여 누적 시각화했습니다.")
     else:
         st.warning("관광 서비스 수요 데이터를 불러올 수 없습니다.")
 
@@ -158,6 +195,8 @@ def render_demand_analysis():
                 yaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0")
             )
             st.plotly_chart(fig3, use_container_width=True)
+            with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
+                st.markdown("공공데이터포털 외국인 방문객 데이터 기반으로 누적 방문객이 가장 많은 상위 5개 지역의 월별 변동 추이를 시각화했습니다.")
 
         with col4:
             st.subheader("지역별 성수기(봄철) 수요 집중도")
@@ -178,6 +217,8 @@ def render_demand_analysis():
                 margin=dict(l=20, r=20, t=40, b=20)
             )
             st.plotly_chart(fig5, use_container_width=True)
+            with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
+                st.markdown("전국 시도별 외국인 관광객 총 방문자 수를 바탕으로, 지도 면적이 아닌 데이터 크기(방문자 수)에 비례하여 지역 크기를 재구성한 카토그램(Cartogram)입니다.")
     except Exception as e:
         st.warning(f"지역별 방문자 수 데이터를 확인할 수 없습니다: {e}")
         
@@ -235,6 +276,8 @@ def render_demand_analysis():
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, title=None)
             )
             st.plotly_chart(fig_trends, use_container_width=True)
+            with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
+                st.markdown("구글 트렌드 API(`pytrends`)를 통해 조회된 최근 12개월간의 지역별 주간 검색 관심도(0~100) 변동 추이입니다.")
             
             # 키워드 시각화
             st.subheader("지역별 급상승 연관 검색어")

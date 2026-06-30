@@ -92,6 +92,8 @@ def render_foreigner_trend():
                 yaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0")
             )
             st.plotly_chart(fig, use_container_width=True)
+            with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
+                st.markdown("출처: 한국관광 데이터랩(KTO) 및 한국문화관광연구원. 월별/국가별/연령별 외래 관광객 실태조사 데이터를 기반으로 집계된 수치입니다.")
             
         st.markdown("---")
 
@@ -119,6 +121,8 @@ def render_foreigner_trend():
                 yaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0")
             )
             st.plotly_chart(fig_gender_age, use_container_width=True)
+            with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
+                st.markdown("출처: 한국관광 데이터랩(KTO) 및 한국문화관광연구원. 월별/국가별/연령별 외래 관광객 실태조사 데이터를 기반으로 집계된 수치입니다.")
 
         with col2:
             st.markdown(f"#### 2. {selected_year}년 방한 외래객 속성별 점유율")
@@ -138,6 +142,8 @@ def render_foreigner_trend():
                 margin=dict(l=20, r=20, t=20, b=20)
             )
             st.plotly_chart(fig_share, use_container_width=True)
+            with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
+                st.markdown("출처: 한국관광 데이터랩(KTO) 및 한국문화관광연구원. 월별/국가별/연령별 외래 관광객 실태조사 데이터를 기반으로 집계된 수치입니다.")
             
         st.markdown("---")
         
@@ -181,6 +187,8 @@ def render_foreigner_trend():
                 margin=dict(l=0, r=0, t=40, b=0)
             )
             st.plotly_chart(fig4, use_container_width=True)
+            with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
+                st.markdown("출처: 한국관광 데이터랩(KTO) 및 한국문화관광연구원. 월별/국가별/연령별 외래 관광객 실태조사 데이터를 기반으로 집계된 수치입니다.")
         else:
             st.warning("입국자 국적 데이터를 확인할 수 없습니다.")
     else:

@@ -49,6 +49,8 @@ def render_tourism_diversity():
                 yaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0")
             )
             st.plotly_chart(fig1, use_container_width=True)
+            with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
+                st.markdown("출처: 신한카드 및 BC카드 빅데이터. 지역별, 가구형태별, 업종별 외국인/내국인 관광객의 실제 카드 소비 결제 금액 및 건수를 바탕으로 산출된 인덱스입니다.")
 
         with col2:
             st.subheader("외국인 방문객 주요 소비국 비율")
@@ -65,6 +67,8 @@ def render_tourism_diversity():
                 margin=dict(l=20, r=20, t=40, b=20)
             )
             st.plotly_chart(fig2, use_container_width=True)
+            with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
+                st.markdown("출처: 신한카드 및 BC카드 빅데이터. 지역별, 가구형태별, 업종별 외국인/내국인 관광객의 실제 카드 소비 결제 금액 및 건수를 바탕으로 산출된 인덱스입니다.")
     except Exception as e:
         st.warning(f"소비 트렌드 CSV 데이터를 불러올 수 없습니다: {e}")
 
@@ -97,6 +101,8 @@ def render_tourism_diversity():
                     margin=dict(l=20, r=20, t=20, b=20)
                 )
                 st.plotly_chart(fig_pie_spend, use_container_width=True)
+                with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
+                    st.markdown("출처: 신한카드 및 BC카드 빅데이터. 지역별, 가구형태별, 업종별 외국인/내국인 관광객의 실제 카드 소비 결제 금액 및 건수를 바탕으로 산출된 인덱스입니다.")
                 
             with col_sp2:
                 st.markdown("#### 전국 관광 총 소비 규모 Top 5")
@@ -119,5 +125,7 @@ def render_tourism_diversity():
                     yaxis_title=None
                 )
                 st.plotly_chart(fig_city_spend, use_container_width=True)
+                with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
+                    st.markdown("출처: 신한카드 및 BC카드 빅데이터. 지역별, 가구형태별, 업종별 외국인/내국인 관광객의 실제 카드 소비 결제 금액 및 건수를 바탕으로 산출된 인덱스입니다.")
     else:
         st.warning("관광 소비 다양성 데이터를 불러올 수 없습니다.")
