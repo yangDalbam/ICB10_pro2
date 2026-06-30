@@ -77,6 +77,8 @@ def render_tourism_diversity():
     df_kto_spend = get_area_spend_diversity("202601")
 
     if not df_kto_spend.empty:
+        # 서울, 부산, 제주 제외 필터링
+        df_kto_spend = df_kto_spend[~df_kto_spend["signguNm"].str.contains("서울|부산|제주")]
         df_ind_spend = df_kto_spend.groupby("indutyNm")["cardUseAmt"].sum().reset_index()
         total_amt = df_ind_spend["cardUseAmt"].sum()
         df_ind_spend["비율"] = (df_ind_spend["cardUseAmt"] / total_amt) * 100

@@ -55,8 +55,9 @@ def render_demand_analysis():
 
     st.header("1. 🚗 관심도 및 실제 방문도 (API 3 연동)")
     df_kto_demand = get_area_service_demand("202602")
-
     if not df_kto_demand.empty:
+        # 서울, 부산, 제주 제외 필터링
+        df_kto_demand = df_kto_demand[~df_kto_demand["signguNm"].str.contains("서울|부산|제주")]
         with st.container():
             col_chart1, col_chart2 = st.columns(2)
             with col_chart1:
@@ -145,6 +146,7 @@ def render_demand_analysis():
                 
                 df_cultural = get_area_cultural_demand("202602")
                 if not df_cultural.empty:
+                    df_cultural = df_cultural[~df_cultural["signguNm"].str.contains("서울|부산|제주")]
                     top_navi_regions = df_top_navi["signguNm"].tolist()
                     df_cult_top = df_cultural[df_cultural["signguNm"].isin(top_navi_regions)]
                     if not df_cult_top.empty:
@@ -178,10 +180,11 @@ def render_demand_analysis():
         col3, col4 = st.columns(2)
 
         with col3:
-            st.subheader("방문객 상위 5개 지역 추이 변화")
-            df_region_sum = df_visitor_region.groupby('지역')['외국인 방문자수'].sum().reset_index()
+            st.subheader("방문객 상위 5개 지역 추이 변화 (서울/부산/제주 제외)")
+            df_visitor_filtered = df_visitor_region[~df_visitor_region['지역'].str.contains("서울|부산|제주")]
+            df_region_sum = df_visitor_filtered.groupby('지역')['외국인 방문자수'].sum().reset_index()
             top5_regions = df_region_sum.nlargest(5, '외국인 방문자수')['지역']
-            df_top5 = df_visitor_region[df_visitor_region['지역'].isin(top5_regions)]
+            df_top5 = df_visitor_filtered[df_visitor_filtered['지역'].isin(top5_regions)]
             fig3 = px.line(df_top5, x='날짜', y='외국인 방문자수', color='지역', markers=True,
                            title="주요 관광 거점(상위 5개 지역) 쏠림 및 성장 추이",
                            color_discrete_sequence=["#2563EB", "#0D9488", "#F97316", "#8B5CF6", "#64748B"])
@@ -237,7 +240,7 @@ def render_demand_analysis():
     )
     
     full_kw_list = [
-        "Seoul", "Busan", "Jeju", "Incheon", "Daegu", "Gwangju", "Daejeon", "Ulsan", 
+        "Incheon", "Daegu", "Gwangju", "Daejeon", "Ulsan", 
         "Sejong", "Gyeonggi", "Gangwon", "Chungbuk", "Chungnam", "Jeonbuk", "Jeonnam", 
         "Gyeongbuk", "Gyeongnam", "Gangneung", "Sokcho", "Yeosu", "Jeonju", "Mokpo"
     ]
@@ -246,7 +249,7 @@ def render_demand_analysis():
     kw_list = st.multiselect(
         "비교할 지역 키워드(영문)를 선택해 주세요 (최대 5개)",
         options=full_kw_list,
-        default=["Seoul", "Jeju", "Busan"],
+        default=["Incheon", "Gyeonggi", "Gangwon"],
         max_selections=5
     )
     

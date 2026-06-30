@@ -25,11 +25,14 @@ def render_eda_insights():
 
     # 세션 상태 설정
     if "city_1" not in st.session_state:
-        st.session_state.city_1 = "서울 마포구"
+        st.session_state.city_1 = "전북 전주시" # 서울 마포구에서 변경
     if "city_2" not in st.session_state:
         st.session_state.city_2 = "강원 삼척시"
 
     df_demand = get_area_service_demand("202601")
+    if not df_demand.empty:
+        # 서울, 부산, 제주 제외 필터링
+        df_demand = df_demand[~df_demand["signguNm"].str.contains("서울|부산|제주")]
 
     if not df_demand.empty:
         st.header("1. 🧩 시군구별 온-오프라인 매트릭스 2x2 진단")
@@ -78,7 +81,11 @@ def render_eda_insights():
 
         # 1:1 비교용 데이터 로드
         df_spend = get_area_spend_diversity()
+        if not df_spend.empty:
+            df_spend = df_spend[~df_spend["signguNm"].str.contains("서울|부산|제주")]
         df_cult = get_area_cultural_demand()
+        if not df_cult.empty:
+            df_cult = df_cult[~df_cult["signguNm"].str.contains("서울|부산|제주")]
         
         s_c1 = df_spend[df_spend["signguNm"] == city_1]
         s_c2 = df_spend[df_spend["signguNm"] == city_2]
