@@ -28,7 +28,8 @@ def render_demand_analysis():
     @st.cache_data
     def load_eda_data():
         df_visitor_region = pd.read_csv(os.path.join(data_dir, '20260620154323_외국인 지역별 방문자 수 추이.csv'))
-        df_visitor_region['날짜'] = df_visitor_region['날짜'].astype(str)
+        # 202501 형태의 정수/문자열을 YYYY-MM 형식의 문자열(혹은 datetime)로 변환하여 x축이 숫자로 인식되지 않게 방지
+        df_visitor_region['날짜'] = pd.to_datetime(df_visitor_region['날짜'].astype(str), format='%Y%m').dt.strftime('%Y-%m')
         return df_visitor_region
 
     CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), '.cache')
@@ -278,7 +279,7 @@ def render_demand_analysis():
                 font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
                 hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                 margin=dict(l=20, r=20, t=40, b=20),
-                xaxis=dict(showgrid=False, zeroline=False, linecolor="#334155"),
+                xaxis=dict(type='category', showgrid=False, zeroline=False, linecolor="#334155"),
                 yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
             )
             st.plotly_chart(fig3, use_container_width=True)
