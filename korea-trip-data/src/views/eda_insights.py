@@ -39,18 +39,36 @@ def render_eda_insights():
     if not df_demand.empty:
         st.header("1. 🧩 시군구별 온-오프라인 매트릭스 2x2 진단")
 
+        CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), '.cache')
+        os.makedirs(CACHE_DIR, exist_ok=True)
+        import hashlib
+
         @st.cache_data(ttl=86400)
         def fetch_google_trends_data_all(kw_list):
             try:
-                pytrends = TrendReq(hl='en-US', tz=360)
+                pytrends = TrendReq(hl='en-US', tz=360, retries=3, backoff_factor=1, timeout=(10, 25))
                 all_dfs = []
                 for i in range(0, len(kw_list), 5):
                     chunk = kw_list[i:i+5]
-                    pytrends.build_payload(chunk, cat=0, timeframe='today 3-m', geo='', gprop='')
-                    df = pytrends.interest_over_time()
-                    if not df.empty and 'isPartial' in df.columns:
-                        df = df.drop(columns=['isPartial'])
-                    all_dfs.append(df)
+                    time.sleep(2)  # 트래픽 분산을 위한 의도적 지연
+                    
+                    key_str = "_".join(chunk) + "_all"
+                    h = hashlib.md5(key_str.encode()).hexdigest()
+                    cache_path = os.path.join(CACHE_DIR, f"trends_chunk_{h}.csv")
+                    
+                    try:
+                        pytrends.build_payload(chunk, cat=0, timeframe='today 3-m', geo='', gprop='')
+                        df = pytrends.interest_over_time()
+                        if not df.empty:
+                            if 'isPartial' in df.columns:
+                                df = df.drop(columns=['isPartial'])
+                            df.to_csv(cache_path)
+                            all_dfs.append(df)
+                    except Exception as chunk_e:
+                        if os.path.exists(cache_path):
+                            df_cached = pd.read_csv(cache_path, index_col=0, parse_dates=True)
+                            all_dfs.append(df_cached)
+
                 if all_dfs:
                     return pd.concat(all_dfs, axis=1)
                 return pd.DataFrame()

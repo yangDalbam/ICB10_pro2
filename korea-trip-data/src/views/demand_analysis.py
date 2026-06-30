@@ -31,26 +31,51 @@ def render_demand_analysis():
         df_visitor_region['날짜'] = df_visitor_region['날짜'].astype(str)
         return df_visitor_region
 
+    CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), '.cache')
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    import hashlib
+    import pickle
+
+    def _get_cache_path(prefix, kw_list, geo):
+        key_str = "_".join(kw_list) + f"_{geo}"
+        h = hashlib.md5(key_str.encode()).hexdigest()
+        ext = "csv" if prefix == "trends" else "pkl"
+        return os.path.join(CACHE_DIR, f"{prefix}_{h}.{ext}")
+
     @st.cache_data(ttl=86400)
     def fetch_google_trends_data(kw_list, geo='US', timeframe='today 12-m'):
+        cache_path = _get_cache_path("trends", kw_list, geo)
         try:
-            pytrends = TrendReq(hl='en-US', tz=360)
+            time.sleep(2)  # 트래픽 분산을 위한 의도적 지연
+            pytrends = TrendReq(hl='en-US', tz=360, retries=3, backoff_factor=1, timeout=(10, 25))
             pytrends.build_payload(kw_list, cat=0, timeframe=timeframe, geo=geo, gprop='')
             df = pytrends.interest_over_time()
-            if not df.empty and 'isPartial' in df.columns:
-                df = df.drop(columns=['isPartial'])
+            if not df.empty:
+                if 'isPartial' in df.columns:
+                    df = df.drop(columns=['isPartial'])
+                df.to_csv(cache_path)
             return df
         except Exception as e:
+            if os.path.exists(cache_path):
+                return pd.read_csv(cache_path, index_col=0, parse_dates=True)
             return pd.DataFrame()
 
     @st.cache_data(ttl=86400)
     def fetch_google_trends_related_queries(kw_list, geo='US', timeframe='today 12-m'):
+        cache_path = _get_cache_path("related", kw_list, geo)
         try:
-            pytrends = TrendReq(hl='en-US', tz=360)
+            time.sleep(2)
+            pytrends = TrendReq(hl='en-US', tz=360, retries=3, backoff_factor=1, timeout=(10, 25))
             pytrends.build_payload(kw_list, cat=0, timeframe=timeframe, geo=geo, gprop='')
             related_queries = pytrends.related_queries()
+            if related_queries:
+                with open(cache_path, 'wb') as f:
+                    pickle.dump(related_queries, f)
             return related_queries
         except Exception as e:
+            if os.path.exists(cache_path):
+                with open(cache_path, 'rb') as f:
+                    return pickle.load(f)
             return {}
 
     st.header("1. 🚗 관심도 및 실제 방문도 (API 3 연동)")

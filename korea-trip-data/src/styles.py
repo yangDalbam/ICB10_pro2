@@ -357,6 +357,22 @@ def apply_custom_style():
             display: inline-flex !important;
             align-items: center !important;
         }
+        /* [사용자 요청] 대시보드 밀도와 정렬을 꽉 차게 만들어주는 간단한 CSS 주입 */
+        /* 전체 화면 여백 최소화 및 메인 영역 확장 */
+        .block-container {
+            padding-top: 2rem !important;
+            padding-bottom: 2rem !important;
+            padding-left: 3rem !important;
+            padding-right: 3rem !important;
+            max-width: 100% !important;
+        }
+        /* 카드 컴포넌트 디자인 통일 */
+        div[data-testid="stMetric"] {
+            background-color: #1e2530 !important;
+            border: 1px solid #2d3748 !important;
+            padding: 15px !important;
+            border-radius: 8px !important;
+        }
     </style>
     """
     st.markdown(style, unsafe_allow_html=True)
