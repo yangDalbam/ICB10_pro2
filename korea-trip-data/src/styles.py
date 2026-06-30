@@ -330,26 +330,31 @@ def apply_custom_style():
         [data-baseweb="tab-highlight"] {
             background-color: transparent !important; /* 기본 highlight 바 숨김 처리 (커스텀 border로 대체) */
         }
-        /* [추가] 아코디언 메뉴(Expander) 제목 영역 상하 여백 통일 (글로벌 p 태그 margin 상쇄 및 플렉스박스 중앙 정렬) */
-        details summary, 
-        details summary p, 
-        details summary span, 
-        details summary div,
-        .streamlit-expanderHeader,
-        .streamlit-expanderHeader p {
-            margin-top: 0 !important;
-            margin-bottom: 0 !important;
-            padding-top: 0 !important;
-            padding-bottom: 0 !important;
-            line-height: 1.2 !important;
+        /* [추가] 아코디언 메뉴(Expander) 제목 영역 상하 여백 통일 (완벽 강제화) */
+        [data-testid="stExpander"] details summary {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            padding: 10px 15px !important;
+            min-height: 40px !important;
+            height: auto !important;
         }
         
-        details summary {
-            padding-top: 12px !important;
-            padding-bottom: 12px !important;
-            padding-left: 16px !important;
-            padding-right: 16px !important;
+        [data-testid="stExpander"] details summary > div,
+        [data-testid="stExpander"] details summary > span,
+        .streamlit-expanderHeader {
             display: flex !important;
+            align-items: center !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            flex: 1 1 0% !important;
+        }
+
+        [data-testid="stExpander"] details summary p {
+            margin: 0 !important;
+            padding: 0 !important;
+            line-height: normal !important;
+            display: inline-flex !important;
             align-items: center !important;
         }
     </style>
