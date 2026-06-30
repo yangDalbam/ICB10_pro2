@@ -20,6 +20,7 @@ from api.kto_api import (
 def render_eda_insights():
     st.title("💡 관광 인사이트 및 지역 활성화 제언")
     st.markdown("전국 관광지의 특성을 매트릭스 형태로 진단하고 벤치마킹을 위한 심층 비교를 진행합니다.")
+    st.caption("🔹 **자료 출처:** 한국관광공사(한국관광 데이터랩), 공공데이터포털(ODCloud)")
     st.markdown("---")
 
     # 세션 상태 설정

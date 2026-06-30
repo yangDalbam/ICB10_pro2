@@ -17,6 +17,7 @@ from api.odcloud_api import get_foreigner_monthly_data
 def render_foreigner_trend():
     st.title("📈 방한 외래관광객 트렌드 분석")
     st.markdown("글로벌 외래 관광객의 입국 트렌드와 인구통계학적 세그먼트 분석을 제공합니다.")
+    st.caption("🔹 **자료 출처:** 한국관광공사(한국관광 데이터랩), 공공데이터포털(ODCloud)")
     st.markdown("---")
 
     df_foreigner = get_foreigner_monthly_data()

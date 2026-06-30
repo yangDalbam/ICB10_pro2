@@ -16,6 +16,7 @@ from api.kto_api import get_area_spend_diversity
 def render_tourism_diversity():
     st.title("💳 관광 소비 현황 분석")
     st.markdown("업종별 월간 관광 소비 트렌드 및 전국 주요 관광지 소비 비중을 확인합니다.")
+    st.caption("🔹 **자료 출처:** 한국관광공사(한국관광 데이터랩), 공공데이터포털(ODCloud)")
     st.markdown("---")
     
     data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')

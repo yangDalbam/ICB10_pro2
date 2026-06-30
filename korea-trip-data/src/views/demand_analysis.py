@@ -20,6 +20,7 @@ from api.kto_api import get_area_service_demand
 def render_demand_analysis():
     st.title("🗺️ 인기 관광 지역 분석")
     st.markdown("전국 주요 관광지의 온라인 관심도(SNS), 실제 방문도(내비) 및 성수기 집중도를 확인합니다.")
+    st.caption("🔹 **자료 출처:** 한국관광공사(한국관광 데이터랩), 공공데이터포털(ODCloud), 구글 트렌드")
     st.markdown("---")
 
     data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
