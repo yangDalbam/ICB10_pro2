@@ -330,24 +330,25 @@ def apply_custom_style():
         [data-baseweb="tab-highlight"] {
             background-color: transparent !important; /* 기본 highlight 바 숨김 처리 (커스텀 border로 대체) */
         }
-        
         /* [추가] 아코디언 메뉴(Expander) 제목 영역 상하 여백 통일 (글로벌 p 태그 margin 상쇄 및 플렉스박스 중앙 정렬) */
-        [data-testid="stExpander"] summary {
-            padding-top: 10px !important;
-            padding-bottom: 10px !important;
-            display: flex !important;
-            align-items: center !important;
-            min-height: 48px !important;
+        details summary, 
+        details summary p, 
+        details summary span, 
+        details summary div,
+        .streamlit-expanderHeader,
+        .streamlit-expanderHeader p {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            line-height: 1.2 !important;
         }
-        [data-testid="stExpander"] summary > div {
-            display: flex !important;
-            align-items: center !important;
-        }
-        [data-testid="stExpander"] summary p, 
-        [data-testid="stExpander"] summary span {
-            margin: 0 !important;
-            padding: 0 !important;
-            line-height: 1 !important;
+        
+        details summary {
+            padding-top: 12px !important;
+            padding-bottom: 12px !important;
+            padding-left: 16px !important;
+            padding-right: 16px !important;
             display: flex !important;
             align-items: center !important;
         }
