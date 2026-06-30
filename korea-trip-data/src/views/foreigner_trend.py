@@ -146,19 +146,39 @@ def render_foreigner_trend():
         
         if df_entry is not None and not df_entry.empty:
             st.subheader("방한 주요 국적별 입국자 총량")
-            df_entry_top10 = df_entry.nlargest(10, '입국자 수(명)')
-            fig4 = px.bar(df_entry_top10, x='입국자 수(명)', y='입국자 국적', orientation='h',
-                          title="국적별 입국자 수 압도적 1위 중국 및 동아시아 강세",
-                          color='입국자 수(명)', color_continuous_scale='Blues')
+            
+            # 국가별 ISO-3 코드 매핑 (카토그램용)
+            iso_mapping = {
+                '중국': 'CHN', '일본': 'JPN', '대만': 'TWN', '미국': 'USA',
+                '홍콩': 'HKG', '베트남': 'VNM', '싱가포르': 'SGP', '필리핀': 'PHL',
+                '태국': 'THA', '말레이시아': 'MYS', '인도네시아': 'IDN', '러시아': 'RUS',
+                '영국': 'GBR', '캐나다': 'CAN', '프랑스': 'FRA', '독일': 'DEU', '호주': 'AUS'
+            }
+            df_entry['ISO_CODE'] = df_entry['입국자 국적'].map(iso_mapping)
+            
+            # 지도 시각화 (카토그램/Choropleth)
+            fig4 = px.choropleth(
+                df_entry, 
+                locations="ISO_CODE", 
+                color="입국자 수(명)", 
+                hover_name="입국자 국적",
+                title="국적별 입국자 수 카토그램 (중국 및 동아시아 강세)",
+                color_continuous_scale="Blues",
+                projection="equirectangular"
+            )
+            
             fig4.update_layout(
-                yaxis={'categoryorder': 'total ascending'},
+                geo=dict(
+                    showframe=False,
+                    showcoastlines=True,
+                    coastlinecolor="#CBD5E1",
+                    bgcolor="rgba(0,0,0,0)"
+                ),
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
                 font=dict(family="Pretendard, sans-serif", size=14, color="#334155"),
                 hoverlabel=dict(bgcolor="white", font_size=13, font_family="Pretendard"),
-                margin=dict(l=20, r=20, t=40, b=20),
-                xaxis=dict(showgrid=True, gridcolor="#F1F5F9", zeroline=False, linecolor="#E2E8F0"),
-                yaxis_title=None
+                margin=dict(l=0, r=0, t=40, b=0)
             )
             st.plotly_chart(fig4, use_container_width=True)
         else:
