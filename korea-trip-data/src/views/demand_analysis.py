@@ -155,8 +155,6 @@ def render_demand_analysis():
                     yaxis_title=None
                 )
                 st.plotly_chart(fig_sns, use_container_width=True)
-                with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
-                    st.markdown("KTO 지역별 'SNS 언급량'을 100점 만점으로 정규화한 값(50%)과 구글 트렌드 API의 최근 3개월 지역별 평균 검색 관심도(50%)를 합산하여 산출했습니다. 연관 검색어는 구글 트렌드의 급상승 키워드를 추출했습니다.")
             with col_chart2:
                 st.markdown("#### 🧭 실제 방문도 및 방문 목적")
                 df_top_navi = df_kto_demand.nlargest(5, "naviSearchCo")
@@ -185,8 +183,6 @@ def render_demand_analysis():
                             legend_title_text="관광 목적"
                         )
                         st.plotly_chart(fig_cult, use_container_width=True)
-                        with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
-                            st.markdown("한국관광공사 지역별 관광 자원 수요 API 데이터를 활용하여, 내비게이션 검색량을 목적별(역사, 자연, 휴양, 문화, 레저)로 세분화하여 누적 시각화했습니다.")
     else:
         st.warning("관광 서비스 수요 데이터를 불러올 수 없습니다.")
 
@@ -240,8 +236,6 @@ def render_demand_analysis():
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, title=None)
             )
             st.plotly_chart(fig_trends, use_container_width=True)
-            with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
-                st.markdown("구글 트렌드 API(`pytrends`)를 통해 조회된 최근 12개월간의 지역별 주간 검색 관심도(0~100) 변동 추이입니다.")
             
             # 키워드 시각화
             st.subheader("지역별 급상승 연관 검색어")
@@ -283,8 +277,6 @@ def render_demand_analysis():
                 yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
             )
             st.plotly_chart(fig3, use_container_width=True)
-            with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
-                st.markdown("공공데이터포털 외국인 방문객 데이터 기반으로 누적 방문객이 가장 많은 상위 5개 지역의 월별 변동 추이를 시각화했습니다.")
 
         with col4:
             st.subheader("지역별 성수기(봄철) 수요 집중도")
@@ -305,8 +297,6 @@ def render_demand_analysis():
                 margin=dict(l=20, r=20, t=40, b=20)
             )
             st.plotly_chart(fig5, use_container_width=True)
-            with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
-                st.markdown("전국 시도별 외국인 관광객 총 방문자 수를 바탕으로, 지도 면적이 아닌 데이터 크기(방문자 수)에 비례하여 지역 크기를 재구성한 카토그램(Cartogram)입니다.")
     except Exception as e:
         st.warning(f"지역별 방문자 수 데이터를 확인할 수 없습니다: {e}")
         

@@ -112,8 +112,6 @@ def render_eda_insights():
             yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
         )
         st.plotly_chart(fig, use_container_width=True)
-        with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
-            st.markdown("KTO 지역별 'SNS 언급량'을 100점 만점으로 정규화한 값(50%)과 구글 트렌드 API의 최근 3개월 지역별 평균 검색 관심도(50%)를 합산하여 산출한 종합 관심도와 실제 방문도(내비게이션)의 2x2 매트릭스 진단입니다.")
 
         st.markdown("#### 벤치마킹 대상 도시 선택")
         city_list = sorted(df_demand["signguNm"].unique().tolist())
@@ -171,8 +169,6 @@ def render_eda_insights():
                 margin=dict(l=40, r=40, t=40, b=40)
             )
             st.plotly_chart(fig_radar, use_container_width=True)
-            with st.expander("ℹ️ 데이터 산출 공식 및 출처 보기"):
-                st.markdown("내비게이션 검색 데이터(KTO API)를 활용해 각 지역이 역사, 자연, 문화 등 어느 관광 목적에 강점이 있는지 0~100 스케일로 정규화하여 다각도로 분석한 방사형 차트입니다.")
 
             st.markdown("#### 활성화 벤치마킹 인사이트")
             st.info(f"""
