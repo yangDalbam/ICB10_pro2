@@ -145,9 +145,9 @@ def render_tourism_diversity():
                 
         # 3. 신규 추가 그래프: 방문자수 대비 관광지출액 산점도
         st.markdown("---")
+        st.header("3. 방문자수와 관광지출액의 상관관계")
         
         corr_coef = df_region["방문자수"].corr(df_region["관광지출액"])
-        st.markdown(f"<h3 style='color: #38BDF8;'>3. 방문자수와 관광지출액의 상관관계</h3>", unsafe_allow_html=True)
         
         fig_scatter = px.scatter(
             df_region, x="방문자수", y="관광지출액",
