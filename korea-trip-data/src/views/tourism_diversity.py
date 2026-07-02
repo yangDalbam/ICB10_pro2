@@ -154,9 +154,17 @@ def render_tourism_diversity():
             color="관광지출액", size="방문자수",
             trendline="ols", trendline_color_override="#00F0FF",
             color_continuous_scale="Teal",
-            title=f"방문객 유입량과 관광지출액의 강한 양의 상관관계 확인 (상관계수: {corr_coef:.2f})",
             labels={"방문자수": "방문자 수(명)", "관광지출액": "관광지출액(단위: 천원)"}
         )
+        
+        fig_scatter.add_annotation(
+            x=1.0, y=1.05, xref="paper", yref="paper",
+            text=f"상관계수: {corr_coef:.2f}",
+            showarrow=False,
+            font=dict(size=13, color="#38BDF8", family="Pretendard, sans-serif"),
+            align="right"
+        )
+        
         fig_scatter.update_layout(
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
@@ -164,7 +172,8 @@ def render_tourism_diversity():
             hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
             margin=dict(l=20, r=20, t=40, b=20),
             xaxis=dict(tickformat=",.0f", showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155"),
-            yaxis=dict(tickformat=",.0f", showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
+            yaxis=dict(tickformat=",.0f", showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155"),
+            coloraxis_colorbar=dict(tickformat=",.0f")
         )
         st.plotly_chart(fig_scatter, use_container_width=True)
                 
