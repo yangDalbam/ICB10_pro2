@@ -145,12 +145,16 @@ def render_tourism_diversity():
                 
         # 3. 신규 추가 그래프: 방문자수 대비 관광지출액 산점도
         st.markdown("---")
-        st.markdown("#### 🔍 [인사이트] 방문자수와 관광지출액의 상관관계")
+        
+        corr_coef = df_region["방문자수"].corr(df_region["관광지출액"])
+        st.markdown(f"<h3 style='color: #38BDF8;'>3. 방문자수와 관광지출액의 상관관계</h3>", unsafe_allow_html=True)
+        
         fig_scatter = px.scatter(
             df_region, x="방문자수", y="관광지출액",
             color="관광지출액", size="방문자수",
-            color_continuous_scale="Sunsetdark",
-            title="방문객 유입량과 관광지출액의 강한 양의 상관관계 확인",
+            trendline="ols", trendline_color_override="#00F0FF",
+            color_continuous_scale="Teal",
+            title=f"방문객 유입량과 관광지출액의 강한 양의 상관관계 확인 (상관계수: {corr_coef:.2f})",
             labels={"방문자수": "방문자 수(명)", "관광지출액": "관광지출액(단위: 천원)"}
         )
         fig_scatter.update_layout(
@@ -159,8 +163,8 @@ def render_tourism_diversity():
             font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
             hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
             margin=dict(l=20, r=20, t=40, b=20),
-            xaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155"),
-            yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
+            xaxis=dict(tickformat=",.0f", showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155"),
+            yaxis=dict(tickformat=",.0f", showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
         )
         st.plotly_chart(fig_scatter, use_container_width=True)
                 
