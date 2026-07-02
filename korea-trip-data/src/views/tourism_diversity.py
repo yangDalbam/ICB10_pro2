@@ -124,7 +124,7 @@ def render_tourism_diversity():
                 st.plotly_chart(fig_pie_spend, use_container_width=True)
                 
             with col_sp2:
-                st.markdown("#### 핵심 거점 관광지출액 Top 5 (서울/부산/제주 제외)")
+                st.markdown("#### 핵심 거점 관광지출액 Top 5")
                 fig_city_spend = px.bar(
                     df_top_city_spend, x="관광지출액", y="시도명",
                     orientation="h",
