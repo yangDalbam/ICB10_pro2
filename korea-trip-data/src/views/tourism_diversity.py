@@ -23,30 +23,43 @@ def render_tourism_diversity():
 
     @st.cache_data
     def load_eda_data():
-        df_consume_trend = pd.read_csv(os.path.join(data_dir, '20260620155141_업종별 관광소비 추이 CSV 다운로드.csv'))
-        df_consume_country = pd.read_csv(os.path.join(data_dir, '20260620155314_국가별 관광소비 유형 CSV 다운로드.csv'))
-        df_consume_trend['기준년월일'] = pd.to_datetime(df_consume_trend['기준년월일'].astype(str), format='%Y%m').dt.strftime('%Y-%m')
-        return df_consume_trend, df_consume_country
+        try:
+            df_credit_trend = pd.read_csv(os.path.join(data_dir, '20260702202129_전체 외국인 신용카드 관광소비액 및 증감률 CSV 다운로드.csv'), encoding='utf-8')
+        except:
+            df_credit_trend = pd.read_csv(os.path.join(data_dir, '20260702202129_전체 외국인 신용카드 관광소비액 및 증감률 CSV 다운로드.csv'), encoding='cp949')
+            
+        try:
+            df_consume_country = pd.read_csv(os.path.join(data_dir, '20260620155314_국가별 관광소비 유형 CSV 다운로드.csv'), encoding='utf-8')
+        except:
+            df_consume_country = pd.read_csv(os.path.join(data_dir, '20260620155314_국가별 관광소비 유형 CSV 다운로드.csv'), encoding='cp949')
+            
+        df_credit_trend['기준년월'] = pd.to_datetime(df_credit_trend['기준년월'].astype(str), format='%Y%m').dt.strftime('%Y-%m')
+        return df_credit_trend, df_consume_country
 
-    st.header("1. 🛍️ 업종별 및 국가별 관광 소비 트렌드")
+    st.header("1. 🛍️ 주요 거시 관광 소비 트렌드 및 국가 비중")
     try:
-        df_consume_trend, df_consume_country = load_eda_data()
+        df_credit_trend, df_consume_country = load_eda_data()
         col1, col2 = st.columns(2)
         with col1:
-            st.subheader("업종별 월간 관광 소비 추이")
-            df_trend_pivot = df_consume_trend[df_consume_trend['업종별 구분'] != '전체']
-            fig1 = px.line(df_trend_pivot, x='기준년월일', y='소비액(천원)', color='업종별 구분',
-                           markers=True, title="월별 주요 관광 소비 업종 매출 동향",
-                           color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B"])
+            st.subheader("월별 전체 외국인 신용카드 소비 추세")
+            st.caption("💡 2026년 5월, 전년 동기 대비 약 **73.2%**의 폭발적인 소비 성장 달성")
+            
+            df_melt = df_credit_trend.melt(id_vars=['기준년월'], value_vars=['조회기간 소비액', '전년동기 소비액'], var_name='구분', value_name='소비액(원)')
+            # 레이블 가독성을 위해 이름 변경
+            df_melt['구분'] = df_melt['구분'].replace({'조회기간 소비액': '당해연도 소비액', '전년동기 소비액': '전년동기 소비액'})
+            
+            fig1 = px.line(df_melt, x='기준년월', y='소비액(원)', color='구분',
+                           markers=True, title="전년 동기 대비 신용카드 소비 규모 비교",
+                           color_discrete_sequence=["#00F0FF", "#64748B"])
             fig1.update_layout(
-                xaxis_title="연월", yaxis_title="소비액(천원, Log Scale)", legend_title="업종",
+                xaxis_title="연월", yaxis_title="소비액(원)", legend_title="구분",
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)",
                 font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
                 hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                 margin=dict(l=20, r=20, t=40, b=20),
                 xaxis=dict(showgrid=False, zeroline=False, linecolor="#334155", type="category"),
-                yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155", type="log")
+                yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
             )
             st.plotly_chart(fig1, use_container_width=True)
 
