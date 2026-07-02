@@ -71,10 +71,20 @@ def render_demand_analysis():
             return {}
 
     st.header("1. 🚗 관심도 및 실제 방문도")
-    df_kto_demand = get_area_service_demand("202602")
+    import pandas as pd
+    import os
+    try:
+        data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data')
+        df_kto_demand = pd.read_csv(os.path.join(data_dir, '20260702210628_지역별 검색건수.csv'), encoding='utf-8')
+    except:
+        df_kto_demand = pd.read_csv(os.path.join(data_dir, '20260702210628_지역별 검색건수.csv'), encoding='cp949')
+
     if not df_kto_demand.empty:
         # 서울, 부산, 제주 제외 필터링
-        df_kto_demand = df_kto_demand[~df_kto_demand["signguNm"].str.contains("서울|부산|제주")]
+        df_kto_demand = df_kto_demand[~df_kto_demand["광역지자체"].str.contains("서울|부산|제주")].copy()
+        df_kto_demand["signguNm"] = df_kto_demand["광역지자체"] + " " + df_kto_demand["기초지자체"]
+        df_kto_demand["snsMentionCo"] = df_kto_demand["기초지자체 검색건수"]
+        
         with st.container():
             col_chart1, col_chart2 = st.columns(2)
             with col_chart1:
@@ -83,9 +93,13 @@ def render_demand_analysis():
                 
                 # 1. 영문 매핑 (구글 트렌드 검색용)
                 region_mapping = {
-                    "서울 마포구": "Seoul", "제주 제주시": "Jeju", "부산 해운대구": "Busan",
-                    "서울 종로구": "Seoul", "전북 전주시": "Jeonju", "강원 삼척시": "Samcheok",
-                    "경북 안동시": "Andong", "전남 여수시": "Yeosu", "경기 수원시": "Suwon"
+                    "인천광역시 중구": "Incheon",
+                    "경기도 용인시": "Yongin",
+                    "경기도 과천시": "Gwacheon",
+                    "경기도 가평군": "Gapyeong",
+                    "경기도 화성시": "Hwaseong",
+                    "강원특별자치도 강릉시": "Gangneung",
+                    "강원특별자치도 속초시": "Sokcho"
                 }
                 
                 kw_list = []
