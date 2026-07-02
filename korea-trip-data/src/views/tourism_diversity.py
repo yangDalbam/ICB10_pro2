@@ -71,26 +71,44 @@ def render_tourism_diversity():
 
     st.markdown("---")
     st.header("2. 💰 전국 관광 카드 소비 규모 현황")
-    df_kto_spend = get_area_spend_diversity("202601")
+    @st.cache_data
+    def load_spend_data():
+        try:
+            df_easy = pd.read_csv(os.path.join(data_dir, '20260702202154_관광객 간편결제 업종별 관광소비 추이.csv'), encoding='utf-8')
+        except:
+            df_easy = pd.read_csv(os.path.join(data_dir, '20260702202154_관광객 간편결제 업종별 관광소비 추이.csv'), encoding='cp949')
+        
+        try:
+            df_spend = pd.read_csv(os.path.join(data_dir, '20260702202516_관광지출액.csv'), encoding='utf-8')
+        except:
+            df_spend = pd.read_csv(os.path.join(data_dir, '20260702202516_관광지출액.csv'), encoding='cp949')
+            
+        try:
+            df_region = pd.read_csv(os.path.join(data_dir, '20260702202616_지역 방문자수_관광지출액 추세.csv'), encoding='utf-8')
+        except:
+            df_region = pd.read_csv(os.path.join(data_dir, '20260702202616_지역 방문자수_관광지출액 추세.csv'), encoding='cp949')
+            
+        return df_easy, df_spend, df_region
 
-    if not df_kto_spend.empty:
-        # 내국인 데이터 제외 (외국인 touDivCd == '3' 추출)
-        if "touDivCd" in df_kto_spend.columns:
-            df_kto_spend = df_kto_spend[df_kto_spend["touDivCd"] == "3"]
-
-        # 서울, 부산, 제주 제외 필터링
-        df_kto_spend = df_kto_spend[~df_kto_spend["signguNm"].str.contains("서울|부산|제주")]
-        df_ind_spend = df_kto_spend.groupby("indutyNm")["cardUseAmt"].sum().reset_index()
-        total_amt = df_ind_spend["cardUseAmt"].sum()
-        df_ind_spend["비율"] = (df_ind_spend["cardUseAmt"] / total_amt) * 100
+    try:
+        df_easy, df_spend, df_region = load_spend_data()
+        
+        # 1. 전국 관광 소비 비중 (간편결제 업종별)
+        df_easy_filtered = df_easy[df_easy['업종'] != '전체']
+        df_ind_spend = df_easy_filtered.groupby('업종')['소비금액(천원)'].sum().reset_index()
+        
+        # 2. 전국 관광 총 소비 규모 Top 5 (서울, 부산, 제주 제외)
+        excludes = ['서울', '부산', '제주']
+        df_spend_filtered = df_spend[~df_spend['시도명'].str.contains('|'.join(excludes))]
+        df_top_city_spend = df_spend_filtered.sort_values('관광지출액', ascending=False).head(5)
         
         with st.container():
             col_sp1, col_sp2 = st.columns([1, 2])
             
             with col_sp1:
-                st.markdown("#### 전국 관광 소비 비중")
+                st.markdown("#### 업종별 관광 소비 비중 (간편결제 기준)")
                 fig_pie_spend = px.pie(
-                    df_ind_spend, values="cardUseAmt", names="indutyNm",
+                    df_ind_spend, values="소비금액(천원)", names="업종",
                     hole=0.4,
                     color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B", "#94A3B8"]
                 )
@@ -106,13 +124,11 @@ def render_tourism_diversity():
                 st.plotly_chart(fig_pie_spend, use_container_width=True)
                 
             with col_sp2:
-                st.markdown("#### 전국 관광 총 소비 규모 Top 5")
-                df_city_spend = df_kto_spend.groupby("signguNm")["cardUseAmt"].sum().reset_index()
-                df_top_city_spend = df_city_spend.nlargest(5, "cardUseAmt")
+                st.markdown("#### 핵심 거점 관광지출액 Top 5 (서울/부산/제주 제외)")
                 fig_city_spend = px.bar(
-                    df_top_city_spend, x="cardUseAmt", y="signguNm",
+                    df_top_city_spend, x="관광지출액", y="시도명",
                     orientation="h",
-                    color="cardUseAmt",
+                    color="관광지출액",
                     color_continuous_scale="Teal"
                 )
                 fig_city_spend.update_layout(
@@ -126,5 +142,27 @@ def render_tourism_diversity():
                     yaxis_title=None
                 )
                 st.plotly_chart(fig_city_spend, use_container_width=True)
-    else:
-        st.warning("관광 소비 다양성 데이터를 불러올 수 없습니다.")
+                
+        # 3. 신규 추가 그래프: 방문자수 대비 관광지출액 산점도
+        st.markdown("---")
+        st.markdown("#### 🔍 [인사이트] 방문자수와 관광지출액의 상관관계")
+        fig_scatter = px.scatter(
+            df_region, x="방문자수", y="관광지출액",
+            color="관광지출액", size="방문자수",
+            color_continuous_scale="Sunsetdark",
+            title="방문객 유입량과 관광지출액의 강한 양의 상관관계 확인",
+            labels={"방문자수": "방문자 수(명)", "관광지출액": "관광지출액(단위: 천원)"}
+        )
+        fig_scatter.update_layout(
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+            hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
+            margin=dict(l=20, r=20, t=40, b=20),
+            xaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155"),
+            yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
+        )
+        st.plotly_chart(fig_scatter, use_container_width=True)
+                
+    except Exception as e:
+        st.warning(f"관광 소비 데이터를 불러올 수 없습니다: {e}")
