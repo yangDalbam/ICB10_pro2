@@ -51,7 +51,9 @@ def render_foreigner_trend():
         return
 
     # 데이터 타입 캐스팅 및 파생 변수 처리
+    # '202506' 같은 숫자형태 문자열을 '2025-06' 형태로 변환하여 Plotly가 숫자로 자동 해석(예: 202.5k)하지 않도록 방지
     df_monthly['기준년월'] = df_monthly['기준년월'].astype(str)
+    df_monthly['기준년월'] = df_monthly['기준년월'].str[:4] + '-' + df_monthly['기준년월'].str[4:]
     
     # 2026년 총 방문자 수 계산
     df_2026 = df_monthly[df_monthly['기준년월'].str.startswith('2026')]
@@ -99,7 +101,7 @@ def render_foreigner_trend():
             font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
             hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
             margin=dict(l=20, r=20, t=30, b=20),
-            xaxis=dict(showgrid=False, zeroline=False, linecolor="#334155"),
+            xaxis=dict(type='category', showgrid=False, zeroline=False, linecolor="#334155"),
             yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
         )
         st.plotly_chart(fig, use_container_width=True)
@@ -126,7 +128,7 @@ def render_foreigner_trend():
             font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
             hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
             margin=dict(l=20, r=20, t=30, b=20),
-            xaxis=dict(showgrid=False, zeroline=False, linecolor="#334155"),
+            xaxis=dict(type='category', showgrid=False, zeroline=False, linecolor="#334155"),
             yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
         )
         st.plotly_chart(fig_gender_age, use_container_width=True)
