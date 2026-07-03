@@ -120,25 +120,25 @@ def render_tourism_diversity():
             
             with col_sp1:
                 st.markdown("#### 업종별 관광 소비 비중 (간편결제 기준)")
-                df_ind_spend = df_ind_spend.sort_values("소비금액(천원)", ascending=True)
-                total_spend = df_ind_spend["소비금액(천원)"].sum()
-                df_ind_spend["비율"] = (df_ind_spend["소비금액(천원)"] / total_spend) * 100
-                df_ind_spend["텍스트"] = df_ind_spend.apply(lambda x: f"{x['비율']:.1f}%", axis=1)
 
-                fig_pie_spend = px.bar(
-                    df_ind_spend, x="소비금액(천원)", y="업종", orientation="h",
-                    text="텍스트",
-                    color="업종",
-                    color_discrete_sequence=["#94A3B8", "#64748B", "#1E3A8A", "#2563EB", "#38BDF8", "#00F0FF"]
+                fig_pie_spend = px.treemap(
+                    df_ind_spend,
+                    path=['업종'],
+                    values='소비금액(천원)',
+                    color='소비금액(천원)',
+                    color_continuous_scale='Teal'
                 )
-                fig_pie_spend.update_traces(textposition='outside', textfont=dict(color="#F8FAFC"))
+                
+                # 트리맵 내부에 텍스트와 퍼센트(%) 표시
+                fig_pie_spend.data[0].textinfo = 'label+percent root'
+                
                 fig_pie_spend.update_layout(
                     showlegend=False,
                     plot_bgcolor="rgba(0,0,0,0)",
                     paper_bgcolor="rgba(0,0,0,0)",
                     font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
                     hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
-                    margin=dict(l=20, r=20, t=20, b=20)
+                    margin=dict(l=10, r=10, t=10, b=10)
                 )
                 st.plotly_chart(fig_pie_spend, use_container_width=True)
                 
