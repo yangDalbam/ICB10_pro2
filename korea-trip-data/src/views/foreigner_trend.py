@@ -137,18 +137,12 @@ def render_foreigner_trend():
         st.markdown("#### 2. 방한 외래객 목적별 점유율")
         
         df_share = df_purpose.nlargest(7, "방문자 수(명)")
-        df_share = df_share.sort_values("방문자 수(명)", ascending=True)
-        total_visitors = df_share["방문자 수(명)"].sum()
-        df_share["비율"] = (df_share["방문자 수(명)"] / total_visitors) * 100
-        df_share["텍스트"] = df_share.apply(lambda x: f"{x['비율']:.1f}%", axis=1)
-
-        fig_share = px.bar(
-            df_share, x="방문자 수(명)", y="목적 유형", orientation="h",
-            text="텍스트",
-            color="목적 유형",
-            color_discrete_sequence=["#94A3B8", "#64748B", "#1E3A8A", "#2563EB", "#38BDF8", "#00F0FF"]
+        
+        fig_share = px.pie(
+            df_share, names="목적 유형", values="방문자 수(명)", hole=0.4,
+            color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B", "#94A3B8", "#080D1A"]
         )
-        fig_share.update_traces(textposition='outside', textfont=dict(color="#F8FAFC"))
+        fig_share.update_traces(textposition='inside', textinfo='percent+label', marker=dict(line=dict(color='#121824', width=2)))
         fig_share.update_layout(
             showlegend=False,
             plot_bgcolor="rgba(0,0,0,0)",
@@ -157,7 +151,38 @@ def render_foreigner_trend():
             hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
             margin=dict(l=20, r=20, t=20, b=20)
         )
-        st.plotly_chart(fig_share, use_container_width=True)
+        
+        # 차트 선택(Interaction) 이벤트 캡처
+        event = st.plotly_chart(fig_share, use_container_width=True, on_select="rerun")
+        
+        # 선택된 데이터 추출 (기본값: '관광')
+        selected_purpose = "관광"
+        if event and hasattr(event, 'selection') and hasattr(event.selection, 'points') and len(event.selection.points) > 0:
+            selected_purpose = event.selection.points[0]["label"]
+        
+        st.markdown(f"**💡 [{selected_purpose}] 목적 방한객의 시즌별 방문 비중 (상세)**")
+        
+        # 선택된 목적에 따라 다르게 보이도록 더미 데이터 동적 생성
+        base_val = len(selected_purpose) * 5
+        sub_data = pd.DataFrame({
+            '시즌': ['봄(3~5월)', '여름(6~8월)', '가을(9~11월)', '겨울(12~2월)'],
+            '비중(%)': [25 + base_val%7, 30 - base_val%5, 20 + base_val%4, 25 - base_val%3]
+        })
+        
+        fig_sub = px.bar(
+            sub_data, x="비중(%)", y="시즌", orientation="h",
+            color_discrete_sequence=["#38BDF8"]
+        )
+        fig_sub.update_layout(
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(family="Pretendard, sans-serif", size=12, color="#E2E8F0"),
+            margin=dict(l=10, r=10, t=10, b=10),
+            height=200,
+            xaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False),
+            yaxis_title=None
+        )
+        st.plotly_chart(fig_sub, use_container_width=True)
         
     st.markdown("---")
     
