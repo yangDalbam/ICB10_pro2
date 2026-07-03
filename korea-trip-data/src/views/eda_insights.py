@@ -52,17 +52,12 @@ def render_eda_insights():
         df_demand["snsMentionCo"] = df_demand["기초지자체 검색건수"]
         df_demand["naviSearchCo"] = df_demand["기초지자체 검색건수"]
         
-        # cityType 가상 데이터 추가 (scatter plot 색상용)
-        cutoff1 = df_demand["snsMentionCo"].quantile(0.7)
-        cutoff2 = df_demand["snsMentionCo"].quantile(0.4)
-        def get_city_type(x):
-            if x >= cutoff1: return "도시1"
-            elif x >= cutoff2: return "도시2"
-            else: return "일반"
-        df_demand["cityType"] = df_demand["snsMentionCo"].apply(get_city_type)
+        # 사분면에 점이 고루 분포하여 4가지 색상이 모두 보이도록 상위 60개 지역 추출 (화면에는 점 60개 표시)
+        df_demand = df_demand.nlargest(60, "snsMentionCo")
         
-        # 시각화 가독성을 위해 상위 20개 지역 추출
-        df_demand = df_demand.nlargest(20, "snsMentionCo")
+        # 텍스트 라벨 (가독성을 위해 텍스트는 상위 20개만 표시)
+        top20_regions = df_demand.nlargest(20, "snsMentionCo")["signguNm"].tolist()
+        df_demand["label"] = df_demand["signguNm"].apply(lambda x: x if x in top20_regions else "")
 
     if not df_demand.empty:
         st.header("1. 🧩 시군구별 온-오프라인 매트릭스 2x2 진단")
@@ -137,7 +132,7 @@ def render_eda_insights():
 
         fig = px.scatter(
             df_demand, x=x_col, y="naviSearchCo",
-            color="cityType", hover_name="signguNm", text="signguNm",
+            color="cityType", hover_name="signguNm", text="label",
             color_discrete_map={
                 "스타 (고관심·고방문)": "#00F0FF", # 밝은 시안
                 "잠재 (고관심·저방문)": "#A78BFA", # 연보라
