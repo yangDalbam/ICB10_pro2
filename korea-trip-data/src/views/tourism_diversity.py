@@ -109,11 +109,13 @@ def render_tourism_diversity():
         # 1. 전국 관광 소비 비중 (간편결제 업종별)
         df_easy_filtered = df_easy[df_easy['업종'] != '전체']
         df_ind_spend = df_easy_filtered.groupby('업종')['소비금액(천원)'].sum().reset_index()
+        df_ind_spend['소비금액(억원)'] = df_ind_spend['소비금액(천원)'] / 100000
         
         # 2. 전국 관광 총 소비 규모 Top 5 (서울, 부산, 제주 제외)
         excludes = ['서울', '부산', '제주']
         df_spend_filtered = df_spend[~df_spend['시도명'].str.contains('|'.join(excludes))]
         df_top_city_spend = df_spend_filtered.sort_values('관광지출액', ascending=False).head(5)
+        df_top_city_spend['관광지출액(억원)'] = df_top_city_spend['관광지출액'] / 100000
         
         with st.container():
             col_sp1, col_sp2 = st.columns(2)
@@ -124,8 +126,8 @@ def render_tourism_diversity():
                 fig_pie_spend = px.treemap(
                     df_ind_spend,
                     path=['업종'],
-                    values='소비금액(천원)',
-                    color='소비금액(천원)',
+                    values='소비금액(억원)',
+                    color='소비금액(억원)',
                     color_continuous_scale='Teal'
                 )
                 
@@ -133,6 +135,7 @@ def render_tourism_diversity():
                 fig_pie_spend.data[0].textinfo = 'label+percent root'
                 
                 fig_pie_spend.update_layout(
+                    coloraxis_colorbar=dict(title="소비금액(억원)", tickformat=",.0f"),
                     showlegend=False,
                     plot_bgcolor="rgba(0,0,0,0)",
                     paper_bgcolor="rgba(0,0,0,0)",
@@ -145,19 +148,20 @@ def render_tourism_diversity():
             with col_sp2:
                 st.markdown("#### 핵심 거점 관광지출액 Top 5")
                 fig_city_spend = px.bar(
-                    df_top_city_spend, x="관광지출액", y="시도명",
+                    df_top_city_spend, x="관광지출액(억원)", y="시도명",
                     orientation="h",
-                    color="관광지출액",
+                    color="관광지출액(억원)",
                     color_continuous_scale="Teal"
                 )
                 fig_city_spend.update_layout(
+                    coloraxis_colorbar=dict(title="관광지출액(억원)", tickformat=",.0f"),
                     yaxis=dict(categoryorder='total ascending'),
                     plot_bgcolor="rgba(0,0,0,0)",
                     paper_bgcolor="rgba(0,0,0,0)",
                     font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
                     hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                     margin=dict(l=20, r=20, t=20, b=20),
-                    xaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155"),
+                    xaxis=dict(title="관광지출액(억원)", tickformat=",.0f", showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155"),
                     yaxis_title=None
                 )
                 st.plotly_chart(fig_city_spend, use_container_width=True)
