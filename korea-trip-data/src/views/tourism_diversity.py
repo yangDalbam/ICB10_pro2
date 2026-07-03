@@ -116,7 +116,7 @@ def render_tourism_diversity():
         df_top_city_spend = df_spend_filtered.sort_values('관광지출액', ascending=False).head(5)
         
         with st.container():
-            col_sp1, col_sp2 = st.columns([1, 2])
+            col_sp1, col_sp2 = st.columns(2)
             
             with col_sp1:
                 st.markdown("#### 업종별 관광 소비 비중 (간편결제 기준)")
