@@ -27,9 +27,9 @@ def render_eda_insights():
 
     # 세션 상태 설정
     if "city_1" not in st.session_state:
-        st.session_state.city_1 = "경기도 용인시"
+        st.session_state.city_1 = "용인시"
     if "city_2" not in st.session_state:
-        st.session_state.city_2 = "강원특별자치도 강릉시"
+        st.session_state.city_2 = "강릉시"
 
     try:
         data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data')
@@ -40,7 +40,15 @@ def render_eda_insights():
     if not df_demand.empty:
         # 서울, 부산, 제주 제외 필터링
         df_demand = df_demand[~df_demand["광역지자체"].str.contains("서울|부산|제주")].copy()
-        df_demand["signguNm"] = df_demand["광역지자체"] + " " + df_demand["기초지자체"]
+        def format_region(row):
+            sido = row["광역지자체"]
+            sigungu = row["기초지자체"]
+            if sigungu.endswith('시'):
+                return sigungu
+            else:
+                return f"{sido[:2]} {sigungu}"
+        df_demand["signguNm"] = df_demand.apply(format_region, axis=1)
+        
         df_demand["snsMentionCo"] = df_demand["기초지자체 검색건수"]
         df_demand["naviSearchCo"] = df_demand["기초지자체 검색건수"]
         
@@ -53,8 +61,8 @@ def render_eda_insights():
             else: return "일반"
         df_demand["cityType"] = df_demand["snsMentionCo"].apply(get_city_type)
         
-        # 시각화 가독성을 위해 상위 15개 지역만 추출
-        df_demand = df_demand.nlargest(15, "snsMentionCo")
+        # 시각화 가독성을 위해 상위 20개 지역 추출
+        df_demand = df_demand.nlargest(20, "snsMentionCo")
 
     if not df_demand.empty:
         st.header("1. 🧩 시군구별 온-오프라인 매트릭스 2x2 진단")
@@ -78,13 +86,13 @@ def render_eda_insights():
                 return pd.DataFrame()
 
         region_mapping = {
-            "인천광역시 중구": "Incheon",
-            "경기도 용인시": "Yongin",
-            "경기도 과천시": "Gwacheon",
-            "경기도 가평군": "Gapyeong",
-            "경기도 화성시": "Hwaseong",
-            "강원특별자치도 강릉시": "Gangneung",
-            "강원특별자치도 속초시": "Sokcho"
+            "인천 중구": "Incheon",
+            "용인시": "Yongin",
+            "과천시": "Gwacheon",
+            "경기 가평군": "Gapyeong",
+            "화성시": "Hwaseong",
+            "강릉시": "Gangneung",
+            "속초시": "Sokcho"
         }
 
         # 구글 트렌드 연동을 위한 키워드 매핑
