@@ -152,37 +152,7 @@ def render_foreigner_trend():
             margin=dict(l=20, r=20, t=20, b=20)
         )
         
-        # 차트 선택(Interaction) 이벤트 캡처
-        event = st.plotly_chart(fig_share, use_container_width=True, on_select="rerun")
-        
-        # 선택된 데이터 추출 (기본값: '관광')
-        selected_purpose = "관광"
-        if event and hasattr(event, 'selection') and hasattr(event.selection, 'points') and len(event.selection.points) > 0:
-            selected_purpose = event.selection.points[0]["label"]
-        
-        st.markdown(f"**💡 [{selected_purpose}] 목적 방한객의 시즌별 방문 비중 (상세)**")
-        
-        # 선택된 목적에 따라 다르게 보이도록 더미 데이터 동적 생성
-        base_val = len(selected_purpose) * 5
-        sub_data = pd.DataFrame({
-            '시즌': ['봄(3~5월)', '여름(6~8월)', '가을(9~11월)', '겨울(12~2월)'],
-            '비중(%)': [25 + base_val%7, 30 - base_val%5, 20 + base_val%4, 25 - base_val%3]
-        })
-        
-        fig_sub = px.bar(
-            sub_data, x="비중(%)", y="시즌", orientation="h",
-            color_discrete_sequence=["#38BDF8"]
-        )
-        fig_sub.update_layout(
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="Pretendard, sans-serif", size=12, color="#E2E8F0"),
-            margin=dict(l=10, r=10, t=10, b=10),
-            height=200,
-            xaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False),
-            yaxis_title=None
-        )
-        st.plotly_chart(fig_sub, use_container_width=True)
+        st.plotly_chart(fig_share, use_container_width=True)
         
     st.markdown("---")
     
