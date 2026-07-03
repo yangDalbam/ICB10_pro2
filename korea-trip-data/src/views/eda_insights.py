@@ -175,8 +175,13 @@ def render_eda_insights():
             st.session_state.city_1 = st.selectbox("📍 벤치마킹 기준 (성공 도시)", city_list, index=default_idx1)
             
         with col_select2:
-            default_idx2 = city_list.index(st.session_state.city_2) if st.session_state.city_2 in city_list else 0
-            st.session_state.city_2 = st.selectbox("📍 개선 대상 (잠재 도시)", city_list, index=default_idx2)
+            # 첫 번째 선택지에서 선택된 도시를 제외한 리스트 생성
+            city_list2 = [city for city in city_list if city != st.session_state.city_1]
+            if st.session_state.city_2 not in city_list2:
+                st.session_state.city_2 = city_list2[0] if city_list2 else ""
+                
+            default_idx2 = city_list2.index(st.session_state.city_2) if st.session_state.city_2 in city_list2 else 0
+            st.session_state.city_2 = st.selectbox("📍 개선 대상 (잠재 도시)", city_list2, index=default_idx2)
 
         st.markdown("---")
         st.header(f"2. ⚖️ 심층 1:1 비교 분석: {st.session_state.city_1} vs {st.session_state.city_2}")
