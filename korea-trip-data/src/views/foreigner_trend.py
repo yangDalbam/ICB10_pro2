@@ -137,11 +137,20 @@ def render_foreigner_trend():
         st.markdown("#### 2. 방한 외래객 목적별 점유율")
         
         df_share = df_purpose.nlargest(7, "방문자 수(명)")
-        fig_share = px.pie(
-            df_share, names="목적 유형", values="방문자 수(명)", hole=0.4,
-            color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B", "#94A3B8", "#080D1A"]
+        df_share = df_share.sort_values("방문자 수(명)", ascending=True)
+        total_visitors = df_share["방문자 수(명)"].sum()
+        df_share["비율"] = (df_share["방문자 수(명)"] / total_visitors) * 100
+        df_share["텍스트"] = df_share.apply(lambda x: f"{x['비율']:.1f}%", axis=1)
+
+        fig_share = px.bar(
+            df_share, x="방문자 수(명)", y="목적 유형", orientation="h",
+            text="텍스트",
+            color="목적 유형",
+            color_discrete_sequence=["#94A3B8", "#64748B", "#1E3A8A", "#2563EB", "#38BDF8", "#00F0FF"]
         )
+        fig_share.update_traces(textposition='outside', textfont=dict(color="#F8FAFC"))
         fig_share.update_layout(
+            showlegend=False,
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
             font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
