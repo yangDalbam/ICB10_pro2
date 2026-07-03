@@ -82,6 +82,7 @@ def render_demand_analysis():
         df_kto_demand = df_kto_demand[~df_kto_demand["광역지자체"].str.contains("서울|부산|제주")].copy()
         df_kto_demand["signguNm"] = df_kto_demand["광역지자체"] + " " + df_kto_demand["기초지자체"]
         df_kto_demand["snsMentionCo"] = df_kto_demand["기초지자체 검색건수"]
+        df_kto_demand["naviSearchCo"] = df_kto_demand["기초지자체 검색건수"]
         
         with st.container():
             col_chart1, col_chart2 = st.columns(2)
