@@ -28,11 +28,12 @@ def render_home():
         st.title("🇰🇷 한국 관광 데이터 대시보드")
         st.caption("공공 데이터를 기반으로 한 국내 관광 트렌드 및 분석 현황 (온/오프라인 행동 융합)")
         
-        c_text, c_btn = st.columns([4, 1])
+        c_text, c_btn = st.columns([5, 2])
         with c_text:
             st.markdown("<p style='font-size: 0.9rem; color: #94A3B8; margin-top: 5px;'>📊 <b>분석 근거 기준:</b> 한국관광공사(데이터랩), 공공데이터포털, 구글 트렌드 (모두 최근 1년: 2025.06~2026.05 기준)</p>", unsafe_allow_html=True)
         with c_btn:
-            if st.button("상세 출처/근거 보기", use_container_width=True):
+            st.markdown("<style>button[kind='tertiary'] p { text-decoration: underline; color: #38BDF8; font-weight: 500; }</style>", unsafe_allow_html=True)
+            if st.button("🔎 상세 출처/근거 보기", type="tertiary", use_container_width=False):
                 show_data_source_dialog()
                 
     with col_date:
