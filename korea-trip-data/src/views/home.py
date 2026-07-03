@@ -10,7 +10,7 @@ from datetime import datetime
 def show_data_source_dialog():
     st.markdown("""
     ### 1. 데이터 수집 기준 및 처리 프로세스
-    본 대시보드는 2024년 기준의 한국관광 데이터랩(KTO), 공공데이터포털(ODCloud), 신한카드/BC카드 빅데이터, 구글 트렌드 검색어 데이터를 수집하여 개발되었습니다. 모든 데이터는 정교한 전처리 과정을 거쳐 지역별 및 지표별 통계로 가공되었습니다.
+    본 대시보드는 최근 1년(2025.06~2026.05) 기준의 한국관광 데이터랩(KTO), 공공데이터포털(ODCloud), 신한카드/BC카드 빅데이터, 구글 트렌드 검색어 데이터를 수집하여 개발되었습니다. 모든 데이터는 정교한 전처리 과정을 거쳐 지역별 및 지표별 통계로 가공되었습니다.
     
     ### 2. 지표별 데이터 수집 상세 근거
     - 📈 **방한 외래관광객 트렌드:** 출처: 한국관광 데이터랩(KTO) 및 한국문화관광연구원. 월별/국가별/연령별 외래 관광객 실태조사 데이터를 기반으로 집계된 수치입니다.
@@ -30,7 +30,7 @@ def render_home():
         
         c_text, c_btn = st.columns([4, 1])
         with c_text:
-            st.markdown("<p style='font-size: 0.9rem; color: #94A3B8; margin-top: 5px;'>📊 <b>분석 근거 기준:</b> 한국관광공사(데이터랩), 공공데이터포털, 구글 트렌드 (모두 2024년 기준)</p>", unsafe_allow_html=True)
+            st.markdown("<p style='font-size: 0.9rem; color: #94A3B8; margin-top: 5px;'>📊 <b>분석 근거 기준:</b> 한국관광공사(데이터랩), 공공데이터포털, 구글 트렌드 (모두 최근 1년: 2025.06~2026.05 기준)</p>", unsafe_allow_html=True)
         with c_btn:
             if st.button("상세 출처/근거 보기", use_container_width=True):
                 show_data_source_dialog()
