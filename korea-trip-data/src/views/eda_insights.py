@@ -52,12 +52,8 @@ def render_eda_insights():
         df_demand["snsMentionCo"] = df_demand["기초지자체 검색건수"]
         df_demand["naviSearchCo"] = df_demand["기초지자체 검색건수"]
         
-        # 사분면에 점이 고루 분포하여 4가지 색상이 모두 보이도록 상위 60개 지역 추출 (화면에는 점 60개 표시)
-        df_demand = df_demand.nlargest(60, "snsMentionCo")
-        
-        # 텍스트 라벨 (가독성을 위해 텍스트는 상위 20개만 표시)
-        top20_regions = df_demand.nlargest(20, "snsMentionCo")["signguNm"].tolist()
-        df_demand["label"] = df_demand["signguNm"].apply(lambda x: x if x in top20_regions else "")
+        # 사용자의 요청에 따라 가독성을 위해 상위 15개 지역만 추출
+        df_demand = df_demand.nlargest(15, "snsMentionCo")
 
     if not df_demand.empty:
         st.header("1. 🧩 시군구별 온-오프라인 매트릭스 2x2 진단")
@@ -132,7 +128,7 @@ def render_eda_insights():
 
         fig = px.scatter(
             df_demand, x=x_col, y="naviSearchCo",
-            color="cityType", hover_name="signguNm", text="label",
+            color="cityType", hover_name="signguNm", text="signguNm",
             color_discrete_map={
                 "스타 (고관심·고방문)": "#00F0FF", # 밝은 시안
                 "잠재 (고관심·저방문)": "#A78BFA", # 연보라
