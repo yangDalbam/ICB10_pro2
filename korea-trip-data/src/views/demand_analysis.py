@@ -71,8 +71,6 @@ def render_demand_analysis():
             return {}
 
     st.header("1. 🚗 관심도 및 실제 방문도")
-    import pandas as pd
-    import os
     try:
         data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data')
         df_kto_demand = pd.read_csv(os.path.join(data_dir, '20260702210628_지역별 검색건수.csv'), encoding='utf-8')
@@ -273,7 +271,7 @@ def render_demand_analysis():
         col3, col4 = st.columns(2)
 
         with col3:
-            st.subheader("방문객 상위 5개 지역 추이 변화 (서울/부산/제주 제외)")
+            st.subheader("방문객 상위 5개 지역 추이 변화")
             df_visitor_filtered = df_visitor_region[~df_visitor_region['지역'].str.contains("서울|부산|제주")]
             df_region_sum = df_visitor_filtered.groupby('지역')['외국인 방문자수'].sum().reset_index()
             top5_regions = df_region_sum.nlargest(5, '외국인 방문자수')['지역']
@@ -288,7 +286,7 @@ def render_demand_analysis():
                 hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                 margin=dict(l=20, r=20, t=40, b=20),
                 xaxis=dict(type='category', showgrid=False, zeroline=False, linecolor="#334155"),
-                yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
+                yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155", tickformat=",")
             )
             st.plotly_chart(fig3, use_container_width=True)
 
