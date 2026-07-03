@@ -123,12 +123,44 @@ def render_eda_insights():
         median_sns = df_demand[x_col].median()
         median_navi = df_demand["naviSearchCo"].median()
 
+        def get_quadrant(row):
+            if row[x_col] >= median_sns and row["naviSearchCo"] >= median_navi:
+                return "스타 (고관심·고방문)"
+            elif row[x_col] >= median_sns and row["naviSearchCo"] < median_navi:
+                return "잠재 (고관심·저방문)"
+            elif row[x_col] < median_sns and row["naviSearchCo"] >= median_navi:
+                return "안정 (저관심·고방문)"
+            else:
+                return "일반 (저관심·저방문)"
+
+        df_demand["cityType"] = df_demand.apply(get_quadrant, axis=1)
+
         fig = px.scatter(
             df_demand, x=x_col, y="naviSearchCo",
             color="cityType", hover_name="signguNm", text="signguNm",
-            color_discrete_map={"도시1": "#00F0FF", "도시2": "#38BDF8", "일반": "#64748B"}
+            color_discrete_map={
+                "스타 (고관심·고방문)": "#00F0FF", # 밝은 시안
+                "잠재 (고관심·저방문)": "#A78BFA", # 연보라
+                "안정 (저관심·고방문)": "#38BDF8", # 스카이블루
+                "일반 (저관심·저방문)": "#94A3B8"  # 슬레이트(회색)
+            }
         )
-        fig.update_traces(textposition='top center', marker=dict(size=14, opacity=0.85, line=dict(width=1, color='#121824')))
+        
+        # 텍스트 겹침 방지를 위해 사분면별로 텍스트 방향을 밀어내고, 지터링(배열 순환) 적용
+        for trace in fig.data:
+            trace_len = len(trace.x) if trace.x is not None else 0
+            if "스타" in trace.name:
+                pos_array = ['top right', 'top center', 'middle right'] * (trace_len // 3 + 1)
+            elif "잠재" in trace.name:
+                pos_array = ['bottom right', 'bottom center', 'middle right'] * (trace_len // 3 + 1)
+            elif "안정" in trace.name:
+                pos_array = ['top left', 'top center', 'middle left'] * (trace_len // 3 + 1)
+            else:
+                pos_array = ['bottom left', 'bottom center', 'middle left'] * (trace_len // 3 + 1)
+            
+            trace.textposition = pos_array[:trace_len]
+            trace.textfont = dict(size=12, color="#F8FAFC")
+            trace.marker = dict(size=14, opacity=0.85, line=dict(width=1, color='#121824'))
         fig.add_vline(x=median_sns, line_width=1.5, line_dash="dash", line_color="#475569")
         fig.add_hline(y=median_navi, line_width=1.5, line_dash="dash", line_color="#475569")
         fig.update_layout(
