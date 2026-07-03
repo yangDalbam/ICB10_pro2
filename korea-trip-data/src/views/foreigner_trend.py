@@ -116,20 +116,46 @@ def render_foreigner_trend():
                           var_name='성별', value_name='인원수')
         df_long['성별'] = df_long['성별'].replace({'남성 승객 수(명)': '남성', '여성 승객 수(명)': '여성'})
         
+        # 연령 구분 라벨 변경
+        age_mapping = {
+            '0~9세': '0', '10~19세': '10', '20~29세': '20', 
+            '30~39세': '30', '40~49세': '40', '50~59세': '50', 
+            '60~69세': '60', '70~79세': '70', '80세이상': '80+'
+        }
+        df_long['연령 구분'] = df_long['연령 구분'].map(age_mapping).fillna(df_long['연령 구분'])
+        
+        # 인구 피라미드를 위해 남성 인원수를 음수로 변환
+        df_long.loc[df_long['성별'] == '남성', '인원수'] = -df_long.loc[df_long['성별'] == '남성', '인원수']
+        df_long['실제 인원수(명)'] = df_long['인원수'].abs()
+        
         fig_gender_age = px.bar(
-            df_long, x="연령 구분", y="인원수", color="성별",
+            df_long, x="인원수", y="연령 구분", color="성별",
+            orientation='h',
             labels={"인원수": "관광객 수(명)", "연령 구분": "연령대"},
-            barmode="group",
-            color_discrete_map={"여성": "#38BDF8", "남성": "#2563EB"}
+            barmode="relative",
+            color_discrete_map={"여성": "#38BDF8", "남성": "#2563EB"},
+            category_orders={"연령 구분": ["0", "10", "20", "30", "40", "50", "60", "70", "80+"]},
+            hover_data={"실제 인원수(명)": True, "인원수": False}
         )
+        
+        # 동적 X축 틱 생성 (음수를 양수로 표시, M 단위)
+        max_val = df_long['실제 인원수(명)'].max()
+        tick_step = 1000000
+        limit = int((max_val // tick_step + 1) * tick_step)
+        ticks = list(range(-limit, limit + 1, tick_step))
+        tick_texts = [f"{abs(t)//1000000}M" if t != 0 else "0" for t in ticks]
+        
         fig_gender_age.update_layout(
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
             font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
             hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
             margin=dict(l=20, r=20, t=30, b=20),
-            xaxis=dict(type='category', showgrid=False, zeroline=False, linecolor="#334155"),
-            yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
+            xaxis=dict(
+                tickmode='array', tickvals=ticks, ticktext=tick_texts,
+                showgrid=True, gridcolor="#1E293B", zeroline=True, zerolinecolor="#475569", linecolor="#334155"
+            ),
+            yaxis=dict(showgrid=False, zeroline=False, linecolor="#334155")
         )
         st.plotly_chart(fig_gender_age, use_container_width=True)
 
