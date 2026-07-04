@@ -140,7 +140,18 @@ CITIES = [
     {"signguCd": "32010", "signguNm": "강원 춘천시", "type": "일반", "sns_weight": 1.1, "visit_weight": 1.0, "spend_weight": 0.9},
     {"signguCd": "34110", "signguNm": "충남 천안시", "type": "일반", "sns_weight": 0.8, "visit_weight": 0.8, "spend_weight": 0.8},
     {"signguCd": "35110", "signguNm": "전북 전주시", "type": "일반", "sns_weight": 1.2, "visit_weight": 1.1, "spend_weight": 1.0},
-    {"signguCd": "38110", "signguNm": "경남 창원시", "type": "일반", "sns_weight": 0.7, "visit_weight": 0.7, "spend_weight": 0.8}
+    {"signguCd": "38110", "signguNm": "경남 창원시", "type": "일반", "sns_weight": 0.7, "visit_weight": 0.7, "spend_weight": 0.8},
+    
+    # 누락된 상위 내비/상품 수 지역 추가
+    {"signguCd": "28110", "signguNm": "인천 중구", "type": "도시1", "sns_weight": 1.3, "visit_weight": 1.4, "spend_weight": 1.2},
+    {"signguCd": "31190", "signguNm": "경기 용인시", "type": "도시1", "sns_weight": 1.2, "visit_weight": 1.3, "spend_weight": 1.1},
+    {"signguCd": "31100", "signguNm": "경기 고양시", "type": "일반", "sns_weight": 1.0, "visit_weight": 1.1, "spend_weight": 1.0},
+    {"signguCd": "31240", "signguNm": "경기 화성시", "type": "일반", "sns_weight": 1.1, "visit_weight": 1.0, "spend_weight": 1.1},
+    {"signguCd": "31200", "signguNm": "경기 파주시", "type": "도시2", "sns_weight": 1.4, "visit_weight": 0.8, "spend_weight": 0.7},
+    {"signguCd": "37010", "signguNm": "경북 경주시", "type": "도시1", "sns_weight": 1.5, "visit_weight": 1.3, "spend_weight": 1.2},
+    {"signguCd": "32030", "signguNm": "강원 강릉시", "type": "도시1", "sns_weight": 1.4, "visit_weight": 1.5, "spend_weight": 1.3},
+    {"signguCd": "32040", "signguNm": "강원 속초시", "type": "도시1", "sns_weight": 1.3, "visit_weight": 1.4, "spend_weight": 1.2},
+    {"signguCd": "31370", "signguNm": "경기 가평군", "type": "일반", "sns_weight": 1.0, "visit_weight": 1.2, "spend_weight": 1.0}
 ]
 
 def _generate_mock_visitor_div_data(base_ym: str) -> pd.DataFrame:
