@@ -258,7 +258,7 @@ def render_foreigner_trend():
             color="입국자 수(명)", 
             hover_name="입국자 국적",
             hover_data={"lon_adj": False, "lat_adj": False, "ISO_CODE": False, "입국자 수(명)": True, "입국자 비율(%)": True},
-            title="국적별 입국자 수 돌링 카토그램 (충돌 방지 로직 적용)",
+            title="국적별 입국자 수 돌링 카토그램",
             color_continuous_scale="Blues",
             projection="equirectangular",
             size_max=60
