@@ -329,7 +329,7 @@ def render_demand_analysis():
         st.warning(f"지역별 방문자 수 데이터를 확인할 수 없습니다: {e}")
         
     st.markdown("---")
-    st.header("4. 🌍 주요 OTA 플랫폼 기반 지역별 관광 인프라 현황)")
+    st.header("4. 🌍 OTA 플랫폼 기반 지역별 관광 인프라 현황")
     st.markdown("글로벌 온라인 여행 플랫폼(GetYourGuide, Klook)에 등록된 한국 관광 상품 데이터를 바탕으로 지역별 인프라, 방문 규모, 만족도를 분석합니다.")
 
     # 데이터 로딩 및 전처리 로직
@@ -403,13 +403,13 @@ def render_demand_analysis():
             
         with col2:
             fig2 = px.bar(top5_reviews, x='총 리뷰 수', y='지역', orientation='h', color='총 리뷰 수',
-                          color_continuous_scale='Crest', title="외국인 방문 규모(총 리뷰 수) 상위 5개 지역")
+                          color_continuous_scale='Blues', title="외국인 방문 규모(총 리뷰 수) 상위 5개 지역")
             fig2.update_layout(yaxis={'categoryorder':'total ascending'})
             st.plotly_chart(fig2, use_container_width=True)
             
         with col3:
             fig3 = px.bar(top5_ratings, x='평균 평점', y='지역', orientation='h', color='평균 평점',
-                          color_continuous_scale='Flare', title="평균 방문 만족도 상위 5개 지역")
+                          color_continuous_scale='Sunset', title="평균 방문 만족도 상위 5개 지역")
             fig3.update_layout(xaxis=dict(range=[4.0, 5.0]), yaxis={'categoryorder':'total ascending'})
             st.plotly_chart(fig3, use_container_width=True)
 
