@@ -426,9 +426,15 @@ def render_demand_analysis():
             st.plotly_chart(fig1, use_container_width=True)
             
         with col2:
-            fig3 = px.bar(top5_ratings, x='평균 평점', y='지역', orientation='h', color='평균 평점', hover_data=['주요 키워드'],
-                          color_continuous_scale='Blues', title="평균 방문 만족도 상위 5개 지역")
-            fig3.update_layout(xaxis=dict(range=[4.0, 5.0]), yaxis={'categoryorder':'total ascending'})
+            df_violin = df_valid_rating[df_valid_rating['region_sigungu'].isin(top5_ratings['지역'])]
+            df_violin = pd.merge(df_violin, keyword_df, left_on='region_sigungu', right_on='지역', how='left')
+            
+            fig3 = px.violin(df_violin, x='rating_num', y='region_sigungu', color='region_sigungu',
+                             orientation='h', hover_data=['주요 키워드'], box=True,
+                             color_discrete_sequence=px.colors.sequential.Blues[-6:-1],
+                             title="상위 5개 지역 평점 분포 (바이올린 플롯)")
+            fig3.update_layout(xaxis_title="평점", yaxis_title="지역", showlegend=False, 
+                               xaxis=dict(range=[3.5, 5.0]), yaxis={'categoryorder':'mean ascending'})
             st.plotly_chart(fig3, use_container_width=True)
 
         st.markdown("### 🔍 상품 수(인프라)와 방문 규모(리뷰 수) 상관관계 분석")
