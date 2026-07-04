@@ -460,13 +460,27 @@ def render_demand_analysis():
         
         fig_scatter = px.scatter(scatter_df, x='상품 수', y='총 리뷰 수', text='표시 라벨', size='총 리뷰 수', hover_data=['지역', '주요 키워드'],
                                  color='총 리뷰 수', color_continuous_scale='Blues', size_max=40,
-                                 title=f"지역별 인프라 vs 방문 규모 (r={corr1:.2f})")
+                                 title="지역별 인프라 vs 방문 규모")
                                  
         if len(scatter_df) > 1:
             z1 = np.polyfit(scatter_df['상품 수'], scatter_df['총 리뷰 수'], 1)
             p1 = np.poly1d(z1)
             x_range1 = np.linspace(scatter_df['상품 수'].min(), scatter_df['상품 수'].max(), 50)
             fig_scatter.add_trace(go.Scatter(x=x_range1, y=p1(x_range1), mode='lines', line=dict(color='red', dash='dash'), showlegend=False, hoverinfo='skip'))
+            
+        fig_scatter.add_annotation(
+            x=0.98, y=0.95,
+            xref="paper", yref="paper",
+            text=f"<b>r = {corr1:.2f}</b>",
+            showarrow=False,
+            font=dict(size=15, color="white"),
+            bgcolor="rgba(255, 255, 255, 0.1)",
+            bordercolor="rgba(255, 255, 255, 0.3)",
+            borderwidth=1,
+            borderpad=6,
+            xanchor="right",
+            yanchor="top"
+        )
             
         fig_scatter.update_traces(textposition='top center')
         fig_scatter.update_layout(height=500)
