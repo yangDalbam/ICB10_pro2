@@ -142,6 +142,7 @@ def render_demand_analysis():
                     x_axis_title = "종합 관심도 (SNS 50% + 트렌드 50%)"
                 else:
                     st.warning("구글 트렌드 트래픽 제한으로 임시 데이터를 표시합니다.")
+                    df_top_sns["snsKeywords"] = "트래픽 제한으로 조회 불가"
                     x_col = "snsMentionCo"
                     kw_col = "snsKeywords"
                     x_axis_title = "관심도"
