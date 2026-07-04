@@ -393,24 +393,15 @@ def render_demand_analysis():
         top5_ratings.columns = ['지역', '평균 평점']
         top5_ratings['평균 평점'] = top5_ratings['평균 평점'].round(2)
 
-        # 각 지역별 주요 키워드 추출
-        import re
-        from collections import Counter
-        def get_top_keywords(titles):
-            words = []
-            for t in titles:
-                if pd.isna(t): continue
-                tokens = re.findall(r'[가-힣a-zA-Z]+', str(t))
-                for w in tokens:
-                    w = w.lower()
-                    if len(w) > 1 and w not in ['투어', '티켓', 'tour', 'ticket', 'seoul', 'korea', 'from', 'with', 'and', 'day', 'the', 'in', 'of', 'for', 'to']:
-                        words.append(w)
-            if not words: return "키워드 없음"
-            counter = Counter(words)
-            return ", ".join([w for w, c in counter.most_common(3)])
-            
-        keyword_df = df_ota.groupby('region_sigungu')['title'].apply(get_top_keywords).reset_index()
-        keyword_df.columns = ['지역', '주요 키워드']
+        # 사용자가 선택한 지역별 핵심 키워드 매핑
+        keyword_dict = {
+            '경기도 수원시': '스타필드, 민속, 마을, 유네스코',
+            '경기도 파주시': 'DMZ, 탈북자, 땅굴, 현수교, 북한, JSA',
+            '경상북도 경주시': '삼국유사, 유네스코, 세계유산, 등재지',
+            '인천광역시': '국제공항, 호텔, 라운지, 파라다이스시티',
+            '강원도 춘천시': '남이섬, 강촌, 레일바이크, 레고랜드, 리조트'
+        }
+        keyword_df = pd.DataFrame(list(keyword_dict.items()), columns=['지역', '주요 키워드'])
 
         # 키워드 병합
         top5_infra = pd.merge(top5_infra, keyword_df, on='지역', how='left')
