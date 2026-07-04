@@ -419,6 +419,7 @@ def render_demand_analysis():
         with col1:
             fig1 = px.bar(top5_infra, x='상품 수', y='지역', orientation='h', color='상품 수', hover_data=['주요 키워드'],
                           color_continuous_scale='Blues', title="관광 상품(인프라) 수 상위 5개 지역")
+            fig1.update_traces(hovertemplate='<b>상품 수:</b> %{x}개<br><b>주요 키워드:</b> %{customdata[0]}<extra></extra>')
             fig1.update_layout(yaxis={'categoryorder':'total ascending'})
             st.plotly_chart(fig1, use_container_width=True)
             
