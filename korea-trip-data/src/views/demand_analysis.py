@@ -418,7 +418,7 @@ def render_demand_analysis():
         st.markdown("<br>", unsafe_allow_html=True)
         st.subheader("📊 지역별 인프라 및 방문 만족도 분석 (Top 5)")
 
-        col1, col2, col3 = st.columns(3)
+        col1, col2 = st.columns(2)
         with col1:
             fig1 = px.bar(top5_infra, x='상품 수', y='지역', orientation='h', color='상품 수', hover_data=['주요 키워드'],
                           color_continuous_scale='Blues', title="관광 상품(인프라) 수 상위 5개 지역")
@@ -426,12 +426,6 @@ def render_demand_analysis():
             st.plotly_chart(fig1, use_container_width=True)
             
         with col2:
-            fig2 = px.bar(top5_reviews, x='총 리뷰 수', y='지역', orientation='h', color='총 리뷰 수', hover_data=['주요 키워드'],
-                          color_continuous_scale='Blues', title="외국인 방문 규모(총 리뷰 수) 상위 5개 지역")
-            fig2.update_layout(yaxis={'categoryorder':'total ascending'})
-            st.plotly_chart(fig2, use_container_width=True)
-            
-        with col3:
             fig3 = px.bar(top5_ratings, x='평균 평점', y='지역', orientation='h', color='평균 평점', hover_data=['주요 키워드'],
                           color_continuous_scale='Blues', title="평균 방문 만족도 상위 5개 지역")
             fig3.update_layout(xaxis=dict(range=[4.0, 5.0]), yaxis={'categoryorder':'total ascending'})
