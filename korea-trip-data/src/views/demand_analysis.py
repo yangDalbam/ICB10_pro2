@@ -440,60 +440,37 @@ def render_demand_analysis():
                           color_continuous_scale='Blues', title="가격 구간별 관광 상품 인기도(평균 리뷰 수)")
             st.plotly_chart(fig3, use_container_width=True)
 
-        st.markdown("### 🔍 다변량 상관관계 분석")
+        st.markdown("### 🔍 지역 인프라와 방문 규모 상관관계 분석")
         
         import numpy as np
-        corr_col1, corr_col2 = st.columns(2)
         
-        with corr_col1:
-            # Scatter plot for correlation (Region)
-            scatter_df_all = df_ota[df_ota['region_sigungu'] != '알 수 없음'].groupby('region_sigungu').agg({'title': 'count', 'reviews_num': 'sum'}).reset_index()
-            scatter_df_all.columns = ['지역', '상품 수', '총 리뷰 수']
+        # Scatter plot for correlation (Region)
+        scatter_df_all = df_ota[df_ota['region_sigungu'] != '알 수 없음'].groupby('region_sigungu').agg({'title': 'count', 'reviews_num': 'sum'}).reset_index()
+        scatter_df_all.columns = ['지역', '상품 수', '총 리뷰 수']
+        
+        corr1 = scatter_df_all['상품 수'].corr(scatter_df_all['총 리뷰 수'])
+        
+        # 상위 15개 지역만 필터링하여 노이즈 제거
+        scatter_df = scatter_df_all.sort_values(by='총 리뷰 수', ascending=False).head(15).reset_index(drop=True)
+        scatter_df = pd.merge(scatter_df, keyword_df, on='지역', how='left')
+        
+        # 텍스트 겹침 방지를 위해 상위 5개 지역만 차트 위에 이름을 표시하고, 나머지는 호버(마우스 오버)로만 표시
+        scatter_df['표시 라벨'] = scatter_df['지역']
+        scatter_df.loc[5:, '표시 라벨'] = ''
+        
+        fig_scatter = px.scatter(scatter_df, x='상품 수', y='총 리뷰 수', text='표시 라벨', size='총 리뷰 수', hover_data=['지역', '주요 키워드'],
+                                 color='총 리뷰 수', color_continuous_scale='Blues', size_max=40,
+                                 title=f"지역별 인프라 vs 방문 규모 (r={corr1:.2f})")
+                                 
+        if len(scatter_df) > 1:
+            z1 = np.polyfit(scatter_df['상품 수'], scatter_df['총 리뷰 수'], 1)
+            p1 = np.poly1d(z1)
+            x_range1 = np.linspace(scatter_df['상품 수'].min(), scatter_df['상품 수'].max(), 50)
+            fig_scatter.add_trace(go.Scatter(x=x_range1, y=p1(x_range1), mode='lines', line=dict(color='red', dash='dash'), showlegend=False, hoverinfo='skip'))
             
-            corr1 = scatter_df_all['상품 수'].corr(scatter_df_all['총 리뷰 수'])
-            
-            # 상위 15개 지역만 필터링하여 노이즈 제거
-            scatter_df = scatter_df_all.sort_values(by='총 리뷰 수', ascending=False).head(15).reset_index(drop=True)
-            scatter_df = pd.merge(scatter_df, keyword_df, on='지역', how='left')
-            
-            # 텍스트 겹침 방지를 위해 상위 5개 지역만 차트 위에 이름을 표시하고, 나머지는 호버(마우스 오버)로만 표시
-            scatter_df['표시 라벨'] = scatter_df['지역']
-            scatter_df.loc[5:, '표시 라벨'] = ''
-            
-            fig_scatter = px.scatter(scatter_df, x='상품 수', y='총 리뷰 수', text='표시 라벨', size='총 리뷰 수', hover_data=['지역', '주요 키워드'],
-                                     color='총 리뷰 수', color_continuous_scale='Blues', size_max=40,
-                                     title=f"지역별 인프라 vs 방문 규모 (r={corr1:.2f})")
-                                     
-            if len(scatter_df) > 1:
-                z1 = np.polyfit(scatter_df['상품 수'], scatter_df['총 리뷰 수'], 1)
-                p1 = np.poly1d(z1)
-                x_range1 = np.linspace(scatter_df['상품 수'].min(), scatter_df['상품 수'].max(), 50)
-                fig_scatter.add_trace(go.Scatter(x=x_range1, y=p1(x_range1), mode='lines', line=dict(color='red', dash='dash'), showlegend=False, hoverinfo='skip'))
-                
-            fig_scatter.update_traces(textposition='top center')
-            st.plotly_chart(fig_scatter, use_container_width=True)
-            
-        with corr_col2:
-            df_price_corr = df_ota[(df_ota['price_num'] > 0) & (df_ota['reviews_num'] >= 0)].copy()
-            # 극단적인 가격 이상치(Outlier)가 그래프를 왜곡하므로 상위 5% 제외
-            price_limit = df_price_corr['price_num'].quantile(0.95)
-            df_price_corr = df_price_corr[df_price_corr['price_num'] <= price_limit]
-            
-            corr2 = df_price_corr['price_num'].corr(df_price_corr['reviews_num'])
-            
-            fig_price = px.scatter(df_price_corr, x='price_num', y='reviews_num', 
-                                   title=f"상품 가격 vs 방문 규모 (r={corr2:.2f})",
-                                   opacity=0.5, color_discrete_sequence=['#4287f5'],
-                                   hover_data=['title', 'region_sigungu'],
-                                   labels={'price_num': '상품 가격(원)', 'reviews_num': '리뷰 수'})
-            
-            if len(df_price_corr) > 1:
-                z2 = np.polyfit(df_price_corr['price_num'], df_price_corr['reviews_num'], 1)
-                p2 = np.poly1d(z2)
-                x_range2 = np.linspace(df_price_corr['price_num'].min(), df_price_corr['price_num'].max(), 50)
-                fig_price.add_trace(go.Scatter(x=x_range2, y=p2(x_range2), mode='lines', line=dict(color='red', dash='dash'), showlegend=False, hoverinfo='skip'))
-                
-            st.plotly_chart(fig_price, use_container_width=True)
+        fig_scatter.update_traces(textposition='top center')
+        fig_scatter.update_layout(height=500)
+        st.plotly_chart(fig_scatter, use_container_width=True)
 
         st.success("**분석 인사이트:** 상품 수와 방문 규모는 강한 양의 상관관계를 보이나, 파주시(DMZ)처럼 킬러 콘텐츠 하나로 압도적 수요를 이끄는 이상치(Outlier) 지역도 존재합니다. "
                    "반면 상품 가격과 리뷰 수(수요)는 뚜렷한 음의 상관관계 또는 특정 저가 구간 밀집 형태를 보이므로, 전략적 가격 포지셔닝이 중요함을 시사합니다.")
