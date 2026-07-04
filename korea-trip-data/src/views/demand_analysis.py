@@ -334,7 +334,7 @@ def render_demand_analysis():
 
     # 데이터 로딩 및 전처리 로직
     @st.cache_data
-    def load_ota_data():
+    def load_ota_data_v2():
         data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
         csv_path = os.path.join(data_dir, 'ota_data.csv')
         
@@ -369,7 +369,7 @@ def render_demand_analysis():
         df['region_sigungu'] = df['region'].apply(clean_region_sigungu)
         return df
 
-    df_ota = load_ota_data()
+    df_ota = load_ota_data_v2()
 
     if df_ota.empty:
         st.warning("데이터 파이프라인에서 OTA 데이터를 찾을 수 없습니다. 경로를 확인해주세요.")
