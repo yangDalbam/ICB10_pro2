@@ -65,13 +65,14 @@ def render_eda_insights():
         @st.cache_data(ttl=86400)
         def fetch_google_trends_data_all(kw_list):
             try:
-                import numpy as np
-                dates = pd.date_range(end=pd.Timestamp.now(), periods=12, freq='W')
-                df = pd.DataFrame(index=dates)
-                for kw in kw_list:
-                    base = np.random.randint(20, 80)
-                    walk = np.cumsum(np.random.randn(12) * 5)
-                    df[kw] = np.clip(base + walk, 0, 100)
+                from pytrends.request import TrendReq
+                import time
+                pytrends = TrendReq(hl='en-US', tz=360, retries=3, backoff_factor=1)
+                pytrends.build_payload(kw_list, cat=0, timeframe='today 3-m', geo='')
+                df = pytrends.interest_over_time()
+                if not df.empty and 'isPartial' in df.columns:
+                    df = df.drop(columns=['isPartial'])
+                time.sleep(1) # rate limit mitigation
                 return df
             except Exception as e:
                 return pd.DataFrame()
@@ -212,24 +213,79 @@ def render_eda_insights():
         city_1 = st.session_state.city_1
         city_2 = st.session_state.city_2
 
-        # 1:1 비교용 데이터 로드
-        df_spend = get_area_spend_diversity()
-        if not df_spend.empty:
-            df_spend = df_spend[~df_spend["signguNm"].str.contains("서울|부산|제주")]
-        df_cult = get_area_cultural_demand()
-        if not df_cult.empty:
-            df_cult = df_cult[~df_cult["signguNm"].str.contains("서울|부산|제주")]
-        
-        s_c1 = df_spend[df_spend["signguNm"] == city_1]
-        s_c2 = df_spend[df_spend["signguNm"] == city_2]
-        
-        d_c1 = df_demand[df_demand["signguNm"] == city_1]
-        d_c2 = df_demand[df_demand["signguNm"] == city_2]
+        # 1:1 비교용 데이터 로드 (OTA 실제 인프라 데이터 연동)
+        csv_path = os.path.join(data_dir, 'ota_data.csv')
+        if os.path.exists(csv_path):
+            df_ota = pd.read_csv(csv_path)
+            
+            def clean_reviews(r):
+                if pd.isna(r): return 0
+                r = str(r).replace(',', '').replace('건', '').strip()
+                if not r: return 0
+                try: return int(float(r))
+                except: return 0
+                
+            def clean_rating(r):
+                if pd.isna(r): return 0.0
+                try: return float(str(r).strip())
+                except: return 0.0
 
-        if not d_c1.empty and not d_c2.empty:
-            labels = ["관광객 다양성", "소비 다양성", "국제 다양성", "SNS 언급량", "내비 검색량"]
-            val_c1 = [0.95, 0.90, 0.92, float(d_c1.iloc[0]["snsMentionCo"]) / 20000, float(d_c1.iloc[0]["naviSearchCo"]) / 15000]
-            val_c2 = [0.45, 0.25, 0.35, float(d_c2.iloc[0]["snsMentionCo"]) / 20000, float(d_c2.iloc[0]["naviSearchCo"]) / 15000]
+            df_ota['reviews_num'] = df_ota['reviews'].apply(clean_reviews)
+            df_ota['rating_num'] = df_ota['rating'].apply(clean_rating)
+            
+            df_ota_agg = df_ota.groupby('region_sigungu').agg({'title': 'count', 'reviews_num': 'sum', 'rating_num': 'mean'}).reset_index()
+            df_ota_agg.columns = ['지역', '상품 수', '총 리뷰 수', '평균 평점']
+            
+            # 지역명 정규화 (경기도 수원시 -> 경기 수원시)
+            mapping_dict = {
+                "서울특별시": "서울", "부산광역시": "부산", "대구광역시": "대구", "인천광역시": "인천",
+                "광주광역시": "광주", "대전광역시": "대전", "울산광역시": "울산", "세종특별자치시": "세종",
+                "경기도": "경기", "강원특별자치도": "강원", "강원도": "강원", "충청북도": "충북", "충청남도": "충남",
+                "전북특별자치도": "전북", "전라북도": "전북", "전라남도": "전남", "경상북도": "경북",
+                "경상남도": "경남", "제주특별자치도": "제주"
+            }
+            def normalize_region(name):
+                for k, v in mapping_dict.items():
+                    name = str(name).replace(k, v)
+                return name
+            
+            df_ota_agg['signguNm'] = df_ota_agg['지역'].apply(normalize_region)
+            
+            # df_demand 와 병합
+            df_merged = pd.merge(df_demand, df_ota_agg, on='signguNm', how='left').fillna(0)
+        else:
+            df_merged = df_demand.copy()
+            df_merged['상품 수'] = 0
+            df_merged['총 리뷰 수'] = 0
+            df_merged['평균 평점'] = 0
+
+        # 최대값 기준으로 정규화 (0~1)
+        max_sns = df_merged["snsMentionCo"].max() or 1
+        max_navi = df_merged["naviSearchCo"].max() or 1
+        max_infra = df_merged["상품 수"].max() or 1
+        max_review = df_merged["총 리뷰 수"].max() or 1
+        
+        m_c1 = df_merged[df_merged["signguNm"] == city_1]
+        m_c2 = df_merged[df_merged["signguNm"] == city_2]
+
+        if not m_c1.empty and not m_c2.empty:
+            labels = ["SNS 관심도", "내비 방문도", "관광 상품 수", "글로벌 리뷰 수", "평균 평점(5점 만점)"]
+            
+            val_c1 = [
+                float(m_c1.iloc[0]["snsMentionCo"]) / max_sns,
+                float(m_c1.iloc[0]["naviSearchCo"]) / max_navi,
+                float(m_c1.iloc[0]["상품 수"]) / max_infra,
+                float(m_c1.iloc[0]["총 리뷰 수"]) / max_review,
+                float(m_c1.iloc[0]["평균 평점"]) / 5.0
+            ]
+            
+            val_c2 = [
+                float(m_c2.iloc[0]["snsMentionCo"]) / max_sns,
+                float(m_c2.iloc[0]["naviSearchCo"]) / max_navi,
+                float(m_c2.iloc[0]["상품 수"]) / max_infra,
+                float(m_c2.iloc[0]["총 리뷰 수"]) / max_review,
+                float(m_c2.iloc[0]["평균 평점"]) / 5.0
+            ]
 
             val_c1 = [min(x, 1.0) for x in val_c1]
             val_c2 = [min(x, 1.0) for x in val_c2]
@@ -251,12 +307,20 @@ def render_eda_insights():
             )
             st.plotly_chart(fig_radar, use_container_width=True)
 
+            c1_infra = int(m_c1.iloc[0]["상품 수"])
+            c2_infra = int(m_c2.iloc[0]["상품 수"])
+            c1_review = int(m_c1.iloc[0]["총 리뷰 수"])
+            c2_review = int(m_c2.iloc[0]["총 리뷰 수"])
+            
+            infra_diff = "우수" if c1_infra > c2_infra else "부족"
+            review_diff = "활발" if c1_review > c2_review else "부족"
+
             st.markdown("#### 활성화 벤치마킹 인사이트")
             st.info(f"""
             💡 **{city_2} 관광 발전을 위한 데이터 제언**:
-            - **{city_1}**의 경우 온라인 홍보와 더불어 오프라인 체험형 인프라(식음료, 액티비티)가 안정적으로 연계되고 있습니다.
-            - 매트릭스 지표 상 **{city_2}**는 현재 잠재 수요를 실질 방문으로 이끌 매력도(체류시간 증대 요인)가 상대적으로 낮습니다.
-            - {city_1}의 숙박/식음료 소비 패턴을 벤치마킹하여 플랫폼 결합 상품 패키지를 전략적으로 유통할 것을 권장합니다.
+            - **{city_1}**의 경우 관광 상품 수({c1_infra}개)와 글로벌 리뷰 수({c1_review}건) 등 실질적인 인프라와 피드백이 강력하게 구축되어 있습니다.
+            - 매트릭스 지표 상 **{city_2}**는 상대적으로 인프라(상품 수 {c2_infra}개) 및 해외 리뷰({c2_review}건)가 {infra_diff}하고 매력도가 다를 수 있습니다.
+            - {city_1}의 관광 상품 구성(OTA 벤치마킹)과 방문객 후기 패턴을 분석하여, 글로벌 플랫폼에 매력적인 체험형 인프라 패키지를 전략적으로 유통할 것을 권장합니다.
             """)
     else:
         st.warning("분석을 위한 API 데이터를 불러올 수 없습니다.")
