@@ -475,6 +475,10 @@ def render_demand_analysis():
             
         with corr_col2:
             df_price_corr = df_ota[(df_ota['price_num'] > 0) & (df_ota['reviews_num'] >= 0)].copy()
+            # 극단적인 가격 이상치(Outlier)가 그래프를 왜곡하므로 상위 5% 제외
+            price_limit = df_price_corr['price_num'].quantile(0.95)
+            df_price_corr = df_price_corr[df_price_corr['price_num'] <= price_limit]
+            
             corr2 = df_price_corr['price_num'].corr(df_price_corr['reviews_num'])
             
             fig_price = px.scatter(df_price_corr, x='price_num', y='reviews_num', 
