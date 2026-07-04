@@ -387,29 +387,53 @@ def render_demand_analysis():
         top5_ratings.columns = ['지역', '평균 평점']
         top5_ratings['평균 평점'] = top5_ratings['평균 평점'].round(2)
 
+        # 각 지역별 주요 키워드 추출
+        import re
+        from collections import Counter
+        def get_top_keywords(titles):
+            words = []
+            for t in titles:
+                if pd.isna(t): continue
+                tokens = re.findall(r'[가-힣a-zA-Z]+', str(t))
+                for w in tokens:
+                    w = w.lower()
+                    if len(w) > 1 and w not in ['투어', '티켓', 'tour', 'ticket', 'seoul', 'korea', 'from', 'with', 'and', 'day', 'the', 'in', 'of', 'for', 'to']:
+                        words.append(w)
+            if not words: return "키워드 없음"
+            counter = Counter(words)
+            return ", ".join([w for w, c in counter.most_common(3)])
+            
+        keyword_df = df_ota.groupby('region_sigungu')['title'].apply(get_top_keywords).reset_index()
+        keyword_df.columns = ['지역', '주요 키워드']
+
+        # 키워드 병합
+        top5_infra = pd.merge(top5_infra, keyword_df, on='지역', how='left')
+        top5_reviews = pd.merge(top5_reviews, keyword_df, on='지역', how='left')
+        top5_ratings = pd.merge(top5_ratings, keyword_df, on='지역', how='left')
+
         st.subheader("💡 외국인 타겟 주요 관광 키워드 (Top 5)")
         st.info("TF-IDF 분석을 통해 도출된 핵심 키워드: **1. 투어, 2. 수원, 3. 서울, 4. DMZ, 5. 화성**")
-        st.markdown("➡️ 외국인 관광객들은 서울 도심 투어뿐만 아니라 '수원 화성', '파주 DMZ' 등 근교 안보·문화 패키지 투어에 매우 높은 관심을 보이고 있습니다.")
+        st.markdown("➡️ 외국인 관광객들은 서울 도심 투어뿐만 아니라 '수원 화성', '파주 기점 DMZ' 등 근교 안보·문화 패키지 투어에 매우 높은 관심을 보이고 있습니다.")
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.subheader("📊 지역별 인프라 및 방문 만족도 분석 (Top 5)")
 
         col1, col2, col3 = st.columns(3)
         with col1:
-            fig1 = px.bar(top5_infra, x='상품 수', y='지역', orientation='h', color='상품 수',
-                          color_continuous_scale='Viridis', title="관광 상품(인프라) 수 상위 5개 지역")
+            fig1 = px.bar(top5_infra, x='상품 수', y='지역', orientation='h', color='상품 수', hover_data=['주요 키워드'],
+                          color_continuous_scale='Blues', title="관광 상품(인프라) 수 상위 5개 지역")
             fig1.update_layout(yaxis={'categoryorder':'total ascending'})
             st.plotly_chart(fig1, use_container_width=True)
             
         with col2:
-            fig2 = px.bar(top5_reviews, x='총 리뷰 수', y='지역', orientation='h', color='총 리뷰 수',
+            fig2 = px.bar(top5_reviews, x='총 리뷰 수', y='지역', orientation='h', color='총 리뷰 수', hover_data=['주요 키워드'],
                           color_continuous_scale='Blues', title="외국인 방문 규모(총 리뷰 수) 상위 5개 지역")
             fig2.update_layout(yaxis={'categoryorder':'total ascending'})
             st.plotly_chart(fig2, use_container_width=True)
             
         with col3:
-            fig3 = px.bar(top5_ratings, x='평균 평점', y='지역', orientation='h', color='평균 평점',
-                          color_continuous_scale='Sunset', title="평균 방문 만족도 상위 5개 지역")
+            fig3 = px.bar(top5_ratings, x='평균 평점', y='지역', orientation='h', color='평균 평점', hover_data=['주요 키워드'],
+                          color_continuous_scale='Blues', title="평균 방문 만족도 상위 5개 지역")
             fig3.update_layout(xaxis=dict(range=[4.0, 5.0]), yaxis={'categoryorder':'total ascending'})
             st.plotly_chart(fig3, use_container_width=True)
 
@@ -418,9 +442,10 @@ def render_demand_analysis():
         # Scatter plot for correlation
         scatter_df = df_ota.groupby('region_sigungu').agg({'title': 'count', 'reviews_num': 'sum'}).reset_index()
         scatter_df.columns = ['지역', '상품 수', '총 리뷰 수']
+        scatter_df = pd.merge(scatter_df, keyword_df, on='지역', how='left')
         
-        fig_scatter = px.scatter(scatter_df, x='상품 수', y='총 리뷰 수', text='지역', size='총 리뷰 수',
-                                 color='총 리뷰 수', color_continuous_scale='Magma', size_max=40,
+        fig_scatter = px.scatter(scatter_df, x='상품 수', y='총 리뷰 수', text='지역', size='총 리뷰 수', hover_data=['주요 키워드'],
+                                 color='총 리뷰 수', color_continuous_scale='Blues', size_max=40,
                                  title="지역별 상품 수 vs 실제 방문 규모(리뷰 수) 산점도")
         fig_scatter.update_traces(textposition='top center')
         fig_scatter.update_layout(height=500)
