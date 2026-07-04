@@ -43,11 +43,18 @@ def render_eda_insights():
         def format_region(row):
             sido = row["광역지자체"]
             sigungu = row["기초지자체"]
-            if sigungu.endswith('시'):
-                return sigungu
-            else:
-                return f"{sido[:2]} {sigungu}"
+            mapping = {
+                "서울특별시": "서울", "부산광역시": "부산", "대구광역시": "대구", "인천광역시": "인천",
+                "광주광역시": "광주", "대전광역시": "대전", "울산광역시": "울산", "세종특별자치시": "세종",
+                "경기도": "경기", "강원특별자치도": "강원", "강원도": "강원", "충청북도": "충북", "충청남도": "충남",
+                "전북특별자치도": "전북", "전라북도": "전북", "전라남도": "전남", "경상북도": "경북",
+                "경상남도": "경남", "제주특별자치도": "제주"
+            }
+            sido_norm = mapping.get(sido, sido[:2])
+            return f"{sido_norm} {sigungu}"
+            
         df_demand["signguNm"] = df_demand.apply(format_region, axis=1)
+        df_demand["city"] = df_demand["기초지자체"]
         
         df_demand["snsMentionCo"] = df_demand["기초지자체 검색건수"]
         df_demand["naviSearchCo"] = df_demand["기초지자체 검색건수"]
@@ -194,8 +201,11 @@ def render_eda_insights():
 
         # 스타/안정 등 상위 카테고리 순으로 정렬하기 위해, 카테고리 우선순위 부여
         quadrant_order = {"스타": 1, "잠재": 2, "안정": 3, "일반": 4}
-        city_list = sorted(df_demand["signguNm"].unique().tolist(), 
-                           key=lambda x: (quadrant_order.get(city_to_quadrant.get(x, "").split(" ")[0], 99), x))
+        # city column contains "용인시", signguNm contains "경기 용인시"
+        city_list = []
+        for _, r in df_demand.sort_values(by="snsMentionCo", ascending=False).iterrows():
+            if r["city"] not in city_list:
+                city_list.append(r["city"])
         
         col_select1, col_select2 = st.columns(2)
 
@@ -205,7 +215,7 @@ def render_eda_insights():
                 "📍 벤치마킹 기준 (성공 도시)", 
                 city_list, 
                 index=default_idx1,
-                format_func=format_city
+                format_func=lambda x: f"[{city_to_quadrant.get(df_demand[df_demand['city']==x].iloc[0]['signguNm'], '').split(' ')[0]}] {x}" if x in df_demand['city'].values else x
             )
             
         with col_select2:
@@ -219,7 +229,7 @@ def render_eda_insights():
                 "📍 개선 대상 (잠재 도시)", 
                 city_list2, 
                 index=default_idx2,
-                format_func=format_city
+                format_func=lambda x: f"[{city_to_quadrant.get(df_demand[df_demand['city']==x].iloc[0]['signguNm'], '').split(' ')[0]}] {x}" if x in df_demand['city'].values else x
             )
 
         st.markdown("---")
@@ -314,8 +324,8 @@ def render_eda_insights():
         max_spend = df_merged["spend_div"].max() or 1
         max_intl = df_merged["intl_div"].max() or 1
         
-        m_c1 = df_merged[df_merged["signguNm"] == city_1]
-        m_c2 = df_merged[df_merged["signguNm"] == city_2]
+        m_c1 = df_merged[df_merged["city"] == city_1]
+        m_c2 = df_merged[df_merged["city"] == city_2]
 
         if not m_c1.empty and not m_c2.empty:
             labels = ["소비 다양성", "국제 다양성", "SNS 언급량", "내비 검색량", "관광 인프라"]
