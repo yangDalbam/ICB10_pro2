@@ -426,15 +426,16 @@ def render_demand_analysis():
             st.plotly_chart(fig1, use_container_width=True)
             
         with col2:
-            df_violin = df_valid_rating[df_valid_rating['region_sigungu'].isin(top5_ratings['지역'])]
+            # 바이올린 플롯은 데이터 분포가 필요하므로 데이터가 많은 상위 5개 지역(상품 수 기준)을 사용합니다.
+            df_violin = df_valid_rating[df_valid_rating['region_sigungu'].isin(top5_infra['지역'])]
             df_violin = pd.merge(df_violin, keyword_df, left_on='region_sigungu', right_on='지역', how='left')
             
             fig3 = px.violin(df_violin, x='rating_num', y='region_sigungu', color='region_sigungu',
-                             orientation='h', hover_data=['주요 키워드'], box=True,
+                             orientation='h', hover_data=['주요 키워드'], box=True, points="all",
                              color_discrete_sequence=px.colors.sequential.Blues[-6:-1],
-                             title="상위 5개 지역 평점 분포 (바이올린 플롯)")
+                             title="주요 관광 거점(상품 수 상위 5개 지역) 평점 분포")
             fig3.update_layout(xaxis_title="평점", yaxis_title="지역", showlegend=False, 
-                               xaxis=dict(range=[3.5, 5.0]), yaxis={'categoryorder':'mean ascending'})
+                               xaxis=dict(range=[3.0, 5.2]), yaxis={'categoryorder':'mean ascending'})
             st.plotly_chart(fig3, use_container_width=True)
 
         st.markdown("### 🔍 상품 수(인프라)와 방문 규모(리뷰 수) 상관관계 분석")
