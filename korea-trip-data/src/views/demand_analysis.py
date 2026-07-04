@@ -432,12 +432,16 @@ def render_demand_analysis():
             st.plotly_chart(fig1, use_container_width=True)
             
         with col2:
-            df_ota['price_bin'] = pd.qcut(df_ota['price_num'], q=4, labels=['저가', '중저가', '중고가', '고가'])
-            price_reviews = df_ota.groupby('price_bin', observed=True)['reviews_num'].mean().reset_index()
-            price_reviews.columns = ['가격대', '평균 리뷰 수']
-
-            fig3 = px.bar(price_reviews, x='가격대', y='평균 리뷰 수', color='평균 리뷰 수',
-                          color_continuous_scale='Blues', title="가격 구간별 관광 상품 인기도(평균 리뷰 수)")
+            # 플랫폼별 상품 가격 비교 박스플롯
+            df_box = df_ota[df_ota['price_num'] > 0].copy()
+            # 극단적인 이상치로 인해 박스플롯이 왜곡되는 것을 방지하기 위해 상위 5% 제외
+            price_limit_box = df_box['price_num'].quantile(0.95)
+            df_box = df_box[df_box['price_num'] <= price_limit_box]
+            
+            fig3 = px.box(df_box, x='platform', y='price_num', color='platform',
+                          title="플랫폼별 상품 가격 비교",
+                          labels={'platform': '플랫폼', 'price_num': '상품 가격(원)'},
+                          color_discrete_sequence=px.colors.sequential.Blues[-2:])
             st.plotly_chart(fig3, use_container_width=True)
 
         st.markdown("### 🔍 지역 인프라와 방문 규모 상관관계 분석")
