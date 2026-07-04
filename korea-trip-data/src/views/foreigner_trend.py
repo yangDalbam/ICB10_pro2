@@ -8,6 +8,7 @@ import os
 import sys
 import streamlit as st
 import pandas as pd
+import numpy as np
 import plotly.express as px
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -196,14 +197,68 @@ def render_foreigner_trend():
         }
         df_entry['ISO_CODE'] = df_entry['입국자 국적'].map(iso_mapping)
         
+        # 각 국가별 중심 위경도
+        base_coords = {
+            'CHN': [104.195, 35.861], 'JPN': [138.252, 36.204], 'TWN': [120.960, 23.697], 
+            'USA': [-95.712, 37.090], 'HKG': [114.109, 22.396], 'VNM': [108.277, 14.058], 
+            'SGP': [103.819, 1.352], 'PHL': [121.774, 12.879], 'THA': [100.992, 15.870], 
+            'MYS': [101.975, 4.210], 'IDN': [113.921, -0.789], 'RUS': [105.318, 61.524],
+            'GBR': [-3.435, 55.378], 'CAN': [-106.346, 56.130], 'FRA': [2.213, 46.227], 
+            'DEU': [10.451, 51.165], 'AUS': [133.775, -25.274]
+        }
+        
+        df_entry['lon'] = df_entry['ISO_CODE'].map(lambda x: base_coords.get(x, [0,0])[0])
+        df_entry['lat'] = df_entry['ISO_CODE'].map(lambda x: base_coords.get(x, [0,0])[1])
+
+        # 돌링 카토그램을 위한 충돌 방지 로직 (Force-directed)
+        max_val = df_entry['입국자 수(명)'].max()
+        # 원의 논리적 반지름을 도(degree) 단위로 대략 환산 (최대 10도 수준)
+        size_factor = 10.0 / np.sqrt(max_val) if max_val > 0 else 1
+        df_entry['radius'] = np.sqrt(df_entry['입국자 수(명)']) * size_factor
+
+        positions = df_entry[['lon', 'lat']].values.astype(float)
+        radii = df_entry['radius'].values.astype(float)
+        orig_positions = positions.copy()
+
+        n = len(positions)
+        for _ in range(150): # 겹침을 방지하기 위한 물리 엔진 반복
+            for i in range(n):
+                for j in range(i+1, n):
+                    dx = positions[i, 0] - positions[j, 0]
+                    dy = positions[i, 1] - positions[j, 1]
+                    dist = np.sqrt(dx**2 + dy**2)
+                    min_dist = radii[i] + radii[j]
+                    
+                    if dist < min_dist and dist > 0:
+                        overlap = min_dist - dist
+                        nx, ny = dx / dist, dy / dist
+                        
+                        # 가중치 (크기가 작은 원이 더 많이 움직이도록)
+                        w_i = radii[j] / (radii[i] + radii[j])
+                        w_j = radii[i] / (radii[i] + radii[j])
+                        
+                        positions[i, 0] += nx * overlap * w_i * 0.5
+                        positions[i, 1] += ny * overlap * w_i * 0.5
+                        positions[j, 0] -= nx * overlap * w_j * 0.5
+                        positions[j, 1] -= ny * overlap * w_j * 0.5
+                        
+            # 원래 지리적 위치로 돌아가려는 힘
+            for i in range(n):
+                positions[i, 0] += (orig_positions[i, 0] - positions[i, 0]) * 0.05
+                positions[i, 1] += (orig_positions[i, 1] - positions[i, 1]) * 0.05
+
+        df_entry['lon_adj'] = positions[:, 0]
+        df_entry['lat_adj'] = positions[:, 1]
+        
         fig4 = px.scatter_geo(
             df_entry, 
-            locations="ISO_CODE", 
+            lon="lon_adj",
+            lat="lat_adj",
             size="입국자 수(명)",
             color="입국자 수(명)", 
             hover_name="입국자 국적",
-            hover_data={"ISO_CODE": False, "입국자 수(명)": True, "입국자 비율(%)": True},
-            title="국적별 입국자 수 버블 맵 (중국 및 동아시아 강세)",
+            hover_data={"lon_adj": False, "lat_adj": False, "ISO_CODE": False, "입국자 수(명)": True, "입국자 비율(%)": True},
+            title="국적별 입국자 수 돌링 카토그램 (충돌 방지 로직 적용)",
             color_continuous_scale="Blues",
             projection="equirectangular",
             size_max=40
