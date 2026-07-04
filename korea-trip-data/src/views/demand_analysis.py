@@ -46,13 +46,14 @@ def render_demand_analysis():
     @st.cache_data(ttl=86400)
     def fetch_google_trends_data(kw_list, geo='US', timeframe='today 12-m'):
         try:
-            import numpy as np
-            dates = pd.date_range(end=pd.Timestamp.now(), periods=52, freq='W')
-            df = pd.DataFrame(index=dates)
-            for kw in kw_list:
-                base = np.random.randint(20, 50)
-                walk = np.cumsum(np.random.randn(52) * 5)
-                df[kw] = np.clip(base + walk, 0, 100)
+            from pytrends.request import TrendReq
+            import time
+            pytrends = TrendReq(hl='en-US', tz=360, retries=3, backoff_factor=1)
+            pytrends.build_payload(kw_list, cat=0, timeframe=timeframe, geo=geo)
+            df = pytrends.interest_over_time()
+            if not df.empty and 'isPartial' in df.columns:
+                df = df.drop(columns=['isPartial'])
+            time.sleep(1) # rate limit mitigation
             return df
         except Exception as e:
             return pd.DataFrame()
@@ -60,13 +61,13 @@ def render_demand_analysis():
     @st.cache_data(ttl=86400)
     def fetch_google_trends_related_queries(kw_list, geo='US', timeframe='today 12-m'):
         try:
-            related_queries = {}
-            for kw in kw_list:
-                related_queries[kw] = {
-                    'top': pd.DataFrame({'query': [f"{kw} travel", f"{kw} tour", f"{kw} food", f"visit {kw}", f"{kw} hotel"], 'value': [100, 80, 60, 40, 20]}),
-                    'rising': pd.DataFrame({'query': [f"{kw} festival", f"new in {kw}", f"{kw} cafe"], 'value': [150, 120, 90]})
-                }
-            return related_queries
+            from pytrends.request import TrendReq
+            import time
+            pytrends = TrendReq(hl='en-US', tz=360, retries=3, backoff_factor=1)
+            pytrends.build_payload(kw_list, cat=0, timeframe=timeframe, geo=geo)
+            related = pytrends.related_queries()
+            time.sleep(1)
+            return related
         except Exception as e:
             return {}
 
@@ -175,22 +176,29 @@ def render_demand_analysis():
                 df_cultural = get_area_cultural_demand("202602")
                 if not df_cultural.empty:
                     df_cultural = df_cultural[~df_cultural["signguNm"].str.contains("서울|부산|제주")]
-                    top_navi_regions = df_top_navi["signguNm"].tolist()
-                    df_cult_top = df_cultural[df_cultural["signguNm"].isin(top_navi_regions)]
+                    # 지역명 매핑 (CSV -> API 양식 통일)
+                    # CSV: "인천광역시 중구" -> API: "인천 중구"
+                    mapping_dict = {
+                        "서울특별시": "서울", "부산광역시": "부산", "대구광역시": "대구", "인천광역시": "인천",
+                        "광주광역시": "광주", "대전광역시": "대전", "울산광역시": "울산", "세종특별자치시": "세종",
+                        "경기도": "경기", "강원특별자치도": "강원", "충청북도": "충북", "충청남도": "충남",
+                        "전북특별자치도": "전북", "전라북도": "전북", "전라남도": "전남", "경상북도": "경북",
+                        "경상남도": "경남", "제주특별자치도": "제주"
+                    }
+                    def normalize_region(name):
+                        for k, v in mapping_dict.items():
+                            name = name.replace(k, v)
+                        return name
                     
-                    if df_cult_top.empty:
-                        # CSV의 실제 지역명과 API(또는 Mock)의 지역명이 일치하지 않아 데이터가 비게 된 경우 임시 데이터 생성
-                        import numpy as np
-                        np.random.seed(42)
-                        categories = ["역사관광지", "자연관광지", "휴양관광지", "문화시설", "레저스포츠"]
-                        mock_rows = []
-                        for region in top_navi_regions:
-                            base_demand = np.random.randint(10000, 20000)
-                            probs = [0.25, 0.25, 0.20, 0.15, 0.15]
-                            demand_counts = np.random.multinomial(int(base_demand), probs)
-                            for cat, count in zip(categories, demand_counts):
-                                mock_rows.append({"signguNm": region, "clNm": cat, "searchCo": count})
-                        df_cult_top = pd.DataFrame(mock_rows)
+                    df_top_navi["norm_signguNm"] = df_top_navi["signguNm"].apply(normalize_region)
+                    top_navi_regions_norm = df_top_navi["norm_signguNm"].tolist()
+                    
+                    df_cult_top = df_cultural[df_cultural["signguNm"].isin(top_navi_regions_norm)].copy()
+                    
+                    # 시각화를 위해 원래의 CSV 지역명으로 복원
+                    if not df_cult_top.empty:
+                        reverse_mapping = dict(zip(df_top_navi["norm_signguNm"], df_top_navi["signguNm"]))
+                        df_cult_top["signguNm"] = df_cult_top["signguNm"].map(reverse_mapping).fillna(df_cult_top["signguNm"])
                         
                     if not df_cult_top.empty:
                         fig_cult = px.bar(
