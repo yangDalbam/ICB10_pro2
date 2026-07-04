@@ -430,12 +430,12 @@ def render_demand_analysis():
             df_violin = df_valid_rating[df_valid_rating['region_sigungu'].isin(top5_infra['지역'])]
             df_violin = pd.merge(df_violin, keyword_df, left_on='region_sigungu', right_on='지역', how='left')
             
-            fig3 = px.violin(df_violin, x='rating_num', y='region_sigungu', color='region_sigungu',
-                             orientation='h', hover_data=['주요 키워드'], box=True, points="all",
+            fig3 = px.violin(df_violin, x='region_sigungu', y='rating_num', color='region_sigungu',
+                             orientation='v', hover_data=['주요 키워드'], box=True, points="all",
                              color_discrete_sequence=px.colors.sequential.Blues[-6:-1],
                              title="주요 관광 거점(상품 수 상위 5개 지역) 평점 분포")
-            fig3.update_layout(xaxis_title="평점", yaxis_title="지역", showlegend=False, 
-                               xaxis=dict(range=[3.0, 5.2]), yaxis={'categoryorder':'mean ascending'})
+            fig3.update_layout(xaxis_title="지역", yaxis_title="평점", showlegend=False, 
+                               yaxis=dict(range=[3.0, 5.2]), xaxis={'categoryorder':'mean descending'})
             st.plotly_chart(fig3, use_container_width=True)
 
         st.markdown("### 🔍 상품 수(인프라)와 방문 규모(리뷰 수) 상관관계 분석")
