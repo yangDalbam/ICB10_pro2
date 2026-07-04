@@ -245,8 +245,17 @@ def render_eda_insights():
                 try: return float(str(r).strip())
                 except: return 0.0
 
+            def clean_region_sigungu(r):
+                if pd.isna(r): return "알 수 없음"
+                r = str(r).strip()
+                parts = r.split()
+                if len(parts) >= 2: return f"{parts[0]} {parts[1]}"
+                elif len(parts) == 1: return parts[0]
+                return "알 수 없음"
+
             df_ota['reviews_num'] = df_ota['reviews'].apply(clean_reviews)
             df_ota['rating_num'] = df_ota['rating'].apply(clean_rating)
+            df_ota['region_sigungu'] = df_ota['region'].apply(clean_region_sigungu)
             
             df_ota_agg = df_ota.groupby('region_sigungu').agg({'title': 'count', 'reviews_num': 'sum', 'rating_num': 'mean'}).reset_index()
             df_ota_agg.columns = ['지역', '상품 수', '총 리뷰 수', '평균 평점']
