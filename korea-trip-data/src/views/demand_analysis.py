@@ -443,8 +443,10 @@ def render_demand_analysis():
         st.markdown("### 🔍 상품 수(인프라)와 방문 규모(리뷰 수) 상관관계 분석")
         
         # Scatter plot for correlation
-        scatter_df = df_ota.groupby('region_sigungu').agg({'title': 'count', 'reviews_num': 'sum'}).reset_index()
+        scatter_df = df_ota[df_ota['region_sigungu'] != '알 수 없음'].groupby('region_sigungu').agg({'title': 'count', 'reviews_num': 'sum'}).reset_index()
         scatter_df.columns = ['지역', '상품 수', '총 리뷰 수']
+        # 상위 15개 지역만 필터링하여 노이즈(하얀 점들) 제거
+        scatter_df = scatter_df.sort_values(by='총 리뷰 수', ascending=False).head(15)
         scatter_df = pd.merge(scatter_df, keyword_df, on='지역', how='left')
         
         fig_scatter = px.scatter(scatter_df, x='상품 수', y='총 리뷰 수', text='지역', size='총 리뷰 수', hover_data=['주요 키워드'],
