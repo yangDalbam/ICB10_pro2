@@ -103,11 +103,12 @@ def get_area_service_demand(base_ym: str = "202601") -> pd.DataFrame:
     print("[KTO API] getAreaServDemList 호출 실패로 Mock 데이터를 제공합니다.")
     return _generate_mock_service_demand_data(base_ym)
 
-@st.cache_data(show_spinner="지역별 문화 자원 수요 데이터를 불러오는 중...")
+@st.cache_data(show_spinner="지역별 문화 자원 수요 데이터를 불러오는 중...", ttl=86400)
 def get_area_cultural_demand(base_ym: str = "202601") -> pd.DataFrame:
     """
     지역별 문화 자원 수요 정보(내비게이션 유형별 목적지 검색량)를 조회합니다.
     """
+    # 캐시 무효화를 위한 주석 추가 (상위 5개 지역 동기화 적용)
     params = {"baseYm": base_ym}
     items = _request_kto_api(KTO_DEM_ENDPOINT, "getAreaCultDemList", params)
     if items:
