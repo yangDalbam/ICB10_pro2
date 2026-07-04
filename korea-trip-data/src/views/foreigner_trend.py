@@ -261,7 +261,7 @@ def render_foreigner_trend():
             title="국적별 입국자 수 돌링 카토그램 (충돌 방지 로직 적용)",
             color_continuous_scale="Blues",
             projection="equirectangular",
-            size_max=40
+            size_max=60
         )
         
         fig4.update_traces(marker_line_color="white", marker_line_width=1)
@@ -272,8 +272,10 @@ def render_foreigner_trend():
                 coastlinecolor="white",
                 showcountries=True,
                 countrycolor="white",
-                bgcolor="rgba(0,0,0,0)"
+                bgcolor="rgba(0,0,0,0)",
+                fitbounds="locations"  # 데이터가 있는 위치를 기준으로 줌인 (여백 제거)
             ),
+            height=600,  # 차트 높이를 키워 좌우로 더 확장되도록 유도
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
             font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
