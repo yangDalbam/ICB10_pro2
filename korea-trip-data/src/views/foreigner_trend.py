@@ -196,14 +196,17 @@ def render_foreigner_trend():
         }
         df_entry['ISO_CODE'] = df_entry['입국자 국적'].map(iso_mapping)
         
-        fig4 = px.choropleth(
+        fig4 = px.scatter_geo(
             df_entry, 
             locations="ISO_CODE", 
+            size="입국자 수(명)",
             color="입국자 수(명)", 
             hover_name="입국자 국적",
-            title="국적별 입국자 수 카토그램 (중국 및 동아시아 강세)",
+            hover_data={"ISO_CODE": False, "입국자 수(명)": True, "입국자 비율(%)": True},
+            title="국적별 입국자 수 버블 맵 (중국 및 동아시아 강세)",
             color_continuous_scale="Blues",
-            projection="equirectangular"
+            projection="equirectangular",
+            size_max=40
         )
         
         fig4.update_traces(marker_line_color="white", marker_line_width=1)
