@@ -1,0 +1,79 @@
+=== Inspecting c:\Users\user1\Downloads\ICB10_proj2\getyourguide\data\getyourguide.db ===
+Table: sqlite_sequence
+Schema:
+name    object
+seq     object
+dtype: object
+Sample data:
+Empty DataFrame
+Columns: [name, seq]
+Index: []
+------------------------------
+Table: activities
+Schema:
+title      str
+rating     str
+reviews    str
+price      str
+region     str
+dtype: object
+Sample data:
+                                 title rating reviews     price   region
+0  서울: 유네스코 요새와 트렌디한 명소를 둘러보는 수원 종일 여행    4.9     260  ₩ 82,895  경기도 수원시
+1   DMZ 인사이더 투어: 탈북자 Q&A, 제3땅굴 및 다리 옵션    4.9  19,324  ₩ 76,755  경기도 파주시
+2          서울: 수원 화성, 광명동굴, 스타필드 라이브러리    4.7     194  ₩ 88,000  경기도 수원시
+------------------------------
+=== Inspecting c:\Users\user1\Downloads\ICB10_proj2\klook\data\klook_data.db ===
+Table: search_results
+Schema:
+id                        str
+title                     str
+price                     str
+detail_link               str
+rating                    str
+review_count              str
+purchase_count            str
+free_cancellation       int64
+instant_confirmation    int64
+raw_json                  str
+dtype: object
+Sample data:
+           id  ...                                           raw_json
+0   96156_100  ...  {"data": {"country_id": 10, "city_id": 157, "d...
+1    1163_100  ...  {"data": {"country_id": 10, "city_id": 158, "d...
+2  121308_100  ...  {"data": {"country_id": 10, "city_id": 158, "d...
+
+[3 rows x 10 columns]
+------------------------------
+Table: detail_results
+Schema:
+detail_link          str
+title                str
+description          str
+ld_json              str
+raw_html_length    int64
+dtype: object
+Sample data:
+                                         detail_link  ... raw_html_length
+0  https://www.klook.com/ko/activity/96156-everla...  ...          143201
+1  https://www.klook.com/ko/activity/1163-airport...  ...          184407
+2  https://www.klook.com/ko/activity/121308-inche...  ...          191677
+
+[3 rows x 5 columns]
+------------------------------
+Table: activities
+Schema:
+title          str
+rating     float64
+reviews      int64
+price          str
+region         str
+dtype: object
+Sample data:
+                                               title  rating  ...   price   region
+0                           경기 용인 에버랜드 종일이용권 - Klook     4.9  ...  ₩45000  경기도 용인시
+1                     인천국제공항 공항철도 AREX 편도 티켓 - Klook     4.8  ...  ₩11500    인천광역시
+2  인천 국제공항 - 서울 시내 버스 티켓 by Incheon Airport Limou...     4.7  ...  ₩17400    인천광역시
+
+[3 rows x 5 columns]
+------------------------------
