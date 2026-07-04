@@ -433,7 +433,7 @@ def render_demand_analysis():
             fig3 = px.box(df_box, x='platform', y='price_num', color='platform',
                           title="플랫폼별 상품 가격 비교",
                           labels={'platform': '플랫폼', 'price_num': '상품 가격(원)'},
-                          color_discrete_sequence=px.colors.sequential.Blues[-2:])
+                          color_discrete_sequence=['#60A5FA', '#93C5FD'])
             st.plotly_chart(fig3, use_container_width=True)
 
         st.markdown("### 🔍 지역 인프라와 방문 규모 상관관계 분석")
