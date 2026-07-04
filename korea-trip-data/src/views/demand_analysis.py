@@ -417,9 +417,9 @@ def render_demand_analysis():
         top5_reviews = pd.merge(top5_reviews, keyword_df, on='지역', how='left')
         top5_ratings = pd.merge(top5_ratings, keyword_df, on='지역', how='left')
 
-        st.subheader("💡 외국인 타겟 주요 관광 키워드 (Top 5)")
-        st.info("TF-IDF 분석을 통해 도출된 핵심 키워드: **1. 투어, 2. 수원, 3. 서울, 4. DMZ, 5. 화성**")
-        st.markdown("➡️ 외국인 관광객들은 서울 도심 투어뿐만 아니라 '수원 화성', '파주 기점 DMZ' 등 근교 안보·문화 패키지 투어에 매우 높은 관심을 보이고 있습니다.")
+        st.subheader("💡 외국인 타겟 핵심 관광 키워드")
+        st.info("실제 관광 상품명 분석을 통해 도출된 핵심 키워드: **투어, DMZ, 스타필드, 땅굴, 탈북자, 현수교, 호텔, 남이섬, 에버랜드**")
+        st.markdown("➡️ 외국인 관광객들은 일반적인 도심 투어뿐만 아니라, **'스타필드'** 등 최신 쇼핑 인프라, **'땅굴/탈북자 가이드/현수교'** 등을 포함한 **'파주 DMZ'** 안보 관광, **'남이섬/에버랜드'** 같은 근교 테마파크 등 다양하고 구체적인 체험형 투어 상품에 매우 높은 관심을 보이고 있습니다.")
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.subheader("📊 지역별 인프라 및 가격대별 인기도 분석")
