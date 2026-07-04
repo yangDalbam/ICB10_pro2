@@ -486,7 +486,7 @@ def render_demand_analysis():
             yanchor="top"
         )
             
-        fig_scatter.update_traces(textposition='top center')
+        fig_scatter.update_traces(textposition='middle right')
         fig_scatter.update_layout(height=500)
         st.plotly_chart(fig_scatter, use_container_width=True)
 
