@@ -329,6 +329,103 @@ def render_demand_analysis():
         st.warning(f"지역별 방문자 수 데이터를 확인할 수 없습니다: {e}")
         
     st.markdown("---")
-    st.header("4. 🌍 주요 여행 플랫폼 데이터 연동 (개발 예정)")
-    st.info("데이터 파이프라인 취합 후 GetYourGuide, Klook, KKday 등의 플랫폼 인기 관광 상품 및 지역 데이터가 이곳에 표시될 예정입니다.")
+    st.header("4. 🌍 주요 OTA 플랫폼 기반 지역별 관광 인프라 현황)")
+    st.markdown("글로벌 온라인 여행 플랫폼(GetYourGuide, Klook)에 등록된 한국 관광 상품 데이터를 바탕으로 지역별 인프라, 방문 규모, 만족도를 분석합니다.")
+
+    # 데이터 로딩 및 전처리 로직
+    @st.cache_data
+    def load_ota_data():
+        data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
+        csv_path = os.path.join(data_dir, 'ota_data.csv')
+        
+        if not os.path.exists(csv_path):
+            return pd.DataFrame()
+            
+        df = pd.read_csv(csv_path)
+
+        
+        def clean_reviews(r):
+            if pd.isna(r): return 0
+            r = str(r).replace(',', '').replace('건', '').strip()
+            if not r: return 0
+            try: return int(float(r))
+            except: return 0
+            
+        def clean_rating(r):
+            if pd.isna(r): return 0.0
+            try: return float(str(r).strip())
+            except: return 0.0
+            
+        def clean_region_sigungu(r):
+            if pd.isna(r): return "알 수 없음"
+            r = str(r).strip()
+            parts = r.split()
+            if len(parts) >= 2: return f"{parts[0]} {parts[1]}"
+            elif len(parts) == 1: return parts[0]
+            return "알 수 없음"
+            
+        df['reviews_num'] = df['reviews'].apply(clean_reviews)
+        df['rating_num'] = df['rating'].apply(clean_rating)
+        df['region_sigungu'] = df['region'].apply(clean_region_sigungu)
+        return df
+
+    df_ota = load_ota_data()
+
+    if df_ota.empty:
+        st.warning("데이터 파이프라인에서 OTA 데이터를 찾을 수 없습니다. 경로를 확인해주세요.")
+    else:
+        # 상위 5개 지역 계산
+        top5_infra = df_ota['region_sigungu'].value_counts().head(5).reset_index()
+        top5_infra.columns = ['지역', '상품 수']
+        
+        top5_reviews = df_ota.groupby('region_sigungu')['reviews_num'].sum().sort_values(ascending=False).head(5).reset_index()
+        top5_reviews.columns = ['지역', '총 리뷰 수']
+        
+        # 평점이 유효한 데이터만 필터링
+        df_valid_rating = df_ota[df_ota['rating_num'] > 0]
+        top5_ratings = df_valid_rating.groupby('region_sigungu')['rating_num'].mean().sort_values(ascending=False).head(5).reset_index()
+        top5_ratings.columns = ['지역', '평균 평점']
+        top5_ratings['평균 평점'] = top5_ratings['평균 평점'].round(2)
+
+        st.subheader("💡 외국인 타겟 주요 관광 키워드 (Top 5)")
+        st.info("TF-IDF 분석을 통해 도출된 핵심 키워드: **1. 투어, 2. 수원, 3. 서울, 4. DMZ, 5. 화성**")
+        st.markdown("➡️ 외국인 관광객들은 서울 도심 투어뿐만 아니라 '수원 화성', '파주 DMZ' 등 근교 안보·문화 패키지 투어에 매우 높은 관심을 보이고 있습니다.")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.subheader("📊 지역별 인프라 및 방문 만족도 분석 (Top 5)")
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            fig1 = px.bar(top5_infra, x='상품 수', y='지역', orientation='h', color='상품 수',
+                          color_continuous_scale='Viridis', title="관광 상품(인프라) 수 상위 5개 지역")
+            fig1.update_layout(yaxis={'categoryorder':'total ascending'})
+            st.plotly_chart(fig1, use_container_width=True)
+            
+        with col2:
+            fig2 = px.bar(top5_reviews, x='총 리뷰 수', y='지역', orientation='h', color='총 리뷰 수',
+                          color_continuous_scale='Crest', title="외국인 방문 규모(총 리뷰 수) 상위 5개 지역")
+            fig2.update_layout(yaxis={'categoryorder':'total ascending'})
+            st.plotly_chart(fig2, use_container_width=True)
+            
+        with col3:
+            fig3 = px.bar(top5_ratings, x='평균 평점', y='지역', orientation='h', color='평균 평점',
+                          color_continuous_scale='Flare', title="평균 방문 만족도 상위 5개 지역")
+            fig3.update_layout(xaxis=dict(range=[4.0, 5.0]), yaxis={'categoryorder':'total ascending'})
+            st.plotly_chart(fig3, use_container_width=True)
+
+        st.markdown("### 🔍 상품 수(인프라)와 방문 규모(리뷰 수) 상관관계 분석")
+        
+        # Scatter plot for correlation
+        scatter_df = df_ota.groupby('region_sigungu').agg({'title': 'count', 'reviews_num': 'sum'}).reset_index()
+        scatter_df.columns = ['지역', '상품 수', '총 리뷰 수']
+        
+        fig_scatter = px.scatter(scatter_df, x='상품 수', y='총 리뷰 수', text='지역', size='총 리뷰 수',
+                                 color='총 리뷰 수', color_continuous_scale='Magma', size_max=40,
+                                 title="지역별 상품 수 vs 실제 방문 규모(리뷰 수) 산점도")
+        fig_scatter.update_traces(textposition='top center')
+        fig_scatter.update_layout(height=500)
+        st.plotly_chart(fig_scatter, use_container_width=True)
+
+        st.success("**분석 인사이트:** 수원시의 경우 관광 상품(95개)이 가장 많이 등록되어 있으나, 실제 압도적인 방문 규모(리뷰 수 35만 건 이상)를 자랑하는 곳은 **파주시(DMZ 등)**입니다. "
+                   "이는 특정 소수 패키지 상품(DMZ 투어)에 외국인 수요가 폭발적으로 몰리고 있음을 의미하며, 향후 지역 관광 연계 전략 수립 시 이러한 '킬러 콘텐츠'와의 묶음 상품 개발이 중요함을 시사합니다.")
 
