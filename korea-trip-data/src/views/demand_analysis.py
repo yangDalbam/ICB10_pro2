@@ -445,11 +445,15 @@ def render_demand_analysis():
         # Scatter plot for correlation
         scatter_df = df_ota[df_ota['region_sigungu'] != '알 수 없음'].groupby('region_sigungu').agg({'title': 'count', 'reviews_num': 'sum'}).reset_index()
         scatter_df.columns = ['지역', '상품 수', '총 리뷰 수']
-        # 상위 15개 지역만 필터링하여 노이즈(하얀 점들) 제거
-        scatter_df = scatter_df.sort_values(by='총 리뷰 수', ascending=False).head(15)
+        # 상위 15개 지역만 필터링하여 노이즈 제거
+        scatter_df = scatter_df.sort_values(by='총 리뷰 수', ascending=False).head(15).reset_index(drop=True)
         scatter_df = pd.merge(scatter_df, keyword_df, on='지역', how='left')
         
-        fig_scatter = px.scatter(scatter_df, x='상품 수', y='총 리뷰 수', text='지역', size='총 리뷰 수', hover_data=['주요 키워드'],
+        # 텍스트 겹침 방지를 위해 상위 5개 지역만 차트 위에 이름을 표시하고, 나머지는 호버(마우스 오버)로만 표시
+        scatter_df['표시 라벨'] = scatter_df['지역']
+        scatter_df.loc[5:, '표시 라벨'] = ''
+        
+        fig_scatter = px.scatter(scatter_df, x='상품 수', y='총 리뷰 수', text='표시 라벨', size='총 리뷰 수', hover_data=['지역', '주요 키워드'],
                                  color='총 리뷰 수', color_continuous_scale='Blues', size_max=40,
                                  title="지역별 상품 수 vs 실제 방문 규모(리뷰 수) 산점도")
         fig_scatter.update_traces(textposition='top center')
