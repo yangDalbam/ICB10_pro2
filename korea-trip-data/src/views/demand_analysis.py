@@ -462,7 +462,7 @@ def render_demand_analysis():
         scatter_df['표시 라벨'] = scatter_df['지역']
         scatter_df.loc[5:, '표시 라벨'] = ''
         
-        fig_scatter = px.scatter(scatter_df, x='상품 수', y='총 리뷰 수', text='표시 라벨', size='총 리뷰 수', hover_data=['지역', '주요 키워드'],
+        fig_scatter = px.scatter(scatter_df, x='상품 수', y='총 리뷰 수', text='표시 라벨', size='총 리뷰 수',
                                  color='총 리뷰 수', color_continuous_scale='Blues', size_max=40,
                                  title="지역별 인프라 vs 방문 규모")
                                  
@@ -486,7 +486,10 @@ def render_demand_analysis():
             yanchor="top"
         )
             
-        fig_scatter.update_traces(textposition='middle right')
+        fig_scatter.update_traces(
+            textposition='middle right',
+            hovertemplate='<b>상품 수:</b> %{x}개<br><b>총 리뷰 수:</b> %{y}건<extra></extra>'
+        )
         fig_scatter.update_layout(height=500)
         st.plotly_chart(fig_scatter, use_container_width=True)
 
