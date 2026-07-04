@@ -67,14 +67,29 @@ def render_eda_insights():
             try:
                 from pytrends.request import TrendReq
                 import time
+                import pandas as pd
                 pytrends = TrendReq(hl='en-US', tz=360, retries=3, backoff_factor=1)
-                pytrends.build_payload(kw_list, cat=0, timeframe='today 3-m', geo='')
-                df = pytrends.interest_over_time()
-                if not df.empty and 'isPartial' in df.columns:
-                    df = df.drop(columns=['isPartial'])
-                time.sleep(1) # rate limit mitigation
-                return df
+                
+                all_dfs = []
+                # 구글 트렌드는 한 번에 최대 5개의 키워드만 허용하므로 5개 단위로 분할(청크) 처리
+                for i in range(0, len(kw_list), 5):
+                    chunk = kw_list[i:i+5]
+                    pytrends.build_payload(chunk, cat=0, timeframe='today 3-m', geo='')
+                    df = pytrends.interest_over_time()
+                    if not df.empty and 'isPartial' in df.columns:
+                        df = df.drop(columns=['isPartial'])
+                    all_dfs.append(df)
+                    time.sleep(1.5) # rate limit mitigation
+                
+                if all_dfs:
+                    # 열 기준으로 병합 (동일한 날짜 인덱스를 공유)
+                    merged_df = pd.concat(all_dfs, axis=1)
+                    # 혹시 모를 중복 컬럼 제거
+                    return merged_df.loc[:, ~merged_df.columns.duplicated()]
+                return pd.DataFrame()
             except Exception as e:
+                import streamlit as st
+                st.toast(f"구글 트렌드 API 오류: {str(e)}")
                 return pd.DataFrame()
 
         region_mapping = {
