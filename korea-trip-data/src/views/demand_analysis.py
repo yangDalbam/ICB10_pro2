@@ -363,10 +363,16 @@ def render_demand_analysis():
             if len(parts) >= 2: return f"{parts[0]} {parts[1]}"
             elif len(parts) == 1: return parts[0]
             return "알 수 없음"
+        def clean_price(p):
+            if pd.isna(p): return float('nan')
+            p = str(p).replace(',', '').replace('₩', '').replace('원', '').strip()
+            try: return float(p)
+            except: return float('nan')
             
         df['reviews_num'] = df['reviews'].apply(clean_reviews)
         df['rating_num'] = df['rating'].apply(clean_rating)
         df['region_sigungu'] = df['region'].apply(clean_region_sigungu)
+        df['price_num'] = df['price'].apply(clean_price)
         return df
 
     df_ota = load_ota_data_v2()
@@ -416,7 +422,7 @@ def render_demand_analysis():
         st.markdown("➡️ 외국인 관광객들은 서울 도심 투어뿐만 아니라 '수원 화성', '파주 기점 DMZ' 등 근교 안보·문화 패키지 투어에 매우 높은 관심을 보이고 있습니다.")
 
         st.markdown("<br>", unsafe_allow_html=True)
-        st.subheader("📊 지역별 인프라 및 방문 만족도 분석 (Top 5)")
+        st.subheader("📊 지역별 인프라 및 가격대별 인기도 분석")
 
         col1, col2 = st.columns(2)
         with col1:
@@ -426,16 +432,12 @@ def render_demand_analysis():
             st.plotly_chart(fig1, use_container_width=True)
             
         with col2:
-            # 바이올린 플롯은 데이터 분포가 필요하므로 데이터가 많은 상위 5개 지역(상품 수 기준)을 사용합니다.
-            df_violin = df_valid_rating[df_valid_rating['region_sigungu'].isin(top5_infra['지역'])]
-            df_violin = pd.merge(df_violin, keyword_df, left_on='region_sigungu', right_on='지역', how='left')
-            
-            fig3 = px.violin(df_violin, x='region_sigungu', y='rating_num', color='region_sigungu',
-                             orientation='v', hover_data=['주요 키워드'], box=True, points="all",
-                             color_discrete_sequence=px.colors.sequential.Blues[-6:-1],
-                             title="주요 관광 거점(상품 수 상위 5개 지역) 평점 분포")
-            fig3.update_layout(xaxis_title="지역", yaxis_title="평점", showlegend=False, 
-                               yaxis=dict(range=[3.0, 5.2]), xaxis={'categoryorder':'mean descending'})
+            df_ota['price_bin'] = pd.qcut(df_ota['price_num'], q=4, labels=['저가', '중저가', '중고가', '고가'])
+            price_reviews = df_ota.groupby('price_bin', observed=True)['reviews_num'].mean().reset_index()
+            price_reviews.columns = ['가격대', '평균 리뷰 수']
+
+            fig3 = px.bar(price_reviews, x='가격대', y='평균 리뷰 수', color='평균 리뷰 수',
+                          color_continuous_scale='Blues', title="가격 구간별 관광 상품 인기도(평균 리뷰 수)")
             st.plotly_chart(fig3, use_container_width=True)
 
         st.markdown("### 🔍 상품 수(인프라)와 방문 규모(리뷰 수) 상관관계 분석")
