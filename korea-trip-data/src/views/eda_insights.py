@@ -88,8 +88,8 @@ def render_eda_insights():
                     return merged_df.loc[:, ~merged_df.columns.duplicated()]
                 return pd.DataFrame()
             except Exception as e:
-                import streamlit as st
-                st.toast(f"구글 트렌드 API 오류: {str(e)}")
+                # 스트림릿 캐시 함수 내부에서 UI 요소(st.toast 등)를 호출하면 
+                # CacheReplayClosureError 가 발생할 수 있으므로 제거합니다.
                 return pd.DataFrame()
 
         region_mapping = {
@@ -258,7 +258,7 @@ def render_eda_insights():
             df_ota['region_sigungu'] = df_ota['region'].apply(clean_region_sigungu)
             
             df_ota_agg = df_ota.groupby('region_sigungu').agg({'title': 'count', 'reviews_num': 'sum', 'rating_num': 'mean'}).reset_index()
-            df_ota_agg.columns = ['지역', '상품 수', '총 리뷰 수', '평균 평점']
+            df_ota_agg.columns = ['지역', '인프라', '방문수', '만족도']
             
             # 지역명 정규화 (경기도 수원시 -> 경기 수원시)
             mapping_dict = {
@@ -279,15 +279,15 @@ def render_eda_insights():
             df_merged = pd.merge(df_demand, df_ota_agg, on='signguNm', how='left').fillna(0)
         else:
             df_merged = df_demand.copy()
-            df_merged['상품 수'] = 0
-            df_merged['총 리뷰 수'] = 0
-            df_merged['평균 평점'] = 0
+            df_merged['인프라'] = 0
+            df_merged['방문수'] = 0
+            df_merged['만족도'] = 0
 
         # 최대값 기준으로 정규화 (0~1)
         max_sns = df_merged["snsMentionCo"].max() or 1
         max_navi = df_merged["naviSearchCo"].max() or 1
-        max_infra = df_merged["상품 수"].max() or 1
-        max_review = df_merged["총 리뷰 수"].max() or 1
+        max_infra = df_merged["인프라"].max() or 1
+        max_review = df_merged["방문수"].max() or 1
         
         m_c1 = df_merged[df_merged["signguNm"] == city_1]
         m_c2 = df_merged[df_merged["signguNm"] == city_2]
@@ -298,17 +298,17 @@ def render_eda_insights():
             val_c1 = [
                 float(m_c1.iloc[0]["snsMentionCo"]) / max_sns,
                 float(m_c1.iloc[0]["naviSearchCo"]) / max_navi,
-                float(m_c1.iloc[0]["상품 수"]) / max_infra,
-                float(m_c1.iloc[0]["총 리뷰 수"]) / max_review,
-                float(m_c1.iloc[0]["평균 평점"]) / 5.0
+                float(m_c1.iloc[0]["인프라"]) / max_infra,
+                float(m_c1.iloc[0]["방문수"]) / max_review,
+                float(m_c1.iloc[0]["만족도"]) / 5.0
             ]
             
             val_c2 = [
                 float(m_c2.iloc[0]["snsMentionCo"]) / max_sns,
                 float(m_c2.iloc[0]["naviSearchCo"]) / max_navi,
-                float(m_c2.iloc[0]["상품 수"]) / max_infra,
-                float(m_c2.iloc[0]["총 리뷰 수"]) / max_review,
-                float(m_c2.iloc[0]["평균 평점"]) / 5.0
+                float(m_c2.iloc[0]["인프라"]) / max_infra,
+                float(m_c2.iloc[0]["방문수"]) / max_review,
+                float(m_c2.iloc[0]["만족도"]) / 5.0
             ]
 
             val_c1 = [min(x, 1.0) for x in val_c1]
@@ -331,10 +331,10 @@ def render_eda_insights():
             )
             st.plotly_chart(fig_radar, use_container_width=True)
 
-            c1_infra = int(m_c1.iloc[0]["상품 수"])
-            c2_infra = int(m_c2.iloc[0]["상품 수"])
-            c1_review = int(m_c1.iloc[0]["총 리뷰 수"])
-            c2_review = int(m_c2.iloc[0]["총 리뷰 수"])
+            c1_infra = int(m_c1.iloc[0]["인프라"])
+            c2_infra = int(m_c2.iloc[0]["인프라"])
+            c1_review = int(m_c1.iloc[0]["방문수"])
+            c2_review = int(m_c2.iloc[0]["방문수"])
             
             infra_diff = "우수" if c1_infra > c2_infra else "부족"
             review_diff = "활발" if c1_review > c2_review else "부족"
