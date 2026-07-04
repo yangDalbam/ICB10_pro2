@@ -72,21 +72,46 @@ def render_eda_insights():
         @st.cache_data(ttl=86400)
         def fetch_google_trends_data_all(kw_list):
             try:
+                import urllib3
+                # pytrends가 구버전 urllib3의 method_whitelist 파라미터를 사용해서 발생하는 TypeError 패치
+                if hasattr(urllib3.util.Retry, '__init__'):
+                    original_init = urllib3.util.Retry.__init__
+                    def patched_init(self, *args, **kwargs):
+                        if 'method_whitelist' in kwargs:
+                            kwargs['allowed_methods'] = kwargs.pop('method_whitelist')
+                        original_init(self, *args, **kwargs)
+                    urllib3.util.Retry.__init__ = patched_init
+                    
                 from pytrends.request import TrendReq
                 import time
+                import random
                 import pandas as pd
-                pytrends = TrendReq(hl='en-US', tz=360, retries=3, backoff_factor=1)
+                
+                USER_AGENTS = [
+                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
+                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:120.0) Gecko/20100101 Firefox/120.0',
+                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0'
+                ]
                 
                 all_dfs = []
                 # 구글 트렌드는 한 번에 최대 5개의 키워드만 허용하므로 5개 단위로 분할(청크) 처리
                 for i in range(0, len(kw_list), 5):
                     chunk = kw_list[i:i+5]
+                    ua = random.choice(USER_AGENTS)
+                    pytrends = TrendReq(hl='en-US', tz=360, retries=3, backoff_factor=1, requests_args={'headers': {'User-Agent': ua}})
+                    
                     pytrends.build_payload(chunk, cat=0, timeframe='today 3-m', geo='')
                     df = pytrends.interest_over_time()
                     if not df.empty and 'isPartial' in df.columns:
                         df = df.drop(columns=['isPartial'])
                     all_dfs.append(df)
-                    time.sleep(1.5) # rate limit mitigation
+                    
+                    if i + 5 < len(kw_list):
+                        delay = random.uniform(5, 15)
+                        time.sleep(delay) # 무작위 지연(Backoff Delay) 추가
                 
                 if all_dfs:
                     # 열 기준으로 병합 (동일한 날짜 인덱스를 공유)
