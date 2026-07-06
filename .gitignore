@@ -104,3 +104,6 @@ Thumbs.db
 *settings*.ini
 .gemini/
 .copilot/
+
+seoul-pops/data/*.parquet
+seoul-pops/data/*.zip
