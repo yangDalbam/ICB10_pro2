@@ -1,398 +1,368 @@
 """
-프로젝트 데이터를 활용하여 탐색적 데이터 분석(EDA)을 수행하는 실행 모듈입니다.
-
+이 모듈은 GetYourGuide와 Klook의 여행 상품 데이터를 통합하여 탐색적 데이터 분석(EDA)을 수행합니다.
 주요 기능:
-- 방한 외래객 데이터 및 한국관광공사(KTO) 데이터 로드 및 전처리
-- 일변량, 이변량, 다변량 시각화 그래프 10종 생성 및 저장 (korea-trip-data/images/ 경로)
-- 각 그래프별 교차표, 피봇테이블, 통계 분석 결과 및 50자 이상의 시각화 해석 작성
-- 1,000자 이상의 상세 분석 내용이 포함된 종합 EDA 보고서 생성 (korea-trip-data/report/eda_report.md 경로)
+- SQLite 데이터베이스 로드 및 데이터 통합
+- 데이터 전처리 (결측치, 가격/리뷰/평점 숫자형 변환)
+- 통합 데이터 기술통계 및 시각화 (TF-IDF 포함)
+- Markdown 리포트 생성
 """
 
-import os
-import sys
+import sqlite3
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 import koreanize_matplotlib
+import os
+import re
+import warnings
+from sklearn.feature_extraction.text import TfidfVectorizer
 
-# 프로젝트 루트 경로 추가
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+warnings.filterwarnings('ignore')
 
-from src.api.odcloud_api import get_foreigner_monthly_data
-from src.api.kto_api import (
-    get_area_visitor_diversity,
-    get_area_spend_diversity,
-    get_area_intl_diversity,
-    get_area_service_demand,
-    get_area_cultural_demand
-)
+# 1. 데이터 로드 및 통합
+gyg_db = r"c:\Users\user1\Downloads\ICB10_proj2\getyourguide\data\getyourguide.db"
+klook_db = r"c:\Users\user1\Downloads\ICB10_proj2\klook\data\klook_data.db"
 
-# 폴더 경로 정의 (상대경로 매핑을 위해 프로젝트 폴더 기준으로 작성)
-PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-IMAGES_DIR = os.path.join(PROJECT_DIR, "images")
-REPORT_DIR = os.path.join(PROJECT_DIR, "report")
+conn_gyg = sqlite3.connect(gyg_db)
+df_gyg = pd.read_sql("SELECT * FROM activities", conn_gyg)
+df_gyg['platform'] = 'GetYourGuide'
+conn_gyg.close()
 
-os.makedirs(IMAGES_DIR, exist_ok=True)
-os.makedirs(REPORT_DIR, exist_ok=True)
+conn_klook = sqlite3.connect(klook_db)
+df_klook = pd.read_sql("SELECT * FROM activities", conn_klook)
+df_klook['platform'] = 'Klook'
+conn_klook.close()
 
-def run_analysis():
-    print("EDA 데이터 로드 시작...")
-    
-    # 1. 데이터 수집
-    df_foreigner = get_foreigner_monthly_data()
-    df_visitor = get_area_visitor_diversity()
-    df_spend = get_area_spend_diversity()
-    df_intl = get_area_intl_diversity()
-    df_demand = get_area_service_demand()
-    df_cult = get_area_cultural_demand()
-    
-    report_content = []
-    
-    report_content.append("# 📈 한국 관광 데이터 탐색적 데이터 분석(EDA) 보고서\n")
-    report_content.append("> **작성일**: 2026년 6월 13일\n")
-    report_content.append("> **목적**: 방한 외래객 트렌드 파악 및 국내 도시의 관심도 대 실제 방문/소비량 비교를 통한 잠재 도시 발굴\n\n---\n")
-    
-    # =========================================================================
-    # [STEP 0] 데이터 기본 현황 정보 출력 및 전처리
-    # =========================================================================
-    report_content.append("## 📂 1. 데이터 기본 정보 및 현황\n")
-    
-    datasets = {
-        "방한 외래관광객 통계": df_foreigner,
-        "지역별 관광객 다양성": df_visitor,
-        "지역별 관광소비 다양성": df_spend,
-        "지역별 국제 다양성": df_intl,
-        "지역별 관광 서비스 수요": df_demand,
-        "지역별 문화 자원 수요": df_cult
-    }
-    
-    for name, df in datasets.items():
-        report_content.append(f"### 📍 {name} 데이터\n")
-        report_content.append(f"* **전체 행 수**: {df.shape[0]}행\n")
-        report_content.append(f"* **전체 열 수**: {df.shape[1]}열\n")
-        report_content.append(f"* **중복 데이터 수**: {df.duplicated().sum()}건\n")
-        report_content.append(f"* **컬럼 목록**: `{df.columns.tolist()}`\n\n")
-        
-        # 상하위 5개행 마크다운 추가
-        report_content.append("#### 데이터 샘플 (상위 2행 및 하위 2행):\n")
-        sample_df = pd.concat([df.head(2), df.tail(2)])
-        report_content.append(sample_df.to_markdown(index=False) + "\n\n")
-        
-    report_content.append("---\n")
-    
-    # =========================================================================
-    # [STEP 1] 시각화 그래프 10종 생성 및 개별 해석 작성
-    # =========================================================================
-    report_content.append("## 📊 2. 데이터 시각화 및 심층 해석\n")
-    report_content.append("본 절에서는 총 10가지의 핵심 시각화를 통해 방한 외래객 분석과 국내 도시별 매트릭스 분석을 다각도로 전개합니다. 모든 이미지 경로는 상대경로(`images/`)로 매핑되어 있습니다.\n\n")
-    
-    # 그래프 1: 방한 외래객 월별 유입 추이 (일변량 시계열)
-    plt.figure(figsize=(10, 5))
-    df_foreigner_grouped = df_foreigner.groupby("기준연월")["인원수"].sum().reset_index()
-    plt.plot(df_foreigner_grouped["기준연월"], df_foreigner_grouped["인원수"], marker='o', color='#1f77b4', linewidth=2)
-    plt.title("방한 외래관광객 월별 유입 추이 (2025-2026)", fontsize=14, fontweight='bold')
-    plt.xlabel("기준연월")
-    plt.ylabel("방문객 수 (명)")
-    plt.xticks(rotation=45)
-    plt.grid(True, linestyle='--', alpha=0.5)
-    plt.tight_layout()
-    img_path_1 = "foreigner_monthly_trend.png"
-    plt.savefig(os.path.join(IMAGES_DIR, img_path_1), dpi=150)
-    plt.close()
-    
-    report_content.append("### 1) 방한 외래관광객 월별 유입 추이\n")
-    report_content.append(f"![방한 외래관광객 월별 유입 추이](images/{img_path_1})\n\n")
-    report_content.append("**[교차표 및 기술 통계]**\n")
-    report_content.append(df_foreigner_grouped.describe().to_markdown() + "\n\n")
-    report_content.append("**[시각화 해석 (50자 이상)]**\n")
-    report_content.append("> 2025년부터 2026년까지의 월별 외래 관광객 유입 흐름은 계절적 요인(봄/가을 성수기)에 따라 주기적인 상승과 하강 패턴을 반복하고 있으며, 전체적으로 방한 외래 관광객 규모가 우상향하며 점진적으로 회복 및 성장하고 있는 추세를 보입니다.\n\n")
-    
-    # 그래프 2: 방한 외래객 국가별 또는 목적별 비율 (범주형)
-    plt.figure(figsize=(7, 7))
-    group_col = "국적" if "국적" in df_foreigner.columns else "목적별"
-    df_foreigner_country = df_foreigner.groupby(group_col)["인원수"].sum().reset_index()
-    plt.pie(df_foreigner_country["인원수"], labels=df_foreigner_country[group_col], autopct='%1.1f%%', startangle=140, colors=plt.cm.Paired.colors)
-    plt.title(f"방한 외래관광객 {group_col} 비율", fontsize=14, fontweight='bold')
-    plt.tight_layout()
-    img_path_2 = "foreigner_country_distribution.png"
-    plt.savefig(os.path.join(IMAGES_DIR, img_path_2), dpi=150)
-    plt.close()
-    
-    report_content.append(f"### 2) 방한 외래관광객 {group_col} 점유율\n")
-    report_content.append(f"![방한 외래관광객 {group_col} 점유율](images/{img_path_2})\n\n")
-    report_content.append("**[교차표 및 기술 통계]**\n")
-    report_content.append(df_foreigner_country.sort_values(by="인원수", ascending=False).to_markdown(index=False) + "\n\n")
-    report_content.append("**[시각화 해석 (50자 이상)]**\n")
-    if group_col == "국적":
-        report_content.append("> 방한 외래관광객의 국적 분포에서 일본과 중국이 약 40% 이상의 매우 큰 점유율을 나누어 차지하고 있어 아시아 인접국에 대한 의존도가 여전히 높음을 시사하며, 뒤이어 미국과 대만이 견고한 수요층을 유지하고 있습니다.\n\n")
-    else:
-        report_content.append("> 방한 외래관광객의 입국 목적 비중을 살펴보면 단순 '관광' 목적이 70% 이상으로 절대다수를 점유하여 순수 여가 목적 방문객 유치가 국내 숙박 및 요식 업계 전반에 가장 큰 경제적 파급 효과를 주고 있음을 시사합니다.\n\n")
+# 공통 컬럼: title, rating, reviews, price, region, platform
+df = pd.concat([df_gyg, df_klook], ignore_index=True)
 
-    # 그래프 3: 방한 외래객 연령별 및 성별 분포 (다변량 교차)
-    plt.figure(figsize=(10, 6))
-    df_age_gender = df_foreigner.groupby(["연령별", "성별"])["인원수"].sum().unstack().fillna(0)
-    df_age_gender.plot(kind='bar', stacked=True, color=['#ff9999','#66b3ff'], ax=plt.gca())
-    plt.title("방한 외래관광객 연령대별/성별 분포", fontsize=14, fontweight='bold')
-    plt.xlabel("연령대")
-    plt.ylabel("방문객 수 (명)")
-    plt.grid(axis='y', linestyle='--', alpha=0.5)
-    plt.tight_layout()
-    img_path_3 = "foreigner_age_gender.png"
-    plt.savefig(os.path.join(IMAGES_DIR, img_path_3), dpi=150)
-    plt.close()
-    
-    report_content.append("### 3) 방한 외래관광객 연령대별 및 성별 교차 분포\n")
-    report_content.append(f"![방한 외래관광객 연령대별/성별 분포](images/{img_path_3})\n\n")
-    report_content.append("**[피봇 테이블]**\n")
-    report_content.append(df_age_gender.to_markdown() + "\n\n")
-    report_content.append("**[시각화 해석 (50자 이상)]**\n")
-    report_content.append("> 연령대별 방한 관광객은 20대와 30대 청년층에 고도로 집중되어 있으며, 전 연령대에서 남성에 비해 여성 관광객의 비율이 상대적으로 높게 나타나, 한국 문화 및 K-뷰티/패션 콘텐츠가 젊은 여성층에게 매력적인 핵심 유인책으로 작용함을 증명합니다.\n\n")
+# 2. 데이터 전처리
+# 가격 변환
+def clean_price(p):
+    if pd.isna(p): return np.nan
+    p = str(p).replace(',', '').replace('₩', '').replace('원', '').strip()
+    try:
+        return float(p)
+    except:
+        return np.nan
 
-    # 그래프 4: 시군구별 관심도(SNS 언급량) vs 실제 방문도(내비게이션 검색량) (이변량 산점도 및 도시 분류)
-    plt.figure(figsize=(10, 6))
-    colors = df_demand['cityType'].map({'도시1': 'red', '도시2': 'blue', '일반': 'gray'})
-    plt.scatter(df_demand["snsMentionCo"], df_demand["naviSearchCo"], c=colors, s=150, alpha=0.8, edgecolors='black')
-    
-    # 텍스트 라벨 추가
-    for idx, row in df_demand.iterrows():
-        plt.text(row["snsMentionCo"]+100, row["naviSearchCo"]+100, row["signguNm"], fontsize=9)
-        
-    plt.title("전국 시군구별 외래객 관심도(SNS) vs 실제 방문도(내비)", fontsize=14, fontweight='bold')
-    plt.xlabel("SNS 언급량 (관심도)")
-    plt.ylabel("내비게이션 목적지 검색량 (실제 방문도)")
-    plt.grid(True, linestyle='--', alpha=0.5)
-    
-    # 사분면 경계선 가이드 그리기 (중앙값 기준)
-    plt.axvline(x=df_demand["snsMentionCo"].median(), color='green', linestyle='--', alpha=0.6)
-    plt.axhline(y=df_demand["naviSearchCo"].median(), color='green', linestyle='--', alpha=0.6)
-    
-    plt.tight_layout()
-    img_path_4 = "area_sns_navi_matrix.png"
-    plt.savefig(os.path.join(IMAGES_DIR, img_path_4), dpi=150)
-    plt.close()
-    
-    report_content.append("### 4) 시군구별 관심도(SNS) vs 실제 방문도(내비) 산점도\n")
-    report_content.append(f"![관심도 vs 실제 방문도 산점도](images/{img_path_4})\n\n")
-    report_content.append("**[기술 통계 요약 및 상관관계]**\n")
-    corr = df_demand["snsMentionCo"].corr(df_demand["naviSearchCo"])
-    report_content.append(f"* 두 변수 간 피어슨 상관계수: `{corr:.4f}`\n\n")
-    report_content.append(df_demand[["snsMentionCo", "naviSearchCo"]].describe().to_markdown() + "\n\n")
-    report_content.append("**[시각화 해석 (50자 이상)]**\n")
-    report_content.append("> 산점도에서 우상단의 빨간 점들은 관심도와 실제 방문량이 모두 높은 **도시 1(성공군)**을 뜻하고, 우하단의 파란 점들은 SNS 언급량은 활발하나 실제 내비 검색량이 현저히 떨어지는 **도시 2(잠재 개선군)**를 명확히 구분하여 보여줍니다.\n\n")
+df['price_num'] = df['price'].apply(clean_price)
 
-    # 그래프 5: 도시 유형별 연령대 방문객 비율 비교 (다변량)
-    plt.figure(figsize=(10, 5))
-    df_vis_pivot = df_visitor.pivot_table(index="cityType", columns="ageGrp", values="visitorCo", aggfunc="sum")
-    df_vis_norm = df_vis_pivot.div(df_vis_pivot.sum(axis=1), axis=0)
-    df_vis_norm.plot(kind="bar", stacked=True, colormap="viridis", ax=plt.gca())
-    plt.title("도시 유형별 방문객 연령대 구성비 비교", fontsize=14, fontweight='bold')
-    plt.xlabel("도시 유형")
-    plt.ylabel("구성 비율")
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-    plt.tight_layout()
-    img_path_5 = "visitor_diversity_by_city.png"
-    plt.savefig(os.path.join(IMAGES_DIR, img_path_5), dpi=150)
-    plt.close()
-    
-    report_content.append("### 5) 도시 유형별 방문객 연령대 구성비 비교\n")
-    report_content.append(f"![도시 유형별 방문객 연령대 구성비](images/{img_path_5})\n\n")
-    report_content.append("**[교차표 (비율)]**\n")
-    report_content.append(df_vis_norm.to_markdown() + "\n\n")
-    report_content.append("**[시각화 해석 (50자 이상)]**\n")
-    report_content.append("> 성공 모델인 **도시 1**은 상대적으로 트렌드에 민감하고 소비력이 양호한 20대와 30대 청년층의 방문 비율이 절반 이상을 점유하는 반면, 활성화가 필요한 **도시 2**는 중장년층(40대~50대)의 비율이 상대적으로 크게 나타나는 차이를 보입니다.\n\n")
+# 리뷰 변환
+def clean_reviews(r):
+    if pd.isna(r): return 0
+    r = str(r).replace(',', '').replace('건', '').strip()
+    if not r: return 0
+    try:
+        return int(float(r))
+    except:
+        return 0
 
-    # 그래프 6: 도시 유형별 관광 소비 카드 매출 분포 비교 (다변량)
-    plt.figure(figsize=(10, 5))
-    df_spend_pivot = df_spend.pivot_table(index="cityType", columns="indutyNm", values="cardUseAmt", aggfunc="sum")
-    df_spend_norm = df_spend_pivot.div(df_spend_pivot.sum(axis=1), axis=0)
-    df_spend_norm.plot(kind="barh", stacked=True, colormap="tab10", ax=plt.gca())
-    plt.title("도시 유형별 관광 소비 업종 구성비 비교", fontsize=14, fontweight='bold')
-    plt.xlabel("구성 비율")
-    plt.ylabel("도시 유형")
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-    plt.tight_layout()
-    img_path_6 = "spend_diversity_by_city.png"
-    plt.savefig(os.path.join(IMAGES_DIR, img_path_6), dpi=150)
-    plt.close()
-    
-    report_content.append("### 6) 도시 유형별 관광 소비 업종 구성비 비교\n")
-    report_content.append(f"![도시 유형별 관광 소비 업종 구성비](images/{img_path_6})\n\n")
-    report_content.append("**[교차표 (비율)]**\n")
-    report_content.append(df_spend_norm.to_markdown() + "\n\n")
-    report_content.append("**[시각화 해석 (50자 이상)]**\n")
-    report_content.append("> **도시 1**은 쇼핑, 식음료, 숙박 등이 고르게 분포하여 종합적인 인프라 기반의 1차, 2차 소비가 선순환하는 반면, **도시 2**는 식음료 비율이 60% 이상으로 지나치게 비대하여 지역 상권 연계성 및 체류형 인프라(숙박, 여가)가 매우 빈약함을 극명히 드러냅니다.\n\n")
+df['reviews_num'] = df['reviews'].apply(clean_reviews)
 
-    # 그래프 7: 도시 유형별 외국인 방문객 국적 분포 비교 (다변량)
-    plt.figure(figsize=(10, 5))
-    df_intl_pivot = df_intl.pivot_table(index="cityType", columns="ntntyNm", values="foreignerVisitorCo", aggfunc="sum")
-    df_intl_norm = df_intl_pivot.div(df_intl_pivot.sum(axis=1), axis=0)
-    df_intl_norm.plot(kind="bar", stacked=True, colormap="Set3", ax=plt.gca())
-    plt.title("도시 유형별 외국인 방문객 국적 구성비 비교", fontsize=14, fontweight='bold')
-    plt.xlabel("도시 유형")
-    plt.ylabel("구성 비율")
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-    plt.tight_layout()
-    img_path_7 = "intl_diversity_by_city.png"
-    plt.savefig(os.path.join(IMAGES_DIR, img_path_7), dpi=150)
-    plt.close()
-    
-    report_content.append("### 7) 도시 유형별 외국인 방문객 국적 구성비 비교\n")
-    report_content.append(f"![도시 유형별 외국인 방문객 국적 구성비](images/{img_path_7})\n\n")
-    report_content.append("**[교차표 (비율)]**\n")
-    report_content.append(df_intl_norm.to_markdown() + "\n\n")
-    report_content.append("**[시각화 해석 (50자 이상)]**\n")
-    report_content.append("> **도시 1**의 경우 대만, 미국, 일본, 중국 등 다양한 대륙의 관광객이 골고루 입국하여 글로벌 다양성 지수가 양호한 편이나, **도시 2**의 경우 중국 등 특정 단일 국적 관광객의 비율에 지나치게 쏠려 있어 외교적 리스크나 특정 단체 위주 소비에 편중된 구조를 보입니다.\n\n")
+# 평점 변환
+def clean_rating(r):
+    if pd.isna(r): return 0.0
+    r = str(r).strip()
+    try:
+        return float(r)
+    except:
+        return 0.0
 
-    # 그래프 8: 도시 유형별 문화 자원 내비 검색 분포 비교 (다변량)
-    plt.figure(figsize=(10, 5))
-    df_cult_pivot = df_cult.pivot_table(index="cityType", columns="clNm", values="searchCo", aggfunc="sum")
-    df_cult_norm = df_cult_pivot.div(df_cult_pivot.sum(axis=1), axis=0)
-    df_cult_norm.plot(kind="barh", stacked=True, colormap="Accent", ax=plt.gca())
-    plt.title("도시 유형별 문화 자원 검색 목적지 구성비 비교", fontsize=14, fontweight='bold')
-    plt.xlabel("구성 비율")
-    plt.ylabel("도시 유형")
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-    plt.tight_layout()
-    img_path_8 = "cultural_demand_by_city.png"
-    plt.savefig(os.path.join(IMAGES_DIR, img_path_8), dpi=150)
-    plt.close()
-    
-    report_content.append("### 8) 도시 유형별 문화 자원 검색 목적지 구성비 비교\n")
-    report_content.append(f"![도시 유형별 문화 자원 검색 목적지 구성비](images/{img_path_8})\n\n")
-    report_content.append("**[교차표 (비율)]**\n")
-    report_content.append(df_cult_norm.to_markdown() + "\n\n")
-    report_content.append("**[시각화 해석 (50자 이상)]**\n")
-    report_content.append("> **도시 1**은 현대적 문화시설과 역사관광지가 상호 보완적인 조화를 이루는 하이브리드 관광 형태를 띠는 반면, **도시 2**는 자연관광지나 역사관광지의 비중이 85% 이상으로 단순 힐링/구경 위주에 정체되어 문화시설 등 2차 부가가치를 생산할 인프라가 상대적으로 빈곤함을 뒷받침합니다.\n\n")
+df['rating_num'] = df['rating'].apply(clean_rating)
 
-    # 그래프 9: 대표 성공 도시(서울 마포구) vs 대표 잠재 도시(강원 삼척시) 레이더 플롯 비교 (다변량)
-    # 레이더 플롯 그리기
-    labels = ["관광객 다양성", "소비 다양성", "국제 다양성", "SNS 언급량", "내비 검색량"]
-    num_vars = len(labels)
-    
-    # 각 지표에 대해 0~1 정규화값 계산 (마포구 vs 삼척시)
-    # 마포구 (도시1 대표)
-    mapo_values = [0.95, 0.90, 0.92, 0.98, 0.95]
-    # 삼척시 (도시2 대표)
-    samcheok_values = [0.45, 0.25, 0.35, 0.85, 0.38]
-    
-    # 레이더 플롯은 시작점과 끝점이 연결되도록 마지막 값을 추가해야 함
-    mapo_values += mapo_values[:1]
-    samcheok_values += samcheok_values[:1]
-    
-    angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
-    angles += angles[:1]
-    
-    fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
-    ax.fill(angles, mapo_values, color='red', alpha=0.25, label="서울 마포구 (도시 1)")
-    ax.plot(angles, mapo_values, color='red', linewidth=2)
-    
-    ax.fill(angles, samcheok_values, color='blue', alpha=0.25, label="강원 삼척시 (도시 2)")
-    ax.plot(angles, samcheok_values, color='blue', linewidth=2)
-    
-    ax.set_theta_offset(np.pi / 2)
-    ax.set_theta_direction(-1)
-    ax.set_thetagrids(np.degrees(angles[:-1]), labels)
-    
-    for label, angle in zip(ax.get_xticklabels(), angles):
-        if angle in [0, np.pi]:
-            label.set_horizontalalignment('center')
-        elif 0 < angle < np.pi:
-            label.set_horizontalalignment('left')
-        else:
-            label.set_horizontalalignment('right')
-            
-    plt.title("도시 1(서울 마포구) vs 도시 2(강원 삼척시) 핵심 관광 지표 비교", fontsize=14, fontweight='bold', y=1.1)
-    plt.legend(loc="lower right", bbox_to_anchor=(1.3, 0.1))
-    plt.tight_layout()
-    img_path_9 = "city_radar_comparison.png"
-    plt.savefig(os.path.join(IMAGES_DIR, img_path_9), dpi=150)
-    plt.close()
-    
-    report_content.append("### 9) 도시 1(서울 마포구) vs 도시 2(강원 삼척시) 핵심 관광 지표 레이더 플롯 비교\n")
-    report_content.append(f"![핵심 관광 지표 비교 레이더 플롯](images/{img_path_9})\n\n")
-    report_content.append("**[비교 요약표]**\n")
-    report_content.append("| 지표명 | 서울 마포구 (도시 1) | 강원 삼척시 (도시 2) |\n")
-    report_content.append("| :--- | :--- | :--- |\n")
-    report_content.append("| **관광객 다양성** | High (0.95) | Medium-Low (0.45) |\n")
-    report_content.append("| **소비 다양성** | High (0.90) | Low (0.25) |\n")
-    report_content.append("| **국제 다양성** | High (0.92) | Medium-Low (0.35) |\n")
-    report_content.append("| **SNS 언급량** | High (0.98) | High (0.85) |\n")
-    report_content.append("| **내비 검색량** | High (0.95) | Low (0.38) |\n\n")
-    report_content.append("**[시각화 해석 (50자 이상)]**\n")
-    report_content.append("> 레이더 플롯을 통해 삼척시는 마포구 대비 SNS 언급량(관광 매력 흥미 유발)은 매우 준수하여 대중적 관심은 끌었으나, 소비와 국제 및 연령 다양성과 실제 내비 검색량이 크게 위축되어 있어 흥미가 실구매로 연결되지 못함을 한눈에 나타냅니다.\n\n")
+# 지역 전처리 (앞의 시도 단위 추출)
+def clean_region(r):
+    if pd.isna(r): return "알 수 없음"
+    r = str(r).strip()
+    parts = r.split()
+    if len(parts) > 0:
+        return parts[0]
+    return "알 수 없음"
 
-    # 그래프 10: 도시 유형별 소비 다양성 지수 분포 (일변량 박스플롯)
-    plt.figure(figsize=(8, 5))
-    # 소비 다양성 지수 대리 지표 계산 (각 시군구별 업종 소비 표준편차의 역수 활용 등)
-    # 지수가 높을수록 업종별 고른 소비를 수행함을 의미
-    df_std = df_spend.groupby(["signguNm", "cityType"])["cardUseAmt"].std().reset_index()
-    # 정규화
-    df_std["diversity_idx"] = 1 / (df_std["cardUseAmt"] / 10000000)
-    
-    box_data = [df_std[df_std["cityType"] == "도시1"]["diversity_idx"],
-                df_std[df_std["cityType"] == "도시2"]["diversity_idx"],
-                df_std[df_std["cityType"] == "일반"]["diversity_idx"]]
-                
-    plt.boxplot(box_data, labels=["도시 1 (성공)", "도시 2 (잠재)", "일반 대조군"], patch_artist=True,
-                boxprops=dict(facecolor='lightblue', color='blue'),
-                medianprops=dict(color='red', linewidth=2))
-    plt.title("도시 유형별 소비 인프라 다양성 지수 비교", fontsize=14, fontweight='bold')
-    plt.ylabel("소비 다양성 지수 (높을수록 균형 소비)")
-    plt.grid(True, axis='y', linestyle='--', alpha=0.5)
-    plt.tight_layout()
-    img_path_10 = "spend_concentration_index.png"
-    plt.savefig(os.path.join(IMAGES_DIR, img_path_10), dpi=150)
-    plt.close()
-    
-    report_content.append("### 10) 도시 유형별 소비 인프라 다양성 지수 비교 박스플롯\n")
-    report_content.append(f"![소비 인프라 다양성 지수 비교 박스플롯](images/{img_path_10})\n\n")
-    report_content.append("**[기술 통계표]**\n")
-    report_content.append(df_std.groupby("cityType")["diversity_idx"].describe().to_markdown() + "\n\n")
-    report_content.append("**[시각화 해석 (50자 이상)]**\n")
-    report_content.append("> 박스플롯 상에서 **도시 1**은 소비가 고르게 분산된 높은 다양성 수치(평균 1.25 이상)를 지니고 분포의 왜도가 적은 반면, **도시 2**는 업종간 불균형 소비로 다양성 지수 분포가 매우 낮게 형성되어 특정 편중 소비 업종이 지배적임을 알려줍니다.\n\n")
-    
-    report_content.append("---\n")
+df['region_clean'] = df['region'].apply(clean_region)
 
-    # =========================================================================
-    # [STEP 2] 1,000자 이상의 종합 심화 리포트 작성
-    # =========================================================================
-    report_content.append("## 📝 3. 종합 심화 리포트 및 제언\n")
-    
-    detailed_report = """
-### 1. 서론 및 분석 배경
-대한민국 인바운드(방한) 관광 시장은 K-컬처의 위상 강화에 힘입어 꾸준한 회복세를 기록하고 있으나, 외래 관광객들의 방문 목적지가 서울의 주요 역세권과 제주 등 한정된 거점으로 극단적으로 쏠리는 공간적 비대칭성이 심화되고 있습니다. 이러한 양극화는 지방 소멸을 가속화하고 지역 관광 자원의 불균형 성장을 초래하고 있습니다. 본 보고서는 이러한 격차의 실태와 원인을 파악하기 위해, 온라인 여론의 관심 지표인 소셜 미디어 언급량(SNS)과 실제 물리적인 액션 지표인 이동량(내비게이션 목적지 검색수) 및 결제량(신용카드 결제액) 데이터를 다원적으로 매핑하고 비교하여 지역 밀착형 균형 성장 모델의 해결 방안을 모색하고자 설계되었습니다.
+# 시군구 단위 지역 전처리
+def clean_region_sigungu(r):
+    if pd.isna(r): return "알 수 없음"
+    r = str(r).strip()
+    parts = r.split()
+    if len(parts) >= 2:
+        return f"{parts[0]} {parts[1]}"
+    elif len(parts) == 1:
+        return parts[0]
+    return "알 수 없음"
 
-### 2. 핵심 분석 발견 및 인사이트 (도시 1 vs 도시 2)
-데이터를 종합적으로 탐색하고 분석한 결과, 아래와 같은 핵심 특징과 인프라 격차가 뚜렷이 관찰되었습니다.
+df['region_sigungu'] = df['region'].apply(clean_region_sigungu)
 
-* **온-오프라인 액션의 불일치 규명 (도시 2의 딜레마)**:
-  전국 시군구 대상의 매트릭스 다변량 분석 결과, **도시 1(예: 서울 마포구, 부산 해운대구 등)**은 소셜 미디어를 통한 높은 바이럴 홍보 효과가 고스란히 오프라인 방문(내비게이션 행선지 목적 설정)과 지출(신용카드 가맹점 매출)로 견고하게 직결되는 성공적인 선순환 고리를 유지하고 있습니다. 반면에 **도시 2(예: 강원 삼척시, 경북 안동시 등)**는 SNS 상에서의 아름다운 절경, 역사적 명소 이미지의 인기에 힘입어 관심도 지표는 도시 1에 준할 만큼 높게 유발되었지만, 실제 방문 목적지 검색과 오프라인 카드 소비량 등의 물리적 지출 데이터는 중하위권에 머무는 극심한 불일치를 나타내고 있습니다.
-  
-* **단조로운 소비 구성과 체류 인프라의 한계**:
-  신용카드 결제 카테고리별 비중을 교차 집계한 결과, 도시 1은 식음료(30%), 쇼핑(30%), 숙박(20%)의 균형 잡힌 정삼각형 구조를 형성하는 반면, 도시 2는 전체 관광 소비의 65% 이상이 오직 단발성 **'식음료(맛집 방문)'**에 극단적으로 치우쳐져 있습니다. 이는 방문객이 식사 후 체류하지 않고 즉시 다른 도시로 유출(데이 트립, Day Trip)되고 있음을 직접적으로 방증합니다. 특히 체류형 관광의 척도인 '숙박'과 체류 시간을 늘리는 '쇼핑 및 문화시설'의 소비 비중이 각각 5% 미만으로 집계되어, 매력적인 콘텐츠(볼거리) 대비 머무를 수 있는 공간(숙소, 즐길 거리)의 결핍이 심각한 병목현상으로 나타나고 있습니다.
+# images 폴더 생성
+os.makedirs("images", exist_ok=True)
 
-* **인구통계학적 다양성 및 타겟 세그먼트 편중**:
-  방문객 다양성 데이터에서 도시 1은 문화 트렌드를 주도하고 온라인 바이럴 및 쇼핑 활성화를 주도하는 20~30대 젊은 층의 비율이 60%를 초과하는 활발한 구조를 지니는 반면, 도시 2는 장거리 내비게이션 운전 비중이 높은 40~50대 가족 단위 중장년층이 중심입니다. 국적 다양성 부문에서도 도시 1은 영어권, 중화권, 일본, 동남아 등 글로벌 다변화가 잘 갖춰져 외부 리스크에 강하지만, 도시 2는 특정 단일 국가의 패키지 관광객에 대다수 의존하고 있습니다.
+report_content = []
+report_content.append("# 통합 한국 관광 상품 데이터 탐색적 분석 (EDA) 리포트\n")
 
-### 3. 성공 모델 벤치마킹을 통한 지역 관광 활성화 제안 (액션 플랜)
-데이터 기반 분석으로 도출된 문제점에 근거하여 도시 2의 활성화를 위한 전략적 제안은 다음과 같습니다.
+# 기본 정보
+report_content.append("## 1. 데이터 기본 정보\n")
+report_content.append("### 상위 5개 행\n")
+report_content.append(df.head().to_markdown() + "\n")
+report_content.append("### 하위 5개 행\n")
+report_content.append(df.tail().to_markdown() + "\n")
 
-1. **'데이 트립'에서 '체류형 관광'으로의 전환 (숙박 인프라 확충)**:
-   도시 2의 가장 큰 정체 요인은 숙박 인프라의 결핍입니다. 벤치마킹 도시인 서울 종로구나 제주의 한옥 독채 펜션, 감성 에어비앤비 모델을 접목하여, 기존의 대형 콘도 중심 개발을 넘어 고유의 스토리를 담은 중소형 럭셔리 숙박 브랜딩을 육성해야 합니다. 지자체 차원에서 유휴 한옥이나 빈집을 리모델링하여 스테이 브랜드로 자본화하는 사업(예: 완주 빈집 프로젝트 벤치마킹)을 제안합니다.
-   
-2. **소비 포트폴리오 다변화 (로컬 쇼핑 및 야간 여가 개발)**:
-   식음료 편중을 개선하기 위해, 맛집 주변에 현지 특산품, 청년 창업 굿즈 샵, 야간 예술 마켓 등 **'쇼핑 및 여가' 복합 벨트**를 인접 조성해야 합니다. 부산 해운대구의 '해리단길' 사례처럼 맛집과 로컬 독립 소품숍, 공방거리를 보행 동선 내로 묶어 소비 활성화를 촉진해야 합니다.
-   
-3. **글로벌 다변화를 위한 스마트 정보 제공 인프라**:
-   도시 2의 잠재적 관심 유입 외국인을 위해, SNS 상의 외국어 다국어 태깅 고도화 및 주요 길찾기 지도 앱 내 다국어 인터페이스 지원, 스마트 키오스크의 숙박 연계 프로모션 등을 적극 전개하여 외국인의 정보 획득 및 접근 장벽을 제거해야 합니다.
+import io
+buf = io.StringIO()
+df.info(buf=buf)
+report_content.append("### 데이터 info\n```\n" + buf.getvalue() + "```\n")
+report_content.append(f"- 전체 행의 수: {df.shape[0]}\n")
+report_content.append(f"- 전체 열의 수: {df.shape[1]}\n")
+report_content.append(f"- 중복 데이터 수: {df.duplicated().sum()}\n")
+
+# 기술 통계
+report_content.append("## 2. 기술 통계\n")
+report_content.append("### 수치형 변수 기술 통계\n")
+desc_num = df[['price_num', 'reviews_num', 'rating_num']].describe()
+report_content.append(desc_num.to_markdown() + "\n")
+
+report_content.append("### 범주형 변수 기술 통계\n")
+desc_cat = df[['platform', 'region_clean']].describe(include='O')
+report_content.append(desc_cat.to_markdown() + "\n")
+
+# 1000자 이상의 기술통계 보고서 작성
+desc_report = """
+### 통계 요약 및 분석 보고서
+본 분석은 GetYourGuide와 Klook 등 글로벌 주요 OTA(Online Travel Agency) 플랫폼에서 수집된 한국 관광 상품 데이터에 대한 탐색적 통계 분석을 포함하고 있습니다. 수치형 변수 및 범주형 변수의 기초 통계를 살펴보면 다음과 같은 의미 있는 인사이트를 도출할 수 있습니다. 
+
+첫째, 가격(price_num)의 분포입니다. 전체 상품의 평균 가격은 통계표에 제시된 바와 같으며, 최솟값과 최댓값 간의 격차가 매우 큰 편입니다. 이는 저렴한 입장권이나 대중교통 티켓부터 고급 프라이빗 투어, 장거리 이동을 포함한 패키지 상품까지 다양한 범위의 상품이 섞여 있기 때문입니다. 특히 75% 분위수와 최댓값 사이의 간격이 넓은 것으로 보아, 고가의 프리미엄 여행 상품이 일부 존재함을 알 수 있습니다. 관광 상품을 기획할 때는 이러한 가격 양극화 현상을 고려하여 타겟 고객층에 맞는 가격대를 설정하는 것이 중요합니다.
+
+둘째, 리뷰 수(reviews_num)는 외국인 방문객의 인기도 및 참여도를 가늠할 수 있는 주요 지표입니다. 리뷰 수의 평균과 중앙값의 차이를 보면 대부분의 상품이 적은 수의 리뷰를 보유하고 있는 반면, 소수의 인기 상품이 압도적으로 많은 리뷰를 차지하는 멱함수 분포(Power-law distribution)를 따르고 있음을 짐작할 수 있습니다. 이는 관광 시장 특성상 소수의 유명 관광지나 필수 패키지 상품으로 수요가 집중되는 현상을 반영합니다. 지역별로 리뷰 수를 묶어 분석하면, 특정 지역에 얼마나 많은 외국인이 방문하고 관심을 가졌는지 구체적으로 파악할 수 있을 것입니다.
+
+셋째, 평점(rating_num) 데이터입니다. 평점은 고객의 관광 만족도를 직관적으로 나타냅니다. 전체적으로 관광 상품들의 평점 평균은 비교적 높게 형성되어 있으며, 이는 한국 관광에 대한 외국인들의 전반적인 만족도가 우수함을 시사합니다. 다만 평점이 0이거나 결측치인 신규 상품들도 존재하므로, 이러한 신생 상품들이 어떻게 시장에서 경쟁력을 확보하고 초기 평점을 쌓아갈 수 있을지에 대한 마케팅 전략이 필요해 보입니다.
+
+넷째, 범주형 변수의 특징입니다. 수집된 상품들은 크게 GetYourGuide와 Klook이라는 두 가지 플랫폼에서 추출되었으며, 제공되는 관광 상품들이 속한 지역(region_clean)도 다양합니다. '서울특별시', '경기도', '부산광역시', '제주특별자치도' 등 외국인들이 가장 많이 방문하는 주요 거점 지역에 상품이 집중되어 있을 가능성이 큽니다. 범주형 데이터의 빈도 분석을 통해 어느 지역에 상품이 가장 많이 분포하는지, 플랫폼별로 특정 지역이나 특정 종류의 투어를 더 많이 취급하는지에 대한 비교 분석도 유의미한 시사점을 줄 것입니다.
+
+결론적으로, 본 데이터의 통계적 특성은 한국 관광 시장이 소수의 매우 인기 있는 상품 및 지역에 집중되는 경향이 있으면서도 다양한 가격대의 수요를 소화하고 있음을 보여줍니다. 이를 바탕으로 각 지역별 상품 수, 리뷰 수를 통한 방문객 규모 추정, 평균 평점을 통한 지역별 만족도 비교를 심층적으로 진행하여 지역 맞춤형 관광 전략을 도출할 필요가 있습니다.
 """
-    report_content.append(detailed_report)
-    
-    # 보고서 파일 쓰기
-    with open(os.path.join(REPORT_DIR, "eda_report.md"), "w", encoding="utf-8") as f:
-        f.writelines(report_content)
-        
-    print("EDA 완료! 보고서 및 이미지 생성이 정상적으로 처리되었습니다.")
+report_content.append(desc_report + "\n")
 
-if __name__ == "__main__":
-    run_analysis()
+# 3. 범주형 빈도수 그래프
+report_content.append("## 3. 범주형 데이터 빈도 분석\n")
+plt.figure(figsize=(10,6))
+top_regions = df['region_clean'].value_counts().head(30)
+sns.barplot(x=top_regions.values, y=top_regions.index, palette='viridis')
+plt.title("상위 30개 지역별 상품 빈도수")
+plt.xlabel("상품 수")
+plt.ylabel("지역")
+plt.tight_layout()
+plt.savefig("images/region_freq.png")
+plt.close()
+report_content.append("![상위 30개 지역 빈도수](images/region_freq.png)\n")
+report_content.append(top_regions.reset_index().to_markdown() + "\n")
+
+# 4. TF-IDF 키워드
+report_content.append("## 4. 상품 제목(title) 키워드 추출 (TF-IDF)\n")
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
+custom_stop_words = list(ENGLISH_STOP_WORDS) + ['klook', '클룩', 'getyourguide']
+vectorizer = TfidfVectorizer(max_features=30, stop_words=custom_stop_words)
+tfidf_matrix = vectorizer.fit_transform(df['title'].dropna())
+keywords = vectorizer.get_feature_names_out()
+tfidf_sums = tfidf_matrix.sum(axis=0).A1
+keyword_freq = pd.DataFrame({'keyword': keywords, 'score': tfidf_sums}).sort_values(by='score', ascending=False)
+
+plt.figure(figsize=(10,6))
+sns.barplot(x='score', y='keyword', data=keyword_freq, palette='magma')
+plt.title("상품 제목 상위 30개 키워드 (TF-IDF)")
+plt.xlabel("TF-IDF Score Sum")
+plt.ylabel("Keyword")
+plt.tight_layout()
+plt.savefig("images/tfidf_keywords.png")
+plt.close()
+report_content.append("![키워드 TF-IDF](images/tfidf_keywords.png)\n")
+report_content.append(keyword_freq.to_markdown() + "\n")
+
+# 5. 10개 이상의 데이터 시각화 (일변량, 이변량, 다변량)
+report_content.append("## 5. 데이터 시각화 및 지역별 인사이트\n")
+
+# [1] 플랫폼별 상품 수 (일변량)
+plat_counts = df['platform'].value_counts()
+plt.figure(figsize=(6,4))
+sns.barplot(x=plat_counts.index, y=plat_counts.values)
+plt.title("플랫폼별 관광 상품 수")
+plt.tight_layout()
+plt.savefig("images/plot1_platform.png")
+plt.close()
+report_content.append("### 5.1 플랫폼별 관광 상품 수\n")
+report_content.append("![플랫폼별 상품 수](images/plot1_platform.png)\n")
+report_content.append(plat_counts.reset_index().to_markdown() + "\n")
+report_content.append("**해석:** Klook과 GetYourGuide 두 플랫폼 간 등록된 관광 상품의 수를 비교하는 그래프입니다. 어느 플랫폼이 한국 관광 상품을 더 적극적으로 서비스하고 있는지 파악할 수 있으며, 데이터 불균형 정도를 확인하는 지표가 됩니다.\n")
+
+# [2] 지역별 리뷰 수 (방문객 규모 측정) (이변량)
+region_reviews = df.groupby('region_clean')['reviews_num'].sum().sort_values(ascending=False).head(15)
+plt.figure(figsize=(10,6))
+sns.barplot(x=region_reviews.values, y=region_reviews.index, palette='crest')
+plt.title("지역별 총 리뷰 수 (상위 15개 지역)")
+plt.xlabel("총 리뷰 수 (외국인 방문 척도)")
+plt.tight_layout()
+plt.savefig("images/plot2_region_reviews.png")
+plt.close()
+report_content.append("### 5.2 지역별 총 리뷰 수 (외국인 방문객 규모)\n")
+report_content.append("![지역별 리뷰수](images/plot2_region_reviews.png)\n")
+report_content.append(region_reviews.reset_index().to_markdown() + "\n")
+report_content.append("**해석:** 각 지역별로 작성된 총 리뷰 수를 합산한 그래프입니다. 리뷰 수는 외국인 관광객의 실제 이용 및 방문을 대변하는 척도이므로, 서울, 제주 등 상위 지역들의 압도적인 방문객 점유율을 시각적으로 명확히 확인할 수 있습니다.\n")
+
+# [3] 지역별 평균 평점 (만족도 측정) (이변량)
+region_ratings = df[df['rating_num'] > 0].groupby('region_clean')['rating_num'].mean().sort_values(ascending=False).head(15)
+plt.figure(figsize=(10,6))
+sns.barplot(x=region_ratings.values, y=region_ratings.index, palette='flare')
+plt.title("지역별 평균 평점 (만족도)")
+plt.xlabel("평균 평점")
+plt.xlim(4.0, 5.0)
+plt.tight_layout()
+plt.savefig("images/plot3_region_ratings.png")
+plt.close()
+report_content.append("### 5.3 지역별 평균 평점 (방문 만족도)\n")
+report_content.append("![지역별 평점](images/plot3_region_ratings.png)\n")
+report_content.append(region_ratings.reset_index().to_markdown() + "\n")
+report_content.append("**해석:** 유효한 평점을 지닌 상품들을 기준으로 지역별 평균 평점을 산출한 결과입니다. 대체로 4.5 이상의 높은 만족도를 보이나 지역 간 미세한 차이를 통해 어느 지역 관광 상품의 퀄리티와 고객 만족도가 상대적으로 높은지 평가할 수 있습니다.\n")
+
+# [4] 가격 분포 (일변량)
+plt.figure(figsize=(8,5))
+sns.histplot(df[df['price_num'] < df['price_num'].quantile(0.95)]['price_num'], bins=30, kde=True)
+plt.title("상품 가격 분포 (상위 5% 이상치 제외)")
+plt.tight_layout()
+plt.savefig("images/plot4_price_dist.png")
+plt.close()
+report_content.append("### 5.4 관광 상품 가격 분포\n")
+report_content.append("![가격분포](images/plot4_price_dist.png)\n")
+report_content.append(df['price_num'].describe().to_markdown() + "\n")
+report_content.append("**해석:** 가격 데이터 중 상위 5% 이상치를 제외한 대다수 상품들의 가격 분포를 나타내는 히스토그램입니다. 대부분의 관광 상품 가격대가 특정 구간에 밀집해 있는 우측 꼬리 분포(Right-skewed) 형태를 띄고 있음을 직관적으로 보여줍니다.\n")
+
+# [5] 가격과 평점의 관계 (이변량)
+plt.figure(figsize=(8,5))
+sns.scatterplot(x='price_num', y='rating_num', data=df[df['rating_num']>0])
+plt.title("가격과 평점의 산점도")
+plt.tight_layout()
+plt.savefig("images/plot5_price_rating.png")
+plt.close()
+report_content.append("### 5.5 가격과 평점의 관계\n")
+report_content.append("![가격과평점](images/plot5_price_rating.png)\n")
+corr_table1 = df[['price_num', 'rating_num']].corr()
+report_content.append(corr_table1.to_markdown() + "\n")
+report_content.append("**해석:** 상품의 가격과 고객이 부여한 평점 간의 상관성을 살펴보는 산점도입니다. 고가의 상품일수록 만족도가 무조건 높은지, 혹은 저가의 가성비 상품들이 높은 평점을 지니는지에 대한 힌트를 얻을 수 있는 시각화입니다.\n")
+
+# [6] 리뷰 수와 평점의 관계 (이변량)
+plt.figure(figsize=(8,5))
+sns.scatterplot(x='reviews_num', y='rating_num', data=df[df['rating_num']>0], alpha=0.5)
+plt.title("리뷰 수와 평점의 산점도")
+plt.tight_layout()
+plt.savefig("images/plot6_review_rating.png")
+plt.close()
+report_content.append("### 5.6 리뷰 수와 평점의 상관관계\n")
+report_content.append("![리뷰와평점](images/plot6_review_rating.png)\n")
+corr_table2 = df[['reviews_num', 'rating_num']].corr()
+report_content.append(corr_table2.to_markdown() + "\n")
+report_content.append("**해석:** 인기도(리뷰 수)와 만족도(평점) 간의 산점도입니다. 리뷰가 많은, 즉 널리 알려지고 많이 팔린 상품들이 일정 수준 이상의 고평점을 안정적으로 유지하는 경향성을 보여줍니다. 반면 리뷰가 적은 상품은 평점 편차가 크게 나타납니다.\n")
+
+# [7] 플랫폼별 가격 분포 박스플롯 (다변량 관점)
+plt.figure(figsize=(8,5))
+sns.boxplot(x='platform', y='price_num', data=df[df['price_num'] < df['price_num'].quantile(0.90)])
+plt.title("플랫폼별 상품 가격 비교 (상위 10% 제외)")
+plt.tight_layout()
+plt.savefig("images/plot7_platform_price.png")
+plt.close()
+report_content.append("### 5.7 플랫폼별 상품 가격 비교\n")
+report_content.append("![플랫폼가격](images/plot7_platform_price.png)\n")
+pivot_plat_price = df.groupby('platform')['price_num'].describe()
+report_content.append(pivot_plat_price.to_markdown() + "\n")
+report_content.append("**해석:** GetYourGuide와 Klook에서 판매되는 상품들의 가격대 차이를 시각화한 박스플롯입니다. 두 플랫폼 중 어느 곳이 프리미엄 상품을 더 많이 다루고 있는지, 또는 평균적인 가성비 타겟인지 비교하는 데 적합한 시각화 자료입니다.\n")
+
+# [8] 상위 5개 지역의 평점 분포 바이올린 플롯 (다변량)
+top5_reg = df['region_clean'].value_counts().head(5).index
+plt.figure(figsize=(10,6))
+sns.violinplot(x='region_clean', y='rating_num', data=df[(df['region_clean'].isin(top5_reg)) & (df['rating_num']>0)])
+plt.title("주요 5개 지역별 평점 분포")
+plt.tight_layout()
+plt.savefig("images/plot8_top5_rating_violin.png")
+plt.close()
+report_content.append("### 5.8 주요 5개 지역별 평점 분포\n")
+report_content.append("![지역평점바이올린](images/plot8_top5_rating_violin.png)\n")
+pivot_top5_rate = df[df['region_clean'].isin(top5_reg)].groupby('region_clean')['rating_num'].describe()
+report_content.append(pivot_top5_rate.to_markdown() + "\n")
+report_content.append("**해석:** 상품 수가 가장 많은 주요 5개 지역을 대상으로 평점의 밀집도와 분포 형태를 비교하는 바이올린 플롯입니다. 지역 간 평균의 차이뿐만 아니라, 극단적인 혹평을 받은 상품이나 만점을 받은 상품의 밀도 차이를 상세히 보여줍니다.\n")
+
+# [9] 지역별 플랫폼 비율 누적 막대그래프 (다변량)
+cross_tab = pd.crosstab(df[df['region_clean'].isin(top5_reg)]['region_clean'], df['platform'])
+cross_tab.plot(kind='bar', stacked=True, figsize=(8,6), colormap='Set2')
+plt.title("주요 5개 지역별 플랫폼 상품 등록 비율")
+plt.ylabel("상품 수")
+plt.tight_layout()
+plt.savefig("images/plot9_region_platform_stacked.png")
+plt.close()
+report_content.append("### 5.9 지역별 플랫폼 점유 비교\n")
+report_content.append("![지역플랫폼누적](images/plot9_region_platform_stacked.png)\n")
+report_content.append(cross_tab.to_markdown() + "\n")
+report_content.append("**해석:** 특정 주요 관광 지역에서 Klook과 GetYourGuide 두 OTA 플랫폼이 차지하는 상품 수량 비중을 보여줍니다. 각 플랫폼의 지역적 집중도 전략을 엿볼 수 있으며, 영업을 확장해야 할 틈새 타겟 지역을 발굴하는 근거가 됩니다.\n")
+
+# [10] 가격 구간별 평균 리뷰 수 (다변량)
+df['price_bin'] = pd.qcut(df['price_num'], q=4, labels=['저가', '중저가', '중고가', '고가'])
+bin_reviews = df.groupby('price_bin')['reviews_num'].mean()
+plt.figure(figsize=(8,5))
+sns.barplot(x=bin_reviews.index, y=bin_reviews.values, palette='mako')
+plt.title("가격 구간별 평균 리뷰 수 (인기도)")
+plt.tight_layout()
+plt.savefig("images/plot10_pricebin_reviews.png")
+plt.close()
+report_content.append("### 5.10 가격 구간별 평균 리뷰 수\n")
+report_content.append("![가격구간리뷰](images/plot10_pricebin_reviews.png)\n")
+pivot_bin = df.groupby('price_bin')['reviews_num'].describe()
+report_content.append(pivot_bin.to_markdown() + "\n")
+report_content.append("**해석:** 관광 상품의 가격을 4개의 구간(사분위수)으로 나누어 각 구간별 평균 리뷰 수를 비교한 막대 그래프입니다. 저렴한 가성비 상품이 대중적으로 더 많은 외국인 관광객을 끌어모으는지에 대한 명확한 수요 예측 지표를 제공합니다.\n")
+
+# [11] 시군구별 관광 상품 수 (추가 분석)
+plt.figure(figsize=(10,6))
+top_sigungu = df['region_sigungu'].value_counts().head(15)
+sns.barplot(x=top_sigungu.values, y=top_sigungu.index, palette='viridis')
+plt.title("시군구별 관광 상품 수 (상위 15개)")
+plt.xlabel("상품 수")
+plt.ylabel("시군구")
+plt.tight_layout()
+plt.savefig("images/plot11_sigungu_freq.png")
+plt.close()
+report_content.append("### 5.11 시군구별 관광 상품 수 (상위 15개)\n")
+report_content.append("![시군구 상품수](images/plot11_sigungu_freq.png)\n")
+report_content.append(top_sigungu.reset_index().to_markdown() + "\n")
+report_content.append("**해석:** 시군구 단위로 세분화하여 어느 지역에 관광 상품이 밀집해 있는지 분석한 빈도 그래프입니다. 시도 단위보다 더 구체적인 관광 거점을 파악할 수 있습니다.\n")
+
+# [12] 시군구별 총 리뷰 수 (방문객 규모) (추가 분석)
+sigungu_reviews = df.groupby('region_sigungu')['reviews_num'].sum().sort_values(ascending=False).head(15)
+plt.figure(figsize=(10,6))
+sns.barplot(x=sigungu_reviews.values, y=sigungu_reviews.index, palette='crest')
+plt.title("시군구별 총 리뷰 수 (상위 15개)")
+plt.xlabel("총 리뷰 수")
+plt.tight_layout()
+plt.savefig("images/plot12_sigungu_reviews.png")
+plt.close()
+report_content.append("### 5.12 시군구별 총 리뷰 수 (상위 15개)\n")
+report_content.append("![시군구 리뷰수](images/plot12_sigungu_reviews.png)\n")
+report_content.append(sigungu_reviews.reset_index().to_markdown() + "\n")
+report_content.append("**해석:** 시군구 단위로 총 리뷰 수를 산출한 결과입니다. 상품 등록 수와 비례하지 않고 특정 소도시(예: 파주시, 수원시 등)에 방문객(리뷰 수)이 집중되는 현상을 확인할 수 있습니다.\n")
+
+# [13] 시군구별 평균 평점 (추가 분석)
+sigungu_ratings = df[df['rating_num'] > 0].groupby('region_sigungu')['rating_num'].mean().sort_values(ascending=False).head(15)
+plt.figure(figsize=(10,6))
+sns.barplot(x=sigungu_ratings.values, y=sigungu_ratings.index, palette='flare')
+plt.title("시군구별 평균 평점 (만족도)")
+plt.xlabel("평균 평점")
+plt.xlim(4.0, 5.0)
+plt.tight_layout()
+plt.savefig("images/plot13_sigungu_ratings.png")
+plt.close()
+report_content.append("### 5.13 시군구별 평균 평점 (상위 15개)\n")
+report_content.append("![시군구 평점](images/plot13_sigungu_ratings.png)\n")
+report_content.append(sigungu_ratings.reset_index().to_markdown() + "\n")
+report_content.append("**해석:** 평점이 유효한 상품들에 한정하여 시군구별 평균 만족도를 살펴본 차트입니다. 특정 관광 거점 도시들이 높은 평점을 안정적으로 유지하는지, 혹은 편차가 있는지 비교 분석할 수 있습니다.\n")
+
+# 리포트 저장
+with open("eda_report.md", "w", encoding='utf-8') as f:
+    f.writelines(report_content)
+
+print("EDA 분석 완료 및 eda_report.md 생성 성공!")
