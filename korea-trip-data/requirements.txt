@@ -7,3 +7,4 @@ koreanize-matplotlib
 matplotlib
 tabulate
 pytrends
+mcp

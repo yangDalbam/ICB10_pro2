@@ -5,7 +5,7 @@
 - AreaTarDivService (관광객, 소비, 국제 다양성) API 데이터 연동
 - AreaTarResDemService (서비스 수요, 문화 자원 수요) API 데이터 연동
 - Streamlit Caching 기능을 이용한 실시간 로딩 최적화
-- API 호출 실패(404 등) 시 기획 시나리오 검증용 고품질 Mock 데이터(도시 1 vs 도시 2 특징 탑재) 자동 생성
+- API 호출 실패 시 또는 미구현 함수는 빈 데이터프레임을 반환합니다 (Mock 생성 로직 제거)
 """
 
 import os
@@ -51,274 +51,105 @@ def _request_kto_api(base_url: str, operation: str, params: dict) -> list:
         print(f"[KTO API Connection Error] {operation}: {e}")
     return []
 
+# ==========================================
+# 기존 API 연동 함수 (Mock 제거 및 빈 값 반환 적용)
+# ==========================================
+
 @st.cache_data(show_spinner="지역별 관광 다양성 데이터를 불러오는 중...")
 def get_area_visitor_diversity(base_ym: str = "202601") -> pd.DataFrame:
-    """
-    지역별 관광객 다양성 정보(연령별 방문자 등)를 조회합니다.
-    """
+    """지역별 관광객 다양성 정보(연령별 방문자 등)를 조회합니다."""
     params = {"baseYm": base_ym}
     items = _request_kto_api(KTO_DIV_ENDPOINT, "getAreaVisitorDivList", params)
     if items:
         return pd.DataFrame(items)
-    
-    print("[KTO API] getAreaVisitorDivList 호출 실패로 Mock 데이터를 제공합니다.")
-    return _generate_mock_visitor_div_data(base_ym)
+    return pd.DataFrame()
 
 @st.cache_data(show_spinner="지역별 관광 소비 다양성 데이터를 불러오는 중...")
 def get_area_spend_diversity(base_ym: str = "202601") -> pd.DataFrame:
-    """
-    지역별 관광 소비 다양성 정보(업종별/연령별 소비액)를 조회합니다.
-    """
+    """지역별 관광 소비 다양성 정보(업종별/연령별 소비액)를 조회합니다."""
     params = {"baseYm": base_ym}
     items = _request_kto_api(KTO_DIV_ENDPOINT, "getAreaSpendDivList", params)
     if items:
         return pd.DataFrame(items)
-    
-    print("[KTO API] getAreaSpendDivList 호출 실패로 Mock 데이터를 제공합니다.")
-    return _generate_mock_spend_div_data(base_ym)
+    return pd.DataFrame()
 
 @st.cache_data(show_spinner="지역별 국제 다양성 데이터를 불러오는 중...")
 def get_area_intl_diversity(base_ym: str = "202601") -> pd.DataFrame:
-    """
-    지역별 국제 다양성 정보(외국인 소비 및 방문 국적 다양성)를 조회합니다.
-    """
+    """지역별 국제 다양성 정보(외국인 소비 및 방문 국적 다양성)를 조회합니다."""
     params = {"baseYm": base_ym}
     items = _request_kto_api(KTO_DIV_ENDPOINT, "getAreaIntlDivList", params)
     if items:
         return pd.DataFrame(items)
-    
-    print("[KTO API] getAreaIntlDivList 호출 실패로 Mock 데이터를 제공합니다.")
-    return _generate_mock_intl_div_data(base_ym)
+    return pd.DataFrame()
 
 @st.cache_data(show_spinner="지역별 관광 서비스 수요 데이터를 불러오는 중...")
 def get_area_service_demand(base_ym: str = "202601") -> pd.DataFrame:
-    """
-    지역별 관광 서비스 수요 정보(SNS 언급량, 검색량 등 관심도)를 조회합니다.
-    """
+    """지역별 관광 서비스 수요 정보(SNS 언급량, 검색량 등 관심도)를 조회합니다."""
     params = {"baseYm": base_ym}
     items = _request_kto_api(KTO_DEM_ENDPOINT, "getAreaServDemList", params)
     if items:
         return pd.DataFrame(items)
-    
-    print("[KTO API] getAreaServDemList 호출 실패로 Mock 데이터를 제공합니다.")
-    return _generate_mock_service_demand_data(base_ym)
+    return pd.DataFrame()
 
 @st.cache_data(show_spinner="지역별 문화 자원 수요 데이터를 불러오는 중...", ttl=86400)
 def get_area_cultural_demand(base_ym: str = "202601") -> pd.DataFrame:
-    """
-    지역별 문화 자원 수요 정보(내비게이션 유형별 목적지 검색량)를 조회합니다.
-    """
-    # 캐시 무효화를 위한 주석 추가 (상위 5개 지역 동기화 적용)
+    """지역별 문화 자원 수요 정보(내비게이션 유형별 목적지 검색량)를 조회합니다."""
     params = {"baseYm": base_ym}
     items = _request_kto_api(KTO_DEM_ENDPOINT, "getAreaCultDemList", params)
     if items:
         return pd.DataFrame(items)
-    
-    print("[KTO API] getAreaCultDemList 호출 실패로 Mock 데이터를 제공합니다.")
-    return _generate_mock_cultural_demand_data(base_ym)
+    return pd.DataFrame()
 
 
 # ==========================================
-# Mock 데이터 생성기 (도시 1 vs 도시 2 가중치 시나리오 탑재)
+# 신규 요청된 12개 수집 항목 (현재 뼈대만 작성, 빈 데이터프레임 반환)
 # ==========================================
 
-# 가상의 시군구 목록 및 관심도-방문도 유형 정의
-# 도시 1: 관심도(SNS)도 높고, 실제 방문/소비도 높음 (성공)
-# 도시 2: 관심도(SNS)는 높으나, 실제 방문/소비는 낮음 (개선 대상)
-CITIES = [
-    {"signguCd": "11110", "signguNm": "서울 종로구", "type": "도시1", "sns_weight": 1.5, "visit_weight": 1.5, "spend_weight": 1.4},
-    {"signguCd": "11440", "signguNm": "서울 마포구", "type": "도시1", "sns_weight": 1.8, "visit_weight": 1.7, "spend_weight": 1.6},
-    {"signguCd": "26000", "signguNm": "부산 해운대구", "type": "도시1", "sns_weight": 1.6, "visit_weight": 1.5, "spend_weight": 1.5},
-    {"signguCd": "39110", "signguNm": "제주 제주시", "type": "도시1", "sns_weight": 1.7, "visit_weight": 1.6, "spend_weight": 1.5},
-    
-    {"signguCd": "32170", "signguNm": "강원 삼척시", "type": "도시2", "sns_weight": 1.3, "visit_weight": 0.5, "spend_weight": 0.4},
-    {"signguCd": "37110", "signguNm": "경북 안동시", "type": "도시2", "sns_weight": 1.4, "visit_weight": 0.6, "spend_weight": 0.5},
-    {"signguCd": "36110", "signguNm": "전남 여수시", "type": "도시2", "sns_weight": 1.5, "visit_weight": 0.7, "spend_weight": 0.6},
-    {"signguCd": "31110", "signguNm": "경기 수원시", "type": "도시2", "sns_weight": 1.2, "visit_weight": 0.8, "spend_weight": 0.7},
-    
-    # 일반 대조군 도시들
-    {"signguCd": "31140", "signguNm": "경기 성남시", "type": "일반", "sns_weight": 0.9, "visit_weight": 1.0, "spend_weight": 1.1},
-    {"signguCd": "32010", "signguNm": "강원 춘천시", "type": "일반", "sns_weight": 1.1, "visit_weight": 1.0, "spend_weight": 0.9},
-    {"signguCd": "34110", "signguNm": "충남 천안시", "type": "일반", "sns_weight": 0.8, "visit_weight": 0.8, "spend_weight": 0.8},
-    {"signguCd": "35110", "signguNm": "전북 전주시", "type": "일반", "sns_weight": 1.2, "visit_weight": 1.1, "spend_weight": 1.0},
-    {"signguCd": "38110", "signguNm": "경남 창원시", "type": "일반", "sns_weight": 0.7, "visit_weight": 0.7, "spend_weight": 0.8},
-    
-    # 누락된 상위 내비/상품 수 지역 추가
-    {"signguCd": "28110", "signguNm": "인천 중구", "type": "도시1", "sns_weight": 1.3, "visit_weight": 1.4, "spend_weight": 1.2},
-    {"signguCd": "31190", "signguNm": "경기 용인시", "type": "도시1", "sns_weight": 1.2, "visit_weight": 1.3, "spend_weight": 1.1},
-    {"signguCd": "31100", "signguNm": "경기 고양시", "type": "일반", "sns_weight": 1.0, "visit_weight": 1.1, "spend_weight": 1.0},
-    {"signguCd": "31240", "signguNm": "경기 화성시", "type": "일반", "sns_weight": 1.1, "visit_weight": 1.0, "spend_weight": 1.1},
-    {"signguCd": "31200", "signguNm": "경기 파주시", "type": "도시2", "sns_weight": 1.4, "visit_weight": 0.8, "spend_weight": 0.7},
-    {"signguCd": "37010", "signguNm": "경북 경주시", "type": "도시1", "sns_weight": 1.5, "visit_weight": 1.3, "spend_weight": 1.2},
-    {"signguCd": "32030", "signguNm": "강원 강릉시", "type": "도시1", "sns_weight": 1.4, "visit_weight": 1.5, "spend_weight": 1.3},
-    {"signguCd": "32040", "signguNm": "강원 속초시", "type": "도시1", "sns_weight": 1.3, "visit_weight": 1.4, "spend_weight": 1.2},
-    {"signguCd": "31370", "signguNm": "경기 가평군", "type": "일반", "sns_weight": 1.0, "visit_weight": 1.2, "spend_weight": 1.0}
-]
+def get_foreign_visitor_region_ratio(base_ym: str = "202601") -> pd.DataFrame:
+    """1. 외래관광객지역비율"""
+    # TODO: 정확한 KTO API Endpoint 및 Operation 파악 후 구현
+    return pd.DataFrame()
 
-def _generate_mock_visitor_div_data(base_ym: str) -> pd.DataFrame:
-    """
-    지역별 관광객 다양성 Mock 데이터를 생성합니다.
-    """
-    import numpy as np
-    np.random.seed(int(base_ym))
-    rows = []
-    for city in CITIES:
-        # 연령대별 방문객 분포
-        base_visitors = 50000 * city["visit_weight"]
-        ages = ["20대 이하", "20대", "30대", "40대", "50대", "60대 이상"]
-        
-        # 도시 1은 청년층 비중이 높음
-        if city["type"] == "도시1":
-            probs = [0.15, 0.35, 0.25, 0.12, 0.08, 0.05]
-        else:
-            probs = [0.10, 0.15, 0.20, 0.25, 0.18, 0.12]
-            
-        visitor_counts = np.random.multinomial(int(base_visitors), probs)
-        
-        for age, count in zip(ages, visitor_counts):
-            rows.append({
-                "baseYm": base_ym,
-                "signguCd": city["signguCd"],
-                "signguNm": city["signguNm"],
-                "ageGrp": age,
-                "visitorCo": count,
-                "cityType": city["type"] # 시각화 시 그룹 필터링용
-            })
-    return pd.DataFrame(rows)
+def get_foreign_visitor_activity(base_ym: str = "202601") -> pd.DataFrame:
+    """2. 외래관광객방한활동비율(식도락, 업무, 투어 등)"""
+    return pd.DataFrame()
 
-def _generate_mock_spend_div_data(base_ym: str) -> pd.DataFrame:
-    """
-    지역별 관광 소비 다양성 Mock 데이터를 생성합니다.
-    """
-    import numpy as np
-    np.random.seed(int(base_ym) + 1)
-    rows = []
-    industries = ["식음료", "쇼핑", "숙박", "여가/레저", "교통", "문화/체험"]
-    
-    for city in CITIES:
-        base_spend = 100000000 * city["spend_weight"] # 백만원 단위
-        
-        # 도시 1은 쇼핑과 숙박, 식음료가 균형있게 발달
-        if city["type"] == "도시1":
-            probs = [0.30, 0.30, 0.20, 0.10, 0.05, 0.05]
-        # 도시 2는 식음료에 매우 편중되고 숙박/쇼핑이 저조(관광 인프라 부족 시나리오)
-        elif city["type"] == "도시2":
-            probs = [0.65, 0.10, 0.05, 0.10, 0.05, 0.05]
-        else:
-            probs = [0.40, 0.20, 0.15, 0.10, 0.10, 0.05]
-            
-        for tou_div_cd in ["1", "2", "3"]:
-            # 외국인(3)은 비중을 다르게 설정
-            weight_mod = 1.0 if tou_div_cd != "3" else 0.3
-            spend_amounts = np.random.multinomial(int(base_spend * weight_mod), probs)
-            
-            for ind, amount in zip(industries, spend_amounts):
-                rows.append({
-                    "baseYm": base_ym,
-                    "signguCd": city["signguCd"],
-                    "signguNm": city["signguNm"],
-                    "indutyNm": ind,
-                    "cardUseAmt": amount,
-                    "cityType": city["type"],
-                    "touDivCd": tou_div_cd
-                })
-    return pd.DataFrame(rows)
+def get_foreign_visitor_spend(base_ym: str = "202601") -> pd.DataFrame:
+    """3. 외래관광객지출(1인 평균 지출 등)"""
+    return pd.DataFrame()
 
-def _generate_mock_intl_div_data(base_ym: str) -> pd.DataFrame:
-    """
-    지역별 국제 다양성 Mock 데이터를 생성합니다.
-    """
-    import numpy as np
-    np.random.seed(int(base_ym) + 2)
-    rows = []
-    nationalities = ["중국", "일본", "미국", "대만", "유럽", "기타"]
-    
-    for city in CITIES:
-        base_foreigner = 5000 * city["visit_weight"]
-        
-        # 도시 1은 여러 국적의 외국인이 다양하게 분포 (다양성 지수 높음)
-        if city["type"] == "도시1":
-            probs = [0.25, 0.25, 0.20, 0.15, 0.10, 0.05]
-        # 도시 2는 특정 인접국가나 단일 국적에 극도로 편중됨
-        elif city["type"] == "도시2":
-            probs = [0.70, 0.10, 0.05, 0.05, 0.05, 0.05]
-        else:
-            probs = [0.40, 0.20, 0.15, 0.10, 0.10, 0.05]
-            
-        foreigner_counts = np.random.multinomial(int(base_foreigner), probs)
-        
-        for nat, count in zip(nationalities, foreigner_counts):
-            rows.append({
-                "baseYm": base_ym,
-                "signguCd": city["signguCd"],
-                "signguNm": city["signguNm"],
-                "ntntyNm": nat,
-                "foreignerVisitorCo": count,
-                "cityType": city["type"]
-            })
-    return pd.DataFrame(rows)
+def get_related_tourist_spots(base_ym: str = "202601") -> pd.DataFrame:
+    """4. 키워드 검색 관광지별 연관 관광지 정보 목록"""
+    return pd.DataFrame()
 
-def _generate_mock_service_demand_data(base_ym: str) -> pd.DataFrame:
-    """
-    지역별 관광 서비스 수요 Mock 데이터를 생성합니다.
-    """
-    import numpy as np
-    np.random.seed(int(base_ym) + 3)
-    rows = []
-    for city in CITIES:
-        # 관심도(SNS 언급량) 생성
-        sns_mention = int(10000 * city["sns_weight"] * np.random.uniform(0.9, 1.1))
-        # 실제 방문지 내비게이션 검색량
-        navi_search = int(8000 * city["visit_weight"] * np.random.uniform(0.9, 1.1))
-        
-        # SNS 키워드 목업
-        if city["type"] == "도시1":
-            sns_keywords = "핫플, 인스타감성, 오션뷰, 맛집, 야경"
-        elif city["type"] == "도시2":
-            sns_keywords = "가족여행, 힐링, 특산물, 축제, 자연"
-        else:
-            sns_keywords = "당일치기, 주차장, 가성비, 산책, 역사"
-            
-        rows.append({
-            "baseYm": base_ym,
-            "signguCd": city["signguCd"],
-            "signguNm": city["signguNm"],
-            "snsMentionCo": sns_mention,      # SNS 언급량 (관심도)
-            "naviSearchCo": navi_search,      # 내비게이션 검색량 (방문도)
-            "snsKeywords": sns_keywords,      # SNS 검색 키워드
-            "cityType": city["type"]
-        })
-    return pd.DataFrame(rows)
+def get_local_visitor_count(base_ym: str = "202601") -> pd.DataFrame:
+    """5. 광역/기초 지차제 지역방문자수 집계 데이터"""
+    return pd.DataFrame()
 
-def _generate_mock_cultural_demand_data(base_ym: str) -> pd.DataFrame:
-    """
-    지역별 문화 자원 수요 Mock 데이터를 생성합니다.
-    """
-    import numpy as np
-    np.random.seed(int(base_ym) + 4)
-    rows = []
-    categories = ["역사관광지", "자연관광지", "휴양관광지", "문화시설", "레저스포츠"]
-    
-    for city in CITIES:
-        base_demand = 15000 * city["visit_weight"]
-        
-        if city["type"] == "도시1":
-            probs = [0.20, 0.20, 0.20, 0.30, 0.10]
-        elif city["type"] == "도시2":
-            # 도시 2는 역사/자연 관광지에 몰려있고 문화시설이나 휴양 인프라가 부족한 시나리오
-            probs = [0.45, 0.40, 0.05, 0.05, 0.05]
-        else:
-            probs = [0.25, 0.25, 0.20, 0.15, 0.15]
-            
-        demand_counts = np.random.multinomial(int(base_demand), probs)
-        
-        for cat, count in zip(categories, demand_counts):
-            rows.append({
-                "baseYm": base_ym,
-                "signguCd": city["signguCd"],
-                "signguNm": city["signguNm"],
-                "clNm": cat,
-                "searchCo": count,
-                "cityType": city["type"]
-            })
-    return pd.DataFrame(rows)
+def get_foreign_visitor_demographics(base_ym: str = "202601") -> pd.DataFrame:
+    """6. 성별, 연령별, 교통수단별 방한 외래관광객"""
+    return pd.DataFrame()
+
+def get_visitor_by_nationality(base_ym: str = "202601") -> pd.DataFrame:
+    """7. 국적별 방문자 수, 소비액"""
+    return pd.DataFrame()
+
+def get_sns_and_navigation(base_ym: str = "202601") -> pd.DataFrame:
+    """8. SNS 언급량, 소비액, 내비게이션"""
+    return pd.DataFrame()
+
+def get_search_by_tour_type(base_ym: str = "202601") -> pd.DataFrame:
+    """9. 문화 관광/레저 스포츠/역사 관광/체험 관광/자연 관광 유형별 목적지 검색량"""
+    return pd.DataFrame()
+
+def get_spend_type_by_country(base_ym: str = "202601") -> pd.DataFrame:
+    """10. 국가별 관광소비 유형"""
+    return pd.DataFrame()
+
+def get_spend_trend_by_industry(base_ym: str = "202601") -> pd.DataFrame:
+    """11. 업종별 관광소비 추이"""
+    return pd.DataFrame()
+
+def get_foreign_visitor_trend_by_region(base_ym: str = "202601") -> pd.DataFrame:
+    """12. 외국인 지역별 방문자 수 추이"""
+    return pd.DataFrame()
