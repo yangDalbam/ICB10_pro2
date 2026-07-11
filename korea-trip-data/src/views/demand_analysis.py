@@ -179,6 +179,7 @@ def render_demand_analysis():
     # 데이터 로딩 및 전처리 로직
     @st.cache_data
     def load_ota_data_v3():
+        # Cache invalidation trigger (2026-07-11 Incheon update)
         data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
         csv_path = os.path.join(data_dir, 'ota_data.csv')
         
