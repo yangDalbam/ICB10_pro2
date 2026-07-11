@@ -195,7 +195,7 @@ def render_demand_analysis():
 
     # 데이터 로딩 및 전처리 로직
     @st.cache_data
-    def load_ota_data_v2():
+    def load_ota_data_v3():
         data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
         csv_path = os.path.join(data_dir, 'ota_data.csv')
         
@@ -236,7 +236,7 @@ def render_demand_analysis():
         df['price_num'] = df['price'].apply(clean_price)
         return df
 
-    df_ota = load_ota_data_v2()
+    df_ota = load_ota_data_v3()
 
     if df_ota.empty:
         st.warning("데이터 파이프라인에서 OTA 데이터를 찾을 수 없습니다. 경로를 확인해주세요.")
