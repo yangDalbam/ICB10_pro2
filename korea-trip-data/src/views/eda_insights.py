@@ -258,7 +258,10 @@ def render_eda_insights():
                 df_infra = df_ota_agg.copy()
                 df_infra['인프라'] = df_infra['OTA_상품수']
             
-            # 4. 소비 다양성 및 국제 다양성 프록시 데이터 생성 (지역명 기반 해시를 통해 일관된 다양성 지수 부여)
+            # df_demand 와 병합
+            df_merged = pd.merge(df_demand, df_infra, on='signguNm', how='left').fillna(0)
+            
+            # 4. 소비 다양성 및 국제 다양성 프록시 데이터 생성 (모든 도시에 누락 없이 부여하기 위해 병합 후 적용)
             import hashlib
             
             def get_pseudo_diversity(city_name, seed_offset, min_val, max_val):
@@ -281,12 +284,8 @@ def render_eda_insights():
                 val = int(h, 16) % 1000 / 1000.0
                 return min_val + val * (max_val - min_val)
 
-            # df_infra에 다양성 지수 추가
-            df_infra['spend_div'] = df_infra['signguNm'].apply(lambda x: get_pseudo_diversity(x, 1, 0.6, 0.9))
-            df_infra['intl_div'] = df_infra['signguNm'].apply(lambda x: get_pseudo_diversity(x, 2, 0.4, 0.8))
-
-            # df_demand 와 병합
-            df_merged = pd.merge(df_demand, df_infra, on='signguNm', how='left').fillna(0)
+            df_merged['spend_div'] = df_merged['signguNm'].apply(lambda x: get_pseudo_diversity(x, 1, 0.6, 0.9))
+            df_merged['intl_div'] = df_merged['signguNm'].apply(lambda x: get_pseudo_diversity(x, 2, 0.4, 0.8))
         else:
             df_merged = df_demand.copy()
             df_merged['인프라'] = 0
