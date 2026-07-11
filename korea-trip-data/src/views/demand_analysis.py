@@ -337,14 +337,14 @@ def render_demand_analysis():
                 else:
                     pie_data = top_sido
                     
-                fig_pie = px.pie(pie_data, values='추천 수', names='광역시도', 
-                                 color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B", "#3B82F6", "#60A5FA", "#93C5FD"])
-                fig_pie.update_traces(textposition='inside', textinfo='percent+label', marker=dict(line=dict(color='#1E293B', width=1)))
+                fig_pie = px.treemap(pie_data, path=[px.Constant("관광지 점유 비중"), '광역시도'], values='추천 수', 
+                                     color='추천 수', color_continuous_scale='Blues')
+                fig_pie.update_traces(textinfo='label+percent entry', textfont_size=14, marker=dict(line=dict(color='#1E293B', width=1)))
                 fig_pie.update_layout(
                     plot_bgcolor="rgba(0,0,0,0)",
                     paper_bgcolor="rgba(0,0,0,0)",
                     font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
-                    margin=dict(l=20, r=20, t=20, b=20),
+                    margin=dict(l=10, r=10, t=30, b=10),
                     hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                 )
                 st.plotly_chart(fig_pie, use_container_width=True)
