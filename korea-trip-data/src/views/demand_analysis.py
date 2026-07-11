@@ -467,6 +467,9 @@ def render_demand_analysis():
             # OTA 상품 수와 추천 여행지 수를 단순 합산하여 종합 인프라 점수 산출
             merged['infra_score'] = merged['ota_count'] + merged['spot_count']
             
+            # 극단적으로 인프라 점수가 낮아 시각화를 왜곡하는 지역(경기 평택시, 경기 하남시) 제외
+            merged = merged[~merged['norm_region'].isin(['경기 평택시', '경기 하남시'])]
+            
             corr1 = merged['infra_score'].corr(merged['visit_volume'])
             
             # Scatter plot
