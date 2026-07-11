@@ -142,73 +142,7 @@ def render_demand_analysis():
         st.warning("관광 서비스 수요 데이터를 불러올 수 없습니다.")
 
     st.markdown("---")
-    st.header("2. 📈 구글 트렌드 기반 지역별 검색 추이 및 키워드 (Inbound)")
-    st.markdown("최근 1년(12개월) 동안 **해외(외국인)** 관점에서의 주요 관광 지역 검색량 변화와 연관 검색어를 확인합니다.")
-    
-    target_country = st.selectbox(
-        "분석 대상 국가 선택", 
-        options=['US', 'JP', 'TW', 'SG', 'GB', ''], 
-        format_func=lambda x: "전세계 (전체)" if x == '' else {"US":"미국 (US)", "JP":"일본 (JP)", "TW":"대만 (TW)", "SG":"싱가포르 (SG)", "GB":"영국 (GB)"}[x]
-    )
-    
-    full_kw_list = [
-        "Incheon", "Daegu", "Gwangju", "Daejeon", "Ulsan", 
-        "Sejong", "Gyeonggi", "Gangwon", "Chungbuk", "Chungnam", "Jeonbuk", "Jeonnam", 
-        "Gyeongbuk", "Gyeongnam", "Gangneung", "Sokcho", "Yeosu", "Jeonju", "Mokpo"
-    ]
-    
-    st.info("💡 구글 트렌드 API 제한으로 인해 한 번에 최대 5개의 키워드까지만 비교할 수 있습니다.")
-    kw_list = st.multiselect(
-        "비교할 지역 키워드(영문)를 선택해 주세요 (최대 5개)",
-        options=full_kw_list,
-        default=["Incheon", "Gyeonggi", "Gangwon"],
-        max_selections=5
-    )
-    
-    if not kw_list:
-        st.warning("키워드를 1개 이상 선택해 주세요.")
-    else:
-        with st.spinner('구글 트렌드 데이터를 불러오는 중입니다... (최초 로딩 시 다소 시간이 소요될 수 있습니다)'):
-            df_trends = fetch_google_trends_data(kw_list, geo=target_country)
-            dict_related = fetch_google_trends_related_queries(kw_list, geo=target_country)
-            
-        if not df_trends.empty:
-            # 차트 시각화
-            country_name = "전세계" if target_country == "" else {"US":"미국", "JP":"일본", "TW":"대만", "SG":"싱가포르", "GB":"영국"}.get(target_country, target_country)
-            st.subheader(f"📈 {country_name} 내 한국 주요 도시 검색 트렌드 (최근 1년)")
-            
-            fig_trends = px.line(df_trends, x=df_trends.index, y=kw_list, 
-                                 labels={'value': '검색 관심도 (0~100)', 'date': '날짜', 'variable': '지역명'},
-                                 color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B"])
-            fig_trends.update_layout(
-                plot_bgcolor="rgba(0,0,0,0)",
-                paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
-                hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
-                margin=dict(l=20, r=20, t=20, b=20),
-                xaxis=dict(showgrid=False, zeroline=False, linecolor="#334155"),
-                yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155"),
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, title=None)
-            )
-            st.plotly_chart(fig_trends, use_container_width=True)
-            
-            # 키워드 시각화
-            st.subheader("지역별 급상승 연관 검색어")
-            if dict_related:
-                tabs = st.tabs(kw_list)
-                for i, kw in enumerate(kw_list):
-                    with tabs[i]:
-                        related_data = dict_related.get(kw, {})
-                        rising = related_data.get('rising') if related_data else None
-                        if rising is not None and not rising.empty:
-                            rising = rising.rename(columns={'query': '연관 검색어', 'value': '검색량 증가 비율(%)'})
-                            st.dataframe(rising, use_container_width=True, hide_index=True)
-                        else:
-                            st.info(f"'{kw}'에 대한 급상승 연관 검색어 데이터가 없습니다.")
-        else:
-            st.warning("구글 트렌드 데이터를 불러오는데 실패했습니다. API 호출 제한에 도달했을 수 있습니다. 잠시 후 다시 시도해주세요.")
-    st.markdown("---")
-    st.header("3. 📍 방한 방문객 지역 집중화 추이")
+    st.header("2. 📍 방한 방문객 지역 집중화 추이")
     try:
         df_visitor_region = load_eda_data()
         col3, col4 = st.columns(2)
@@ -417,7 +351,7 @@ def render_demand_analysis():
 
         # --- 문화공공데이터광장 추천 여행지 분석 추가 ---
         st.markdown("---")
-        st.header("4. 문화공공데이터광장 추천 여행지 분석")
+        st.header("3. 문화공공데이터광장 추천 여행지 분석")
         
         import sqlite3
         db_path = os.path.join(data_dir, 'tourist_spots.db')
