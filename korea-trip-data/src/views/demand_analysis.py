@@ -89,55 +89,30 @@ def render_demand_analysis():
                 )
                 st.plotly_chart(fig_sns, use_container_width=True)
             with col_chart2:
-                st.markdown("#### 🧭 실제 방문도 및 방문 목적")
+                st.markdown("#### 🧭 실제 방문도 (목적지 검색건수 Top 5)")
                 df_top_navi = df_kto_demand.nlargest(5, "naviSearchCo")
                 
-                df_cultural = get_area_cultural_demand("202602")
-                if not df_cultural.empty:
-                    df_cultural = df_cultural[~df_cultural["signguNm"].str.contains("서울|부산|제주")]
-                    # 지역명 매핑 (CSV -> API 양식 통일)
-                    # CSV: "인천광역시 중구" -> API: "인천 중구"
-                    mapping_dict = {
-                        "서울특별시": "서울", "부산광역시": "부산", "대구광역시": "대구", "인천광역시": "인천",
-                        "광주광역시": "광주", "대전광역시": "대전", "울산광역시": "울산", "세종특별자치시": "세종",
-                        "경기도": "경기", "강원특별자치도": "강원", "충청북도": "충북", "충청남도": "충남",
-                        "전북특별자치도": "전북", "전라북도": "전북", "전라남도": "전남", "경상북도": "경북",
-                        "경상남도": "경남", "제주특별자치도": "제주"
-                    }
-                    def normalize_region(name):
-                        for k, v in mapping_dict.items():
-                            name = name.replace(k, v)
-                        return name
-                    
-                    df_top_navi["norm_signguNm"] = df_top_navi["signguNm"].apply(normalize_region)
-                    top_navi_regions_norm = df_top_navi["norm_signguNm"].tolist()
-                    
-                    df_cult_top = df_cultural[df_cultural["signguNm"].isin(top_navi_regions_norm)].copy()
-                    
-                    # 시각화를 위해 원래의 CSV 지역명으로 복원
-                    if not df_cult_top.empty:
-                        reverse_mapping = dict(zip(df_top_navi["norm_signguNm"], df_top_navi["signguNm"]))
-                        df_cult_top["signguNm"] = df_cult_top["signguNm"].map(reverse_mapping).fillna(df_cult_top["signguNm"])
-                        
-                    if not df_cult_top.empty:
-                        fig_cult = px.bar(
-                            df_cult_top, x="searchCo", y="signguNm", color="clNm",
-                            orientation="h",
-                            color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B"]
-                        )
-                        fig_cult.update_layout(
-                            height=400,
-                            yaxis=dict(categoryorder='total ascending'),
-                            plot_bgcolor="rgba(0,0,0,0)",
-                            paper_bgcolor="rgba(0,0,0,0)",
-                            font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
-                            hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
-                            margin=dict(l=20, r=20, t=20, b=20),
-                            xaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155", title="총 내비 검색량 및 방문 목적"),
-                            yaxis_title=None,
-                            legend_title_text="관광 목적"
-                        )
-                        st.plotly_chart(fig_cult, use_container_width=True)
+                fig_navi = px.bar(
+                    df_top_navi, x="naviSearchCo", y="signguNm",
+                    orientation="h",
+                    color="naviSearchCo",
+                    color_continuous_scale="Blues"
+                )
+                fig_navi.update_traces(
+                    hovertemplate="<b>%{y}</b><br>목적지 검색: %{x:,.0f}건<extra></extra>"
+                )
+                fig_navi.update_layout(
+                    height=400,
+                    yaxis=dict(categoryorder='total ascending'),
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+                    hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
+                    margin=dict(l=20, r=20, t=20, b=20),
+                    xaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155", title="목적지 검색건수"),
+                    yaxis_title=None
+                )
+                st.plotly_chart(fig_navi, use_container_width=True)
     else:
         st.warning("관광 서비스 수요 데이터를 불러올 수 없습니다.")
 
