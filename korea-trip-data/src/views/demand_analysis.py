@@ -464,16 +464,15 @@ def render_demand_analysis():
         merged = pd.merge(merged, spot_counts, on='norm_region', how='left').fillna({'spot_count': 0})
         
         if len(merged) > 0:
-            # MinMax 정규화 후 중간값(평균) 계산
-            scaler = MinMaxScaler(feature_range=(0, 100))
-            merged[['ota_scaled', 'spot_scaled']] = scaler.fit_transform(merged[['ota_count', 'spot_count']])
-            merged['infra_score'] = merged[['ota_scaled', 'spot_scaled']].median(axis=1) # 2개 값의 중간값(평균)
+            # OTA 상품 수와 추천 여행지 수를 단순 합산하여 종합 인프라 점수 산출
+            merged['infra_score'] = merged['ota_count'] + merged['spot_count']
             
             corr1 = merged['infra_score'].corr(merged['visit_volume'])
             
             # Scatter plot
             scatter_df = merged.sort_values(by='visit_volume', ascending=False).head(20).reset_index(drop=True)
-            scatter_df.columns = ['지역', '방문 규모 (검색건수)', 'OTA 상품수', '공공데이터 여행지수', 'OTA_S', 'SPOT_S', '종합 인프라 점수']
+            scatter_df = scatter_df[['norm_region', 'visit_volume', 'ota_count', 'spot_count', 'infra_score']].copy()
+            scatter_df.columns = ['지역', '방문 규모 (검색건수)', 'OTA 상품수', '공공데이터 여행지수', '종합 인프라 점수']
             
             # 텍스트 겹침 방지 (우선순위가 높은 점부터 라벨 할당)
             labels = []
@@ -523,10 +522,10 @@ def render_demand_analysis():
                 hovertemplate='<b>지역:</b> %{customdata[0]}<br><b>인프라 점수:</b> %{x:.1f}점<br><b>방문 규모:</b> %{y:,.0f}건<extra></extra>',
                 customdata=scatter_df[['지역']]
             )
-            fig_scatter.update_layout(height=500, xaxis_title="종합 인프라 점수 (중간값 기준)", yaxis_title="방문 규모 (검색건수)")
+            fig_scatter.update_layout(height=500, xaxis_title="종합 인프라 점수 (합산 기준)", yaxis_title="방문 규모 (검색건수)")
             st.plotly_chart(fig_scatter, use_container_width=True)
     
-            st.success(f"**분석 인사이트:** OTA 플랫폼 기반 관광 상품 수와 문화공공데이터 추천 여행지 빈도수를 종합(중간값)한 '종합 인프라 점수'와 실제 외국인 방문 규모 간에는 **양의 상관관계(r={corr1:.2f})**를 확인할 수 있습니다. "
+            st.success(f"**분석 인사이트:** OTA 플랫폼 기반 관광 상품 수와 문화공공데이터 추천 여행지 빈도수를 단순 합산한 '종합 인프라 점수'와 실제 방문 규모 간에는 **상관관계(r={corr1:.2f})**를 확인할 수 있습니다. "
                        "이는 민간 플랫폼의 인프라와 공공 데이터의 관광지 추천 빈도가 높은 지역일수록 실제 방문 수요로도 유의미하게 연결되고 있음을 시사합니다.")
         else:
             st.warning("상관관계 분석을 위한 데이터가 충분하지 않습니다.")
