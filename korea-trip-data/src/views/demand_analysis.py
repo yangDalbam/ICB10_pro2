@@ -302,8 +302,17 @@ def render_demand_analysis():
             conn.close()
             
             # 서울, 부산, 제주 제외
+            mapping_dict_local = {
+                "서울특별시": "서울", "부산광역시": "부산", "대구광역시": "대구", "인천광역시": "인천",
+                "광주광역시": "광주", "대전광역시": "대전", "울산광역시": "울산", "세종특별자치시": "세종",
+                "경기도": "경기", "강원특별자치도": "강원", "강원도": "강원", "충청북도": "충북", "충청남도": "충남",
+                "전북특별자치도": "전북", "전라북도": "전북", "전라남도": "전남", "경상북도": "경북",
+                "경상남도": "경남", "제주특별자치도": "제주", "제주도": "제주"
+            }
             df_spots['지역_시도'] = df_spots['지역_시도시군구'].astype(str).str.split().str[0]
-            exclude_regions = ['서울', '서울특별시', '부산', '부산광역시', '제주', '제주특별자치도', '알수없음', 'None', 'nan']
+            df_spots['지역_시도'] = df_spots['지역_시도'].map(lambda x: mapping_dict_local.get(x, x))
+            
+            exclude_regions = ['서울', '부산', '제주', '알수없음', 'None', 'nan']
             df_filtered = df_spots[~df_spots['지역_시도'].isin(exclude_regions)].copy()
             
             col3, col4 = st.columns(2)
@@ -330,12 +339,8 @@ def render_demand_analysis():
                 top_sido = df_filtered['지역_시도'].value_counts().reset_index()
                 top_sido.columns = ['광역시도', '추천 수']
                 
-                if len(top_sido) > 7:
-                    top_7 = top_sido.head(7).copy()
-                    others = pd.DataFrame({'광역시도': ['기타'], '추천 수': [top_sido.iloc[7:]['추천 수'].sum()]})
-                    pie_data = pd.concat([top_7, others])
-                else:
-                    pie_data = top_sido
+                # 트리맵 특성상 좁은 면적도 효과적으로 시각화 가능하므로 '기타' 묶음 제거
+                pie_data = top_sido
                     
                 fig_pie = px.treemap(pie_data, path=[px.Constant("관광지 점유 비중"), '광역시도'], values='추천 수', 
                                      color='추천 수', color_continuous_scale='Blues')
