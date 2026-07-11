@@ -158,7 +158,7 @@ def render_eda_insights():
         quadrant_order = {"스타": 1, "잠재": 2, "안정": 3, "일반": 4}
         # city column contains "용인시", signguNm contains "경기 용인시"
         city_list = []
-        for _, r in df_demand.sort_values(by="snsMentionCo", ascending=False).iterrows():
+        for _, r in df_demand.sort_values(by="normSns", ascending=False).iterrows():
             if r["city"] not in city_list:
                 city_list.append(r["city"])
         
