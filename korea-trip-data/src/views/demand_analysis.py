@@ -287,8 +287,13 @@ def render_demand_analysis():
                              labels={'region_sigungu': '지역', 'rating_num': '평점 (5점 만점)'},
                              color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B"])
             
-            fig3.update_layout(xaxis={'categoryorder':'array', 'categoryarray': top5_regions}, showlegend=False)
+            fig3.update_layout(
+                xaxis={'categoryorder':'array', 'categoryarray': top5_regions}, 
+                yaxis=dict(range=[3.5, 5.2]),
+                showlegend=False
+            )
             st.plotly_chart(fig3, use_container_width=True)
+            st.caption("※ 시각적 왜곡(빈 공간)을 방지하기 위해 3.5점 미만의 일부 극단적 이상치는 화면 표시 범위에서 제외되었습니다.")
 
         # --- 문화공공데이터광장 추천 여행지 분석 추가 ---
         st.markdown("---")
