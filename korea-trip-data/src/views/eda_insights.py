@@ -69,95 +69,13 @@ def render_eda_insights():
         os.makedirs(CACHE_DIR, exist_ok=True)
         import hashlib
 
-        @st.cache_data(ttl=86400)
-        def fetch_google_trends_data_all(kw_list):
-            try:
-                import urllib3
-                # pytrends가 구버전 urllib3의 method_whitelist 파라미터를 사용해서 발생하는 TypeError 패치
-                if hasattr(urllib3.util.Retry, '__init__'):
-                    original_init = urllib3.util.Retry.__init__
-                    def patched_init(self, *args, **kwargs):
-                        if 'method_whitelist' in kwargs:
-                            kwargs['allowed_methods'] = kwargs.pop('method_whitelist')
-                        original_init(self, *args, **kwargs)
-                    urllib3.util.Retry.__init__ = patched_init
-                    
-                from pytrends.request import TrendReq
-                import time
-                import random
-                import pandas as pd
-                
-                USER_AGENTS = [
-                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
-                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:120.0) Gecko/20100101 Firefox/120.0',
-                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
-                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0'
-                ]
-                
-                all_dfs = []
-                # 구글 트렌드는 한 번에 최대 5개의 키워드만 허용하므로 5개 단위로 분할(청크) 처리
-                for i in range(0, len(kw_list), 5):
-                    chunk = kw_list[i:i+5]
-                    ua = random.choice(USER_AGENTS)
-                    pytrends = TrendReq(hl='en-US', tz=360, retries=3, backoff_factor=1, requests_args={'headers': {'User-Agent': ua}})
-                    
-                    pytrends.build_payload(chunk, cat=0, timeframe='today 3-m', geo='')
-                    df = pytrends.interest_over_time()
-                    if not df.empty and 'isPartial' in df.columns:
-                        df = df.drop(columns=['isPartial'])
-                    all_dfs.append(df)
-                    
-                    if i + 5 < len(kw_list):
-                        delay = random.uniform(5, 15)
-                        time.sleep(delay) # 무작위 지연(Backoff Delay) 추가
-                
-                if all_dfs:
-                    # 열 기준으로 병합 (동일한 날짜 인덱스를 공유)
-                    merged_df = pd.concat(all_dfs, axis=1)
-                    # 혹시 모를 중복 컬럼 제거
-                    return merged_df.loc[:, ~merged_df.columns.duplicated()]
-                return pd.DataFrame()
-            except Exception as e:
-                # 스트림릿 캐시 함수 내부에서 UI 요소(st.toast 등)를 호출하면 
-                # CacheReplayClosureError 가 발생할 수 있으므로 제거합니다.
-                return pd.DataFrame()
+        # (구글 트렌드 수집 로직 제거됨)
 
-        region_mapping = {
-            "인천 중구": "Incheon",
-            "용인시": "Yongin",
-            "과천시": "Gwacheon",
-            "경기 가평군": "Gapyeong",
-            "화성시": "Hwaseong",
-            "강릉시": "Gangneung",
-            "속초시": "Sokcho"
-        }
-
-        # 구글 트렌드 연동을 위한 키워드 매핑
-        df_demand["Keyword"] = df_demand["signguNm"].map(region_mapping).fillna("Seoul")
-        unique_kws = list(df_demand["Keyword"].unique())
-
-        with st.spinner("구글 트렌드 관심도 분석 중..."):
-            df_trends = fetch_google_trends_data_all(unique_kws)
-
-        if not df_trends.empty:
-            df_trends = df_trends.loc[:, ~df_trends.columns.duplicated()]
-            avg_interest = df_trends[unique_kws].mean().reset_index()
-            avg_interest.columns = ["Keyword", "avgInterest"]
-            
-            df_demand = df_demand.merge(avg_interest, on="Keyword", how="left")
-            df_demand["avgInterest"] = df_demand["avgInterest"].fillna(df_demand["snsMentionCo"] / df_demand["snsMentionCo"].max() * 100)
-            
-            df_demand["normSns"] = df_demand["snsMentionCo"] / df_demand["snsMentionCo"].max() * 100
-            df_demand["combinedScore"] = (df_demand["normSns"] * 0.5) + (df_demand["avgInterest"] * 0.5)
-            x_col = "combinedScore"
-            x_axis_title = "종합 관심도 (SNS 50% + 트렌드 50%)"
-        else:
-            st.warning("구글 트렌드 트래픽 제한으로 임시 데이터를 표시합니다.")
-            df_demand["combinedScore"] = df_demand["snsMentionCo"]
-            x_col = "combinedScore"
-            x_axis_title = "SNS 언급량(관심도)"
+        # 구글 트렌드 연동 제외: KTO 데이터(snsMentionCo) 100% 사용
+        df_demand["normSns"] = df_demand["snsMentionCo"] / df_demand["snsMentionCo"].max() * 100
+        df_demand["combinedScore"] = df_demand["normSns"]
+        x_col = "combinedScore"
+        x_axis_title = "온라인 관심도 (SNS 언급량 기준)"
 
         median_sns = df_demand[x_col].median()
         median_navi = df_demand["naviSearchCo"].median()

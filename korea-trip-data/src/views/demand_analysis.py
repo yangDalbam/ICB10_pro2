@@ -34,42 +34,7 @@ def render_demand_analysis():
 
     CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), '.cache')
     os.makedirs(CACHE_DIR, exist_ok=True)
-    import hashlib
-    import pickle
-
-    def _get_cache_path(prefix, kw_list, geo):
-        key_str = "_".join(kw_list) + f"_{geo}"
-        h = hashlib.md5(key_str.encode()).hexdigest()
-        ext = "csv" if prefix == "trends" else "pkl"
-        return os.path.join(CACHE_DIR, f"{prefix}_{h}.{ext}")
-
-    @st.cache_data(ttl=86400)
-    def fetch_google_trends_data(kw_list, geo='US', timeframe='today 12-m'):
-        try:
-            from pytrends.request import TrendReq
-            import time
-            pytrends = TrendReq(hl='en-US', tz=360, retries=3, backoff_factor=1)
-            pytrends.build_payload(kw_list, cat=0, timeframe=timeframe, geo=geo)
-            df = pytrends.interest_over_time()
-            if not df.empty and 'isPartial' in df.columns:
-                df = df.drop(columns=['isPartial'])
-            time.sleep(1) # rate limit mitigation
-            return df
-        except Exception as e:
-            return pd.DataFrame()
-
-    @st.cache_data(ttl=86400)
-    def fetch_google_trends_related_queries(kw_list, geo='US', timeframe='today 12-m'):
-        try:
-            from pytrends.request import TrendReq
-            import time
-            pytrends = TrendReq(hl='en-US', tz=360, retries=3, backoff_factor=1)
-            pytrends.build_payload(kw_list, cat=0, timeframe=timeframe, geo=geo)
-            related = pytrends.related_queries()
-            time.sleep(1)
-            return related
-        except Exception as e:
-            return {}
+    # (구글 트렌드 수집 로직 제거됨)
 
     st.header("1. 🚗 관심도 및 실제 방문도")
     try:
@@ -91,61 +56,14 @@ def render_demand_analysis():
                 st.markdown("#### 🔥 온라인 관심도 및 연관 검색어")
                 df_top_sns = df_kto_demand.nlargest(5, "snsMentionCo")
                 
-                # 1. 영문 매핑 (구글 트렌드 검색용)
-                region_mapping = {
-                    "인천광역시 중구": "Incheon",
-                    "경기도 용인시": "Yongin",
-                    "경기도 과천시": "Gwacheon",
-                    "경기도 가평군": "Gapyeong",
-                    "경기도 화성시": "Hwaseong",
-                    "강원특별자치도 강릉시": "Gangneung",
-                    "강원특별자치도 속초시": "Sokcho"
-                }
+                # 구글 트렌드 연결 제외: KTO 데이터(snsMentionCo) 100% 사용
+                df_top_sns["normSns"] = df_top_sns["snsMentionCo"] / df_top_sns["snsMentionCo"].max() * 100
+                df_top_sns["combinedScore"] = df_top_sns["normSns"]
+                df_top_sns["snsKeywords_gt"] = "관련 검색어 수집 제외"
                 
-                kw_list = []
-                for name in df_top_sns["signguNm"]:
-                    kw_list.append(region_mapping.get(name, "Seoul"))
-                # 중복 제거 (순서 유지)
-                kw_list = list(dict.fromkeys(kw_list))[:5]
-                
-                # 2. 구글 트렌드 데이터 수집
-                with st.spinner("구글 트렌드 관심도 분석 중..."):
-                    df_trends = fetch_google_trends_data(kw_list, geo='', timeframe='today 3-m')
-                    dict_related = fetch_google_trends_related_queries(kw_list, geo='', timeframe='today 3-m')
-                
-                # 3. 데이터 병합 및 예외 처리
-                if not df_trends.empty:
-                    avg_interest = df_trends[kw_list].mean().reset_index()
-                    avg_interest.columns = ["Keyword", "avgInterest"]
-                    
-                    df_top_sns["Keyword"] = df_top_sns["signguNm"].map(region_mapping).fillna("Seoul")
-                    df_top_sns = df_top_sns.merge(avg_interest, on="Keyword", how="left")
-                    # 결측치 발생 시 기존 관심도 값을 스케일링하여 임시 사용
-                    df_top_sns["avgInterest"] = df_top_sns["avgInterest"].fillna(df_top_sns["snsMentionCo"] / df_top_sns["snsMentionCo"].max() * 100)
-                    
-                    new_keywords = []
-                    for kw in df_top_sns["Keyword"]:
-                        related = dict_related.get(kw, {})
-                        rising = related.get("rising") if related else None
-                        if rising is not None and not rising.empty:
-                            new_keywords.append(", ".join(rising["query"].head(3).tolist()))
-                        else:
-                            new_keywords.append("관련 검색어 없음")
-                    df_top_sns["snsKeywords_gt"] = new_keywords
-                    
-                    # KTO 데이터 정규화 (0~100) 및 50:50 가중치 적용
-                    df_top_sns["normSns"] = df_top_sns["snsMentionCo"] / df_top_sns["snsMentionCo"].max() * 100
-                    df_top_sns["combinedScore"] = (df_top_sns["normSns"] * 0.5) + (df_top_sns["avgInterest"] * 0.5)
-                    
-                    x_col = "combinedScore"
-                    kw_col = "snsKeywords_gt"
-                    x_axis_title = "종합 관심도 (SNS 50% + 트렌드 50%)"
-                else:
-                    st.warning("구글 트렌드 트래픽 제한으로 임시 데이터를 표시합니다.")
-                    df_top_sns["snsKeywords"] = "트래픽 제한으로 조회 불가"
-                    x_col = "snsMentionCo"
-                    kw_col = "snsKeywords"
-                    x_axis_title = "관심도"
+                x_col = "combinedScore"
+                kw_col = "snsKeywords_gt"
+                x_axis_title = "온라인 관심도 (SNS 언급량 기준)"
 
                 # 4. 막대 그래프 시각화 (툴팁에 키워드 내장)
                 fig_sns = px.bar(
