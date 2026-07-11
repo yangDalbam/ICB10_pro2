@@ -163,20 +163,24 @@ def render_foreigner_trend():
     with col2:
         st.markdown("#### 2. 방한 외래객 목적별 점유율")
         
-        df_share = df_purpose.nlargest(7, "방문자 수(명)")
+        df_share = df_purpose.nlargest(7, "방문자 수(명)").sort_values(by="방문자 수(명)", ascending=True)
         
-        fig_share = px.pie(
-            df_share, names="목적 유형", values="방문자 수(명)", hole=0.4,
-            color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B", "#94A3B8", "#080D1A"]
+        fig_share = px.bar(
+            df_share, x="방문자 수(명)", y="목적 유형", orientation='h',
+            color="방문자 수(명)", color_continuous_scale='Blues',
+            text_auto='.3s'
         )
-        fig_share.update_traces(textposition='inside', textinfo='percent+label', marker=dict(line=dict(color='#121824', width=2)))
+        fig_share.update_traces(textposition='outside', marker=dict(line=dict(color='#121824', width=1)))
         fig_share.update_layout(
             showlegend=False,
+            coloraxis_showscale=False,
             plot_bgcolor="rgba(0,0,0,0)",
             paper_bgcolor="rgba(0,0,0,0)",
             font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
             hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
-            margin=dict(l=20, r=20, t=20, b=20)
+            margin=dict(l=20, r=20, t=20, b=20),
+            xaxis=dict(showgrid=True, gridcolor="#1E293B", title="방문자 수 (명)"),
+            yaxis=dict(showgrid=False, title="")
         )
         
         st.plotly_chart(fig_share, use_container_width=True)
