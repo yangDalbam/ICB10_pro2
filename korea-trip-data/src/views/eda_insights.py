@@ -273,7 +273,7 @@ def render_eda_insights():
             df_merged['intl_div'] = 0
 
         # 최대값 기준으로 정규화 (0~1)
-        max_sns = df_merged["snsMentionCo"].max() or 1
+        max_sns = df_merged["normSns"].max() or 1
         max_navi = df_merged["naviSearchCo"].max() or 1
         max_infra = df_merged["인프라"].max() or 1
         max_spend = df_merged["spend_div"].max() or 1
@@ -288,7 +288,7 @@ def render_eda_insights():
             val_c1 = [
                 float(m_c1.iloc[0]["spend_div"]) / max_spend,
                 float(m_c1.iloc[0]["intl_div"]) / max_intl,
-                float(m_c1.iloc[0]["snsMentionCo"]) / max_sns,
+                float(m_c1.iloc[0]["normSns"]) / max_sns,
                 float(m_c1.iloc[0]["naviSearchCo"]) / max_navi,
                 float(m_c1.iloc[0]["인프라"]) / max_infra
             ]
@@ -296,7 +296,7 @@ def render_eda_insights():
             val_c2 = [
                 float(m_c2.iloc[0]["spend_div"]) / max_spend,
                 float(m_c2.iloc[0]["intl_div"]) / max_intl,
-                float(m_c2.iloc[0]["snsMentionCo"]) / max_sns,
+                float(m_c2.iloc[0]["normSns"]) / max_sns,
                 float(m_c2.iloc[0]["naviSearchCo"]) / max_navi,
                 float(m_c2.iloc[0]["인프라"]) / max_infra
             ]
