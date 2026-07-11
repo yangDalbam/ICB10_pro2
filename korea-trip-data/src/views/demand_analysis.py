@@ -265,7 +265,7 @@ def render_demand_analysis():
         st.markdown("➡️ 서울/제주/부산 등 3대 핵심 거점을 제외하고 분석한 결과, **'파주 DMZ'**, **'남이섬/춘천'**, **'용인 에버랜드'**, **'수원 스타필드/화성'** 등 뚜렷한 목적성을 지닌 **근교 체험형/테마형 일일 투어(Day Tour)**가 강력한 2선 관광 인프라를 구축하고 있음을 알 수 있습니다.")
 
         st.markdown("<br>", unsafe_allow_html=True)
-        st.subheader("📊 지역별 인프라 및 가격대별 인기도 분석")
+        st.subheader("📊 지역별 관광 상품 인프라 및 평점 분포 분석")
 
         col1, col2 = st.columns(2)
         with col1:
@@ -276,16 +276,17 @@ def render_demand_analysis():
             st.plotly_chart(fig1, use_container_width=True)
             
         with col2:
-            # 플랫폼별 상품 가격 비교 박스플롯
-            df_box = df_ota[df_ota['price_num'] > 0].copy()
-            # 극단적인 이상치로 인해 박스플롯이 왜곡되는 것을 방지하기 위해 상위 5% 제외
-            price_limit_box = df_box['price_num'].quantile(0.95)
-            df_box = df_box[df_box['price_num'] <= price_limit_box]
+            # 주요 5개 지역별 평점 분포 바이올린 플롯
+            top5_regions = top5_infra['지역'].tolist()
+            df_violin = df_filtered[df_filtered['region_sigungu'].isin(top5_regions) & (df_filtered['rating_num'] > 0)].copy()
             
-            fig3 = px.box(df_box, x='platform', y='price_num', color='platform',
-                          title="플랫폼별 상품 가격 비교",
-                          labels={'platform': '플랫폼', 'price_num': '상품 가격(원)'},
-                          color_discrete_sequence=['#60A5FA', '#93C5FD'])
+            fig3 = px.violin(df_violin, x='region_sigungu', y='rating_num', color='region_sigungu',
+                             box=True, points="all",
+                             title="주요 5개 지역별 평점 분포",
+                             labels={'region_sigungu': '지역', 'rating_num': '평점 (5점 만점)'},
+                             color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B"])
+            
+            fig3.update_layout(xaxis={'categoryorder':'array', 'categoryarray': top5_regions}, showlegend=False)
             st.plotly_chart(fig3, use_container_width=True)
 
         # --- 문화공공데이터광장 추천 여행지 분석 추가 ---
