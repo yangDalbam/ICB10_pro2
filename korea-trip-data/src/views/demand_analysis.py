@@ -289,11 +289,11 @@ def render_demand_analysis():
             
             fig3.update_layout(
                 xaxis={'categoryorder':'array', 'categoryarray': top5_regions}, 
-                yaxis=dict(range=[3.5, 5.2]),
+                yaxis=dict(range=[4.0, 5.2]),
                 showlegend=False
             )
             st.plotly_chart(fig3, use_container_width=True)
-            st.caption("※ 시각적 왜곡(빈 공간)을 방지하기 위해 3.5점 미만의 일부 극단적 이상치는 화면 표시 범위에서 제외되었습니다.")
+            st.caption("※ 시각적 왜곡(빈 공간)을 방지하기 위해 4.0점 미만의 일부 극단적 이상치는 화면 표시 범위에서 제외되었습니다.")
 
         # --- 문화공공데이터광장 추천 여행지 분석 추가 ---
         st.markdown("---")
