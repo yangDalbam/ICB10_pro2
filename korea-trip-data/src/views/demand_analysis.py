@@ -288,7 +288,102 @@ def render_demand_analysis():
                           color_discrete_sequence=['#60A5FA', '#93C5FD'])
             st.plotly_chart(fig3, use_container_width=True)
 
-        st.markdown("### 🔍 지역 인프라와 방문 규모 상관관계 분석")
+        # --- 문화공공데이터광장 추천 여행지 분석 추가 ---
+        st.markdown("---")
+        st.header("3. 문화공공데이터광장 추천 여행지 분석")
+        
+        import sqlite3
+        db_path = os.path.join(data_dir, 'tourist_spots.db')
+        if os.path.exists(db_path):
+            conn = sqlite3.connect(db_path)
+            df_spots = pd.read_sql('SELECT * FROM recommended_spots', conn)
+            conn.close()
+            
+            # 서울, 부산, 제주 제외
+            df_spots['지역_시도'] = df_spots['지역_시도시군구'].astype(str).str.split().str[0]
+            exclude_regions = ['서울', '서울특별시', '부산', '부산광역시', '제주', '제주특별자치도', '알수없음', 'None', 'nan']
+            df_filtered = df_spots[~df_spots['지역_시도'].isin(exclude_regions)].copy()
+            
+            col3, col4 = st.columns(2)
+            with col3:
+                st.subheader("🔥 관광지 빈도수 상위 5개 지역 (시도/시군구)")
+                top5_spots = df_filtered['지역_시도시군구'].value_counts().head(5).reset_index()
+                top5_spots.columns = ['지역', '추천 수']
+                fig_spots = px.bar(top5_spots, x='추천 수', y='지역', orientation='h', 
+                                   color='추천 수', color_continuous_scale='Blues')
+                fig_spots.update_layout(
+                    yaxis={'categoryorder':'total ascending'},
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+                    hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
+                    margin=dict(l=20, r=20, t=20, b=20),
+                    xaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155"),
+                    yaxis_title=None
+                )
+                st.plotly_chart(fig_spots, use_container_width=True)
+                
+            with col4:
+                st.subheader("🍰 주요 광역시도별 관광지 점유 비중")
+                top_sido = df_filtered['지역_시도'].value_counts().reset_index()
+                top_sido.columns = ['광역시도', '추천 수']
+                
+                if len(top_sido) > 7:
+                    top_7 = top_sido.head(7).copy()
+                    others = pd.DataFrame({'광역시도': ['기타'], '추천 수': [top_sido.iloc[7:]['추천 수'].sum()]})
+                    pie_data = pd.concat([top_7, others])
+                else:
+                    pie_data = top_sido
+                    
+                fig_pie = px.pie(pie_data, values='추천 수', names='광역시도', 
+                                 color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B", "#3B82F6", "#60A5FA", "#93C5FD"])
+                fig_pie.update_traces(textposition='inside', textinfo='percent+label', marker=dict(line=dict(color='#1E293B', width=1)))
+                fig_pie.update_layout(
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+                    margin=dict(l=20, r=20, t=20, b=20),
+                    hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
+                )
+                st.plotly_chart(fig_pie, use_container_width=True)
+                
+            st.info("**분석 인사이트:** 대표적인 대도시 및 대형 관광 거점(서울, 부산, 제주)을 제외하고 분석한 결과, "
+                    "**강원, 전남, 경북** 등 자연 경관과 역사/문화 자원이 풍부한 권역의 추천 빈도가 매우 높게 나타났습니다. "
+                    "이는 공공데이터의 추천 콘텐츠들이 기존 상업화된 핫플레이스보다는 생태 관광이나 힐링, 로컬 명소 발굴에 초점이 맞춰져 있음을 시사합니다.")
+            
+            # --- 지자체별 핵심 관광 테마 (TF-IDF) ---
+            st.markdown("### 🏷️ 지자체별 주요 관광 테마 (핵심 키워드)")
+            
+            top5_sido_names = top_sido['광역시도'].head(5).tolist()
+            from sklearn.feature_extraction.text import TfidfVectorizer
+            import numpy as np
+            
+            theme_data = []
+            for sido in top5_sido_names:
+                sido_titles = df_filtered[df_filtered['지역_시도'] == sido]['TITLE'].dropna().astype(str)
+                if len(sido_titles) > 5:
+                    try:
+                        vectorizer = TfidfVectorizer(max_features=50)
+                        tfidf_matrix = vectorizer.fit_transform(sido_titles)
+                        tfidf_sum = np.asarray(tfidf_matrix.sum(axis=0)).flatten()
+                        top_indices = tfidf_sum.argsort()[-5:][::-1]
+                        feature_names = vectorizer.get_feature_names_out()
+                        keywords = [feature_names[i] for i in top_indices]
+                        theme_data.append({'지역(광역시도)': sido, '주요 테마 키워드 (Top 5)': ", ".join(keywords)})
+                    except ValueError:
+                        pass
+            
+            if theme_data:
+                df_theme = pd.DataFrame(theme_data)
+                st.table(df_theme)
+                
+                st.info("**테마 분석 인사이트:** TF-IDF 텍스트 마이닝을 통해 각 지자체별 추천 여행지 제목에서 단어의 고유 중요도를 반영한 핵심 키워드를 추출했습니다. "
+                        "이를 통해 각 지자체(예: 바다를 낀 전남, 산악/액티비티가 강한 강원, 역사가 깊은 경북 등)가 주력으로 삼고 있는 차별화된 관광 소구점(Selling Point)을 명확하게 확인할 수 있습니다.")
+        else:
+            st.warning("추천 여행지 데이터베이스(tourist_spots.db)를 찾을 수 없습니다.")
+
+        st.markdown('---')
+        st.markdown("### 4. 🔍 지역 인프라와 방문 규모 상관관계 분석")
         
         import numpy as np
         from sklearn.preprocessing import MinMaxScaler
@@ -398,96 +493,3 @@ def render_demand_analysis():
         else:
             st.warning("상관관계 분석을 위한 데이터가 충분하지 않습니다.")
 
-        # --- 문화공공데이터광장 추천 여행지 분석 추가 ---
-        st.markdown("---")
-        st.header("3. 문화공공데이터광장 추천 여행지 분석")
-        
-        import sqlite3
-        db_path = os.path.join(data_dir, 'tourist_spots.db')
-        if os.path.exists(db_path):
-            conn = sqlite3.connect(db_path)
-            df_spots = pd.read_sql('SELECT * FROM recommended_spots', conn)
-            conn.close()
-            
-            # 서울, 부산, 제주 제외
-            df_spots['지역_시도'] = df_spots['지역_시도시군구'].astype(str).str.split().str[0]
-            exclude_regions = ['서울', '서울특별시', '부산', '부산광역시', '제주', '제주특별자치도', '알수없음', 'None', 'nan']
-            df_filtered = df_spots[~df_spots['지역_시도'].isin(exclude_regions)].copy()
-            
-            col3, col4 = st.columns(2)
-            with col3:
-                st.subheader("🔥 관광지 빈도수 상위 5개 지역 (시도/시군구)")
-                top5_spots = df_filtered['지역_시도시군구'].value_counts().head(5).reset_index()
-                top5_spots.columns = ['지역', '추천 수']
-                fig_spots = px.bar(top5_spots, x='추천 수', y='지역', orientation='h', 
-                                   color='추천 수', color_continuous_scale='Blues')
-                fig_spots.update_layout(
-                    yaxis={'categoryorder':'total ascending'},
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
-                    hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
-                    margin=dict(l=20, r=20, t=20, b=20),
-                    xaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155"),
-                    yaxis_title=None
-                )
-                st.plotly_chart(fig_spots, use_container_width=True)
-                
-            with col4:
-                st.subheader("🍰 주요 광역시도별 관광지 점유 비중")
-                top_sido = df_filtered['지역_시도'].value_counts().reset_index()
-                top_sido.columns = ['광역시도', '추천 수']
-                
-                if len(top_sido) > 7:
-                    top_7 = top_sido.head(7).copy()
-                    others = pd.DataFrame({'광역시도': ['기타'], '추천 수': [top_sido.iloc[7:]['추천 수'].sum()]})
-                    pie_data = pd.concat([top_7, others])
-                else:
-                    pie_data = top_sido
-                    
-                fig_pie = px.pie(pie_data, values='추천 수', names='광역시도', 
-                                 color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B", "#3B82F6", "#60A5FA", "#93C5FD"])
-                fig_pie.update_traces(textposition='inside', textinfo='percent+label', marker=dict(line=dict(color='#1E293B', width=1)))
-                fig_pie.update_layout(
-                    plot_bgcolor="rgba(0,0,0,0)",
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
-                    margin=dict(l=20, r=20, t=20, b=20),
-                    hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
-                )
-                st.plotly_chart(fig_pie, use_container_width=True)
-                
-            st.info("**분석 인사이트:** 대표적인 대도시 및 대형 관광 거점(서울, 부산, 제주)을 제외하고 분석한 결과, "
-                    "**강원, 전남, 경북** 등 자연 경관과 역사/문화 자원이 풍부한 권역의 추천 빈도가 매우 높게 나타났습니다. "
-                    "이는 공공데이터의 추천 콘텐츠들이 기존 상업화된 핫플레이스보다는 생태 관광이나 힐링, 로컬 명소 발굴에 초점이 맞춰져 있음을 시사합니다.")
-            
-            # --- 지자체별 핵심 관광 테마 (TF-IDF) ---
-            st.markdown("### 🏷️ 지자체별 주요 관광 테마 (핵심 키워드)")
-            
-            top5_sido_names = top_sido['광역시도'].head(5).tolist()
-            from sklearn.feature_extraction.text import TfidfVectorizer
-            import numpy as np
-            
-            theme_data = []
-            for sido in top5_sido_names:
-                sido_titles = df_filtered[df_filtered['지역_시도'] == sido]['TITLE'].dropna().astype(str)
-                if len(sido_titles) > 5:
-                    try:
-                        vectorizer = TfidfVectorizer(max_features=50)
-                        tfidf_matrix = vectorizer.fit_transform(sido_titles)
-                        tfidf_sum = np.asarray(tfidf_matrix.sum(axis=0)).flatten()
-                        top_indices = tfidf_sum.argsort()[-5:][::-1]
-                        feature_names = vectorizer.get_feature_names_out()
-                        keywords = [feature_names[i] for i in top_indices]
-                        theme_data.append({'지역(광역시도)': sido, '주요 테마 키워드 (Top 5)': ", ".join(keywords)})
-                    except ValueError:
-                        pass
-            
-            if theme_data:
-                df_theme = pd.DataFrame(theme_data)
-                st.table(df_theme)
-                
-                st.info("**테마 분석 인사이트:** TF-IDF 텍스트 마이닝을 통해 각 지자체별 추천 여행지 제목에서 단어의 고유 중요도를 반영한 핵심 키워드를 추출했습니다. "
-                        "이를 통해 각 지자체(예: 바다를 낀 전남, 산악/액티비티가 강한 강원, 역사가 깊은 경북 등)가 주력으로 삼고 있는 차별화된 관광 소구점(Selling Point)을 명확하게 확인할 수 있습니다.")
-        else:
-            st.warning("추천 여행지 데이터베이스(tourist_spots.db)를 찾을 수 없습니다.")
