@@ -10,10 +10,10 @@ from datetime import datetime
 def show_data_source_dialog():
     st.markdown("""
     ### 1. 데이터 수집 기준 및 처리 프로세스
-    본 대시보드는 최근 1년(2025.06~2026.05) 기준의 한국관광데이터랩(KTO), 공공데이터포털(ODCloud), 신한카드/BC카드 빅데이터, 문화공공데이터광장 및 **글로벌 OTA 플랫폼(Klook, KKday, GetYourGuide)** 데이터를 수집하여 개발되었습니다. 모든 데이터는 정교한 전처리 과정을 거쳐 지역별 및 지표별 통계로 가공되었습니다.
+    본 대시보드는 최근 1년(2025.06~2026.05) 기준의 한국관광 데이터랩(KTO), 공공데이터포털(ODCloud), 신한카드/BC카드 빅데이터 및 **글로벌 OTA 플랫폼(Klook, KKday, GetYourGuide)** 데이터를 수집하여 개발되었습니다. 모든 데이터는 정교한 전처리 과정을 거쳐 지역별 및 지표별 통계로 가공되었습니다.
     
     ### 2. 지표별 데이터 수집 상세 근거
-    - 📈 **방한 외래관광객 트렌드:** 출처: 한국관광데이터랩(KTO) 및 한국문화관광연구원. 월별/국가별/연령별 외래 관광객 실태조사 데이터를 기반으로 집계된 수치입니다.
+    - 📈 **방한 외래관광객 트렌드:** 출처: 한국관광 데이터랩(KTO) 및 한국문화관광연구원. 월별/국가별/연령별 외래 관광객 실태조사 데이터를 기반으로 집계된 수치입니다.
     - 💳 **관광 소비 현황:** 출처: 신한카드 및 BC카드 빅데이터. 외국인 관광객의 실제 카드 소비 결제 금액 및 건수를 바탕으로 산출된 인덱스입니다.
     - 🗺️ **인기 관광 지역 (온라인 관심도):** KTO 지역별 'SNS 언급량'을 100점 만점으로 정규화한 값을 기반으로 종합 관심도를 산출했습니다.
     - 🧭 **실제 방문도 및 방문 목적:** 한국관광공사 지역별 관광 자원 수요 API 데이터를 활용하여, 내비게이션 검색량을 목적별(역사, 자연, 휴양, 문화, 레저)로 세분화하여 누적 시각화했습니다.
@@ -31,7 +31,7 @@ def render_home():
         
         c_text, c_btn = st.columns([5, 2])
         with c_text:
-            st.markdown("<p style='font-size: 0.9rem; color: #94A3B8; margin-top: 5px;'>📊 <b>분석 근거 기준:</b> 한국관광공사(한국관광데이터랩), 공공데이터포털, 문화공공데이터광장, 글로벌 OTA 통합 데이터 (모두 최근 1년: 2025.06~2026.05 기준)</p>", unsafe_allow_html=True)
+            st.markdown("<p style='font-size: 0.9rem; color: #94A3B8; margin-top: 5px;'>📊 <b>분석 근거 기준:</b> 한국관광공사(데이터랩), 공공데이터포털, 글로벌 OTA 통합 데이터 (최근 1년: 2025.06~2026.05 기준)</p>", unsafe_allow_html=True)
         with c_btn:
             st.markdown("<style>button[kind='tertiary'] p { text-decoration: underline; color: #38BDF8; font-weight: 500; }</style>", unsafe_allow_html=True)
             if st.button("🔎 상세 출처/근거 보기", type="tertiary", use_container_width=False):

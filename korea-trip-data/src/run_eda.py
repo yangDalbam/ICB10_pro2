@@ -23,6 +23,7 @@ warnings.filterwarnings('ignore')
 # 1. 데이터 로드 및 통합
 gyg_db = r"c:\Users\user1\Downloads\ICB10_proj2\getyourguide\data\getyourguide.db"
 klook_db = r"c:\Users\user1\Downloads\ICB10_proj2\klook\data\klook_data.db"
+kkday_db = r"c:\Users\user1\Downloads\ICB10_proj2\kkday\data\kkday_products.db"
 
 conn_gyg = sqlite3.connect(gyg_db)
 df_gyg = pd.read_sql("SELECT * FROM activities", conn_gyg)
@@ -34,8 +35,13 @@ df_klook = pd.read_sql("SELECT * FROM activities", conn_klook)
 df_klook['platform'] = 'Klook'
 conn_klook.close()
 
+conn_kkday = sqlite3.connect(kkday_db)
+df_kkday = pd.read_sql("SELECT * FROM kkday_products", conn_kkday)
+df_kkday['platform'] = 'KKday'
+conn_kkday.close()
+
 # 공통 컬럼: title, rating, reviews, price, region, platform
-df = pd.concat([df_gyg, df_klook], ignore_index=True)
+df = pd.concat([df_gyg, df_klook, df_kkday], ignore_index=True)
 
 # 2. 데이터 전처리
 # 가격 변환
@@ -362,7 +368,8 @@ report_content.append(sigungu_ratings.reset_index().to_markdown() + "\n")
 report_content.append("**해석:** 평점이 유효한 상품들에 한정하여 시군구별 평균 만족도를 살펴본 차트입니다. 특정 관광 거점 도시들이 높은 평점을 안정적으로 유지하는지, 혹은 편차가 있는지 비교 분석할 수 있습니다.\n")
 
 # 리포트 저장
-with open("eda_report.md", "w", encoding='utf-8') as f:
+os.makedirs("report", exist_ok=True)
+with open("report/eda_report.md", "w", encoding='utf-8') as f:
     f.writelines(report_content)
 
-print("EDA 분석 완료 및 eda_report.md 생성 성공!")
+print("EDA 분석 완료 및 report/eda_report.md 생성 성공!")
