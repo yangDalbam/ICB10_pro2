@@ -277,12 +277,12 @@ def render_demand_analysis():
             st.plotly_chart(fig1, use_container_width=True)
             
         with col2:
-            # 주요 5개 지역별 평점 분포 바이올린 플롯
+            # 주요 5개 지역별 평점 분포 박스 플롯 (바이올린 플롯의 극단치 왜곡 현상 개선)
             top5_regions = top5_infra['지역'].tolist()
             df_violin = df_filtered[df_filtered['region_sigungu'].isin(top5_regions) & (df_filtered['rating_num'] > 0)].copy()
             
-            fig3 = px.violin(df_violin, x='region_sigungu', y='rating_num', color='region_sigungu',
-                             box=True, points="all",
+            fig3 = px.box(df_violin, x='region_sigungu', y='rating_num', color='region_sigungu',
+                             points="all", notched=True,
                              title="주요 5개 지역별 평점 분포",
                              labels={'region_sigungu': '지역', 'rating_num': '평점 (5점 만점)'},
                              color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B"])
