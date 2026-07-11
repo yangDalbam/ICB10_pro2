@@ -459,9 +459,31 @@ def render_demand_analysis():
             scatter_df = merged.sort_values(by='visit_volume', ascending=False).head(20).reset_index(drop=True)
             scatter_df.columns = ['지역', '방문 규모 (검색건수)', 'OTA 상품수', '공공데이터 여행지수', 'OTA_S', 'SPOT_S', '종합 인프라 점수']
             
-            # 텍스트 겹침 방지
-            scatter_df['표시 라벨'] = scatter_df['지역']
-            scatter_df.loc[5:, '표시 라벨'] = ''
+            # 텍스트 겹침 방지 (우선순위가 높은 점부터 라벨 할당)
+            labels = []
+            labeled_points = []
+            x_max = scatter_df['종합 인프라 점수'].max() or 1
+            y_max = scatter_df['방문 규모 (검색건수)'].max() or 1
+            
+            for idx, row in scatter_df.iterrows():
+                nx = row['종합 인프라 점수'] / x_max
+                ny = row['방문 규모 (검색건수)'] / y_max
+                
+                overlap = False
+                for px, py in labeled_points:
+                    # x축(텍스트 길이 고려) 가중치 적용 거리 계산
+                    dist = (((nx - px) * 1.5)**2 + (ny - py)**2)**0.5
+                    if dist < 0.1:
+                        overlap = True
+                        break
+                
+                if not overlap:
+                    labels.append(row['지역'])
+                    labeled_points.append((nx, ny))
+                else:
+                    labels.append('')
+                    
+            scatter_df['표시 라벨'] = labels
             
             fig_scatter = px.scatter(scatter_df, x='종합 인프라 점수', y='방문 규모 (검색건수)', text='표시 라벨', size='방문 규모 (검색건수)',
                                      color='방문 규모 (검색건수)', color_continuous_scale='Blues', size_max=40,
