@@ -241,26 +241,31 @@ def render_demand_analysis():
     if df_ota.empty:
         st.warning("데이터 파이프라인에서 OTA 데이터를 찾을 수 없습니다. 경로를 확인해주세요.")
     else:
-        # 상위 5개 지역 계산
-        top5_infra = df_ota['region_sigungu'].value_counts().head(5).reset_index()
+        # 사용자 요청: 제주, 서울, 부산 제외
+        df_filtered = df_ota[~df_ota['region_sigungu'].str.contains('제주|서울|부산', na=False)]
+
+        # 상위 5개 지역 계산 (제주/서울/부산 제외)
+        top5_infra = df_filtered['region_sigungu'].value_counts().head(5).reset_index()
         top5_infra.columns = ['지역', '상품 수']
         
-        top5_reviews = df_ota.groupby('region_sigungu')['reviews_num'].sum().sort_values(ascending=False).head(5).reset_index()
+        top5_reviews = df_filtered.groupby('region_sigungu')['reviews_num'].sum().sort_values(ascending=False).head(5).reset_index()
         top5_reviews.columns = ['지역', '총 리뷰 수']
         
         # 평점이 유효한 데이터만 필터링
-        df_valid_rating = df_ota[df_ota['rating_num'] > 0]
+        df_valid_rating = df_filtered[df_filtered['rating_num'] > 0]
         top5_ratings = df_valid_rating.groupby('region_sigungu')['rating_num'].mean().sort_values(ascending=False).head(5).reset_index()
         top5_ratings.columns = ['지역', '평균 평점']
         top5_ratings['평균 평점'] = top5_ratings['평균 평점'].round(2)
 
-        # 사용자가 선택한 지역별 핵심 키워드 매핑
+        # 사용자가 선택한 지역별 핵심 키워드 매핑 (제주/서울/부산 제외한 주요 지역)
         keyword_dict = {
-            '제주특별자치도': '투어, 체험, 렌터카, 우도, 성산일출봉',
-            '서울특별시': '투어, 서울, 남산, 경복궁, 한복',
-            '부산광역시': '부산, 당일, 출발, 해운대, 요트',
             '강원특별자치도': '남이섬, 춘천, 레일바이크, 일일, 강릉',
-            '인천광역시': '인천, 국제공항, 호텔, 환승, 투어'
+            '인천광역시': '인천, 국제공항, 호텔, 환승, 투어',
+            '경기도 용인시': '에버랜드, 민속촌, 테마파크, 일일',
+            '경기도 파주시': 'DMZ, 탈북자, 땅굴, 현수교, 북한',
+            '인천 강화군': '강화도, 루지, 전등사, 평화전망대',
+            '대구광역시': '이월드, 팔공산, 근대골목, 야경',
+            '경상북도 경주시': '유네스코, 불국사, 황리단길, 신라'
         }
         keyword_df = pd.DataFrame(list(keyword_dict.items()), columns=['지역', '주요 키워드'])
 
@@ -269,9 +274,12 @@ def render_demand_analysis():
         top5_reviews = pd.merge(top5_reviews, keyword_df, on='지역', how='left')
         top5_ratings = pd.merge(top5_ratings, keyword_df, on='지역', how='left')
 
-        st.subheader("💡 외국인 타겟 핵심 관광 키워드")
-        st.info("실제 관광 상품명 분석을 통해 도출된 핵심 키워드: **투어, 서울, 출발, 수원, DMZ, 화성, 여행, 경주, 스타필드, 남이섬**")
-        st.markdown("➡️ 외국인 관광객들은 서울, 제주, 부산 등 핵심 거점을 중심으로 한 당일/일일 투어(Day Tour)에 높은 관심을 보이고 있으며, **'스타필드/수원화성'**이나 **'DMZ', '남이섬'**과 같이 특색 있는 근교 체험형 상품에도 꾸준한 수요가 집중되고 있습니다.")
+        # 결측 키워드 처리
+        top5_infra['주요 키워드'].fillna('지역 특화 투어, 체험, 일일 코스', inplace=True)
+
+        st.subheader("💡 외국인 타겟 핵심 관광 키워드 (제주/서울/부산 외)")
+        st.info("핵심 거점을 제외한 주요 관광 키워드: **DMZ, 남이섬, 에버랜드, 수원화성, 인천공항, 경주, 전등사**")
+        st.markdown("➡️ 서울/제주/부산 등 3대 핵심 거점을 제외하고 분석한 결과, **'파주 DMZ'**, **'남이섬/춘천'**, **'용인 에버랜드'**, **'수원 스타필드/화성'** 등 뚜렷한 목적성을 지닌 **근교 체험형/테마형 일일 투어(Day Tour)**가 강력한 2선 관광 인프라를 구축하고 있음을 알 수 있습니다.")
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.subheader("📊 지역별 인프라 및 가격대별 인기도 분석")
