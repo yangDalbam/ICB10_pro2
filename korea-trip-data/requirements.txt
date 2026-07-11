@@ -4,3 +4,8 @@ plotly
 pytrends
 requests
 python-dotenv
+scikit-learn
+numpy
+matplotlib
+seaborn
+koreanize-matplotlib
