@@ -342,11 +342,40 @@ def render_demand_analysis():
                 top_sido.columns = ['광역시도', '추천 수']
                 
                 # 상위 15개만 표시
-                pie_data = top_sido.head(15)
+                pie_data = top_sido.head(15).copy()
+                
+                # --- 지자체별 핵심 관광 테마 (TF-IDF) 계산 및 병합 ---
+                from sklearn.feature_extraction.text import TfidfVectorizer
+                import numpy as np
+                
+                keywords_list = []
+                for sido in pie_data['광역시도']:
+                    sido_titles = df_filtered[df_filtered['지역_시도'] == sido]['TITLE'].dropna().astype(str)
+                    if len(sido_titles) > 5:
+                        try:
+                            vectorizer = TfidfVectorizer(max_features=50)
+                            tfidf_matrix = vectorizer.fit_transform(sido_titles)
+                            tfidf_sum = np.asarray(tfidf_matrix.sum(axis=0)).flatten()
+                            top_indices = tfidf_sum.argsort()[-5:][::-1]
+                            feature_names = vectorizer.get_feature_names_out()
+                            keywords = ", ".join([feature_names[i] for i in top_indices])
+                            keywords_list.append(keywords)
+                        except ValueError:
+                            keywords_list.append("키워드 없음")
+                    else:
+                        keywords_list.append("키워드 없음")
+                
+                pie_data['keywords'] = keywords_list
                     
                 fig_pie = px.treemap(pie_data, path=[px.Constant("관광지 점유 비중"), '광역시도'], values='추천 수', 
-                                     color='추천 수', color_continuous_scale='Blues')
-                fig_pie.update_traces(textinfo='label+percent entry', textfont_size=14, marker=dict(line=dict(color='#1E293B', width=1)))
+                                     color='추천 수', color_continuous_scale='Blues',
+                                     custom_data=['keywords'])
+                fig_pie.update_traces(
+                    textinfo='label+percent entry', 
+                    textfont_size=14, 
+                    marker=dict(line=dict(color='#1E293B', width=1)),
+                    hovertemplate='<b>%{label}</b><br>추천 수: %{value}<br>핵심 키워드: %{customdata[0]}<extra></extra>'
+                )
                 fig_pie.update_layout(
                     plot_bgcolor="rgba(0,0,0,0)",
                     paper_bgcolor="rgba(0,0,0,0)",
@@ -358,36 +387,9 @@ def render_demand_analysis():
                 
             st.info("**분석 인사이트:** 대표적인 대도시 및 대형 관광 거점(서울, 부산, 제주)을 제외하고 분석한 결과, "
                     "**강원, 전남, 경북** 등 자연 경관과 역사/문화 자원이 풍부한 권역의 추천 빈도가 매우 높게 나타났습니다. "
-                    "이는 공공데이터의 추천 콘텐츠들이 기존 상업화된 핫플레이스보다는 생태 관광이나 힐링, 로컬 명소 발굴에 초점이 맞춰져 있음을 시사합니다.")
-            
-            # --- 지자체별 핵심 관광 테마 (TF-IDF) ---
-            st.markdown("### 🏷️ 지자체별 주요 관광 테마 (핵심 키워드)")
-            
-            top5_sido_names = top_sido['광역시도'].head(5).tolist()
-            from sklearn.feature_extraction.text import TfidfVectorizer
-            import numpy as np
-            
-            theme_data = []
-            for sido in top5_sido_names:
-                sido_titles = df_filtered[df_filtered['지역_시도'] == sido]['TITLE'].dropna().astype(str)
-                if len(sido_titles) > 5:
-                    try:
-                        vectorizer = TfidfVectorizer(max_features=50)
-                        tfidf_matrix = vectorizer.fit_transform(sido_titles)
-                        tfidf_sum = np.asarray(tfidf_matrix.sum(axis=0)).flatten()
-                        top_indices = tfidf_sum.argsort()[-5:][::-1]
-                        feature_names = vectorizer.get_feature_names_out()
-                        keywords = [feature_names[i] for i in top_indices]
-                        theme_data.append({'지역(광역시도)': sido, '주요 테마 키워드 (Top 5)': ", ".join(keywords)})
-                    except ValueError:
-                        pass
-            
-            if theme_data:
-                df_theme = pd.DataFrame(theme_data)
-                st.table(df_theme)
-                
-                st.info("**테마 분석 인사이트:** TF-IDF 텍스트 마이닝을 통해 각 지자체별 추천 여행지 제목에서 단어의 고유 중요도를 반영한 핵심 키워드를 추출했습니다. "
-                        "이를 통해 각 지자체(예: 바다를 낀 전남, 산악/액티비티가 강한 강원, 역사가 깊은 경북 등)가 주력으로 삼고 있는 차별화된 관광 소구점(Selling Point)을 명확하게 확인할 수 있습니다.")
+                    "이는 공공데이터의 추천 콘텐츠들이 기존 상업화된 핫플레이스보다는 생태 관광이나 힐링, 로컬 명소 발굴에 초점이 맞춰져 있음을 시사합니다. "
+                    "또한 트리맵 마우스 호버 시 노출되는 핵심 키워드(TF-IDF 분석)를 통해 각 지자체(예: 바다를 낀 전남, 산악/액티비티가 강한 강원, 역사가 깊은 경북 등)가 "
+                    "주력으로 삼고 있는 차별화된 관광 소구점(Selling Point)을 직관적으로 확인할 수 있습니다.")
         else:
             st.warning("추천 여행지 데이터베이스(tourist_spots.db)를 찾을 수 없습니다.")
 
