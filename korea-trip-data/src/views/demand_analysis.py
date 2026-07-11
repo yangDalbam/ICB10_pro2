@@ -371,8 +371,17 @@ def render_demand_analysis():
                 top5_spots = df_filtered['지역_시도시군구'].value_counts().head(5).reset_index()
                 top5_spots.columns = ['지역', '추천 수']
                 fig_spots = px.bar(top5_spots, x='추천 수', y='지역', orientation='h', 
-                                   color='추천 수', color_continuous_scale='Oranges')
-                fig_spots.update_layout(yaxis={'categoryorder':'total ascending'})
+                                   color='추천 수', color_continuous_scale='Blues')
+                fig_spots.update_layout(
+                    yaxis={'categoryorder':'total ascending'},
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+                    hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
+                    margin=dict(l=20, r=20, t=20, b=20),
+                    xaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155"),
+                    yaxis_title=None
+                )
                 st.plotly_chart(fig_spots, use_container_width=True)
                 
             with col4:
@@ -388,8 +397,15 @@ def render_demand_analysis():
                     pie_data = top_sido
                     
                 fig_pie = px.pie(pie_data, values='추천 수', names='광역시도', 
-                                 color_discrete_sequence=px.colors.qualitative.Pastel)
-                fig_pie.update_traces(textposition='inside', textinfo='percent+label')
+                                 color_discrete_sequence=["#00F0FF", "#38BDF8", "#2563EB", "#1E3A8A", "#64748B", "#3B82F6", "#60A5FA", "#93C5FD"])
+                fig_pie.update_traces(textposition='inside', textinfo='percent+label', marker=dict(line=dict(color='#1E293B', width=1)))
+                fig_pie.update_layout(
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+                    margin=dict(l=20, r=20, t=20, b=20),
+                    hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
+                )
                 st.plotly_chart(fig_pie, use_container_width=True)
                 
             st.info("**분석 인사이트:** 대표적인 대도시 및 대형 관광 거점(서울, 부산, 제주)을 제외하고 분석한 결과, "
