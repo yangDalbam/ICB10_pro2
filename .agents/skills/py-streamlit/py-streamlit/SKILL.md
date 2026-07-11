@@ -37,10 +37,11 @@ description: Streamlit 대시보드 제작, 검증 및 최적화를 위한 전�
 
 ## 권장 도구 및 라이브러리
 - **Core**: `streamlit`, `pandas`, `numpy`
-- **Visualization**: **ONLY `plotly`** (Matplotlib, Seaborn, Altair 등 다른 라이브러리는 절대 사용하지 마십시오. 모든 시각화는 Plotly를 활용하여 인터랙티브하게 구현해야 합니다.)
+- **Visualization**: **ONLY `plotly`** (Matplotlib, Seaborn, Altair 등 다른 라이브러리는 절대 사용하지 마십시오. 모든 시각화는 무조건 Plotly를 활용해야 합니다.)
 - **Stats/ML**: `scipy`, `statsmodels`, `scikit-learn`
 
 ## 주의 사항
+- **KPI 카드 필수 배치**: 대시보드 최상단에는 사용자가 전체 데이터를 한눈에 파악할 수 있도록 주요 핵심 지표(총 데이터 수, 평균값, 최대값 등)를 요약한 **KPI 카드(`st.metric` 등 활용)**를 반드시 배치하십시오.
 - **시각화 일관성**: 모든 차트는 `st.plotly_chart`를 통해 출력하십시오. Plotly의 `px` (Express) 또는 `go` (Graph Objects)를 활용하여 시각적 완성도와 상호작용성을 높이십시오.
 - **정적 파일 내보내기**: 사용자가 웹 환경에서 대시보드를 즉시 볼 수 있도록, 전체 페이지나 주요 차트를 HTML로 저장하는 로직을 코드에 포함시키십시오.
 - **보안**: 절대 `.env` 파일이나 API Key를 코드에 하드코딩하지 마십시오. `st.secrets` 활용을 권장합니다.

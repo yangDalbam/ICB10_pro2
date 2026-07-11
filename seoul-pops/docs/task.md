@@ -1,0 +1,5 @@
+- `[x]` 1. `seoul-pops/scripts/prep_sqlite.py` 작성 및 실행하여 DB 생성
+- `[x]` 2. `utils.py` 데이터 로딩 방식을 SQLite 기반으로 재작성 (`load_agg_pop`, `load_map_dong`, `load_map_gu`)
+- `[x]` 3. `app.py`에서 기존 Parquet 데이터 구조 대신 SQLite에서 로딩한 사전 집계 테이블을 연동하도록 코드 수정
+- `[x]` 4. 문법 검증 및 Streamlit 재시작 (로컬 테스트)
+- `[x]` 5. 산출물(Walkthrough) 최신화 및 완료 안내

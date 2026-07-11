@@ -11,18 +11,60 @@ import pandas as pd
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
+import requests
+
+import sqlite3
 
 # 절대 경로 혹은 워크스페이스 기준 상대 경로
-DATA_PATH = "seoul-pops/data/LOCAL_PEOPLE_DONG_202606_optimized_final.parquet"
+DB_PATH = "seoul-pops/data/seoul_pops.db"
+MAP_EXCEL_PATH = "seoul-pops/data/행정동코드_매핑정보_20241218.xlsx"
 IMAGE_DIR = "seoul-pops/images"
 REPORT_DIR = "seoul-pops/report"
 
 @st.cache_data
 def load_data():
-    """데이터 로드 및 기본 전처리"""
-    # 데이터가 너무 크면 Streamlit 로딩이 느릴 수 있으므로, parquet 최적화 로드
-    df = pd.read_parquet(DATA_PATH)
+    """SQLite에서 사전에 집계된 대시보드용 기본 데이터 로드"""
+    conn = sqlite3.connect(DB_PATH)
+    df = pd.read_sql('SELECT * FROM agg_pop', conn)
+    conn.close()
     return df
+
+@st.cache_data
+def load_map_dong():
+    """SQLite에서 사전에 집계된 동별 지도용 데이터 로드"""
+    conn = sqlite3.connect(DB_PATH)
+    df = pd.read_sql('SELECT * FROM map_dong', conn)
+    conn.close()
+    return df
+
+@st.cache_data
+def load_map_gu():
+    """SQLite에서 사전에 집계된 구별 지도용 데이터 로드"""
+    conn = sqlite3.connect(DB_PATH)
+    df = pd.read_sql('SELECT * FROM map_gu', conn)
+    conn.close()
+    return df
+
+@st.cache_data
+def load_mapping():
+    """행정동코드 매핑 정보 엑셀 파일 로드 (첫번째 행은 영문 컬럼이므로 스킵)"""
+    df_map = pd.read_excel(MAP_EXCEL_PATH)
+    df_map.columns = df_map.iloc[0]
+    df_map = df_map.drop(0).reset_index(drop=True)
+    return df_map
+
+@st.cache_data
+def get_geojson(level='dong'):
+    """서울시 동별/구별 GeoJSON 로드 (southkorea-maps 기준)"""
+    if level == 'dong':
+        url = 'https://raw.githubusercontent.com/southkorea/southkorea-maps/master/kostat/2013/json/skorea_submunicipalities_geo_simple.json'
+    else:
+        url = 'https://raw.githubusercontent.com/southkorea/southkorea-maps/master/kostat/2013/json/skorea_municipalities_geo_simple.json'
+    response = requests.get(url)
+    geo_data = response.json()
+    # 서울시(코드 11로 시작) 데이터만 필터링
+    geo_data['features'] = [f for f in geo_data['features'] if str(f['properties']['code']).startswith('11')]
+    return geo_data
 
 def save_plot(fig, filename):
     """생성된 Plotly figure를 images 폴더에 저장하고, 저장된 경로를 반환"""
