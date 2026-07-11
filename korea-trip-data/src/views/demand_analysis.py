@@ -257,17 +257,30 @@ def render_demand_analysis():
         top5_ratings.columns = ['지역', '평균 평점']
         top5_ratings['평균 평점'] = top5_ratings['평균 평점'].round(2)
 
-        # 사용자가 선택한 지역별 핵심 키워드 매핑 (제주/서울/부산 제외한 주요 지역)
-        keyword_dict = {
-            '강원특별자치도': '남이섬, 춘천, 레일바이크, 일일, 강릉',
-            '인천광역시': '인천, 국제공항, 호텔, 환승, 투어',
-            '경기도 용인시': '에버랜드, 민속촌, 테마파크, 일일',
+        # 사용자가 직접 지역별 핵심 키워드를 설정할 수 있는 UI 제공
+        st.subheader("💡 외국인 타겟 핵심 관광 키워드 커스텀 매핑")
+        st.info("그래프 마우스 호버 시 표시될 지역별 키워드를 아래 표에서 직접 입력하고 수정할 수 있습니다.")
+        
+        # 기본 키워드 프리셋
+        default_keywords = {
+            '경기도 수원시': '스타필드, 민속, 마을, 유네스코',
             '경기도 파주시': 'DMZ, 탈북자, 땅굴, 현수교, 북한',
-            '인천 강화군': '강화도, 루지, 전등사, 평화전망대',
-            '대구광역시': '이월드, 팔공산, 근대골목, 야경',
-            '경상북도 경주시': '유네스코, 불국사, 황리단길, 신라'
+            '경상북도 경주시': '유네스코, 세계유산, 신라, 역사',
+            '강원도 춘천시': '남이섬, 레일바이크, 춘천닭갈비',
+            '인천광역시': '국제공항, 호텔, 환승, 파라다이스시티',
+            '강원특별자치도': '남이섬, 춘천, 강릉, 바다',
+            '경기도 용인시': '에버랜드, 민속촌, 테마파크'
         }
-        keyword_df = pd.DataFrame(list(keyword_dict.items()), columns=['지역', '주요 키워드'])
+        
+        top_regions = top5_infra['지역'].tolist()
+        keyword_data = []
+        for reg in top_regions:
+            keyword_data.append({"지역": reg, "주요 키워드": default_keywords.get(reg, "지역 특화 투어, 맞춤형 체험")})
+            
+        keyword_df_initial = pd.DataFrame(keyword_data)
+        
+        # st.data_editor를 통해 사용자가 직접 수정 가능하도록 함
+        keyword_df = st.data_editor(keyword_df_initial, use_container_width=True, hide_index=True)
 
         # 키워드 병합
         top5_infra = pd.merge(top5_infra, keyword_df, on='지역', how='left')
@@ -279,7 +292,7 @@ def render_demand_analysis():
 
         st.subheader("💡 외국인 타겟 핵심 관광 키워드 (제주/서울/부산 외)")
         st.info("핵심 거점을 제외한 주요 관광 키워드: **DMZ, 남이섬, 에버랜드, 수원화성, 인천공항, 경주, 전등사**")
-        st.markdown("➡️ 서울/제주/부산 등 3대 핵심 거점을 제외하고 분석한 결과, **'파주 DMZ'**, **'남이섬/춘천'**, **'용인 에버랜드'**, **'수원 스타필드/화성'** 등 뚜렷한 목적성을 지닌 **근교 체험형/테마형 일일 투어(Day Tour)**가 강력한 2선 관광 인프라를 구축하고 있음을 알 수 있습니다.")
+        st.markdown("➡️ 표에서 키워드를 수정하면 아래 그래프의 툴팁(마우스 호버)에 즉시 반영됩니다. 서울/제주/부산 등 3대 핵심 거점을 제외하고 분석한 결과, 뚜렷한 목적성을 지닌 **근교 체험형/테마형 일일 투어(Day Tour)**가 강력한 2선 관광 인프라를 구축하고 있음을 알 수 있습니다.")
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.subheader("📊 지역별 인프라 및 가격대별 인기도 분석")
