@@ -346,60 +346,8 @@ def render_demand_analysis():
         fig_scatter.update_layout(height=500)
         st.plotly_chart(fig_scatter, use_container_width=True)
 
-        # --- 가격 및 평점 vs 방문수(리뷰 수) 산점도 분석 ---
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.subheader("💵/⭐ 가격 및 평점과 방문 수요의 상관관계")
-        col_p, col_r = st.columns(2)
-        
-        with col_p:
-            df_price_clean = df_ota[(df_ota['price_num'] > 0) & (df_ota['reviews_num'] > 0)].copy()
-            # 상위 5% 초고가 제외 (시각화 왜곡 방지)
-            price_p95 = df_price_clean['price_num'].quantile(0.95)
-            df_price_clean = df_price_clean[df_price_clean['price_num'] <= price_p95]
-            
-            corr_price = df_price_clean['price_num'].corr(df_price_clean['reviews_num'])
-            
-            fig_price = px.scatter(df_price_clean, x='price_num', y='reviews_num', color='platform',
-                                   hover_data=['title', 'region_sigungu'],
-                                   color_discrete_sequence=['#38BDF8', '#818CF8', '#A78BFA'],
-                                   title="가격 vs 방문(리뷰) 수",
-                                   labels={'price_num': '상품 가격(원)', 'reviews_num': '리뷰 수(건)'})
-            fig_price.add_annotation(
-                x=0.98, y=0.95, xref="paper", yref="paper",
-                text=f"<b>r = {corr_price:.2f}</b>", showarrow=False,
-                font=dict(size=14, color="white"), bgcolor="rgba(255, 255, 255, 0.1)",
-                bordercolor="rgba(255, 255, 255, 0.3)", borderwidth=1, xanchor="right", yanchor="top"
-            )
-            fig_price.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-                                    font=dict(color="#E2E8F0"), margin=dict(l=20, r=20, t=40, b=20),
-                                    xaxis=dict(showgrid=True, gridcolor="#1E293B", linecolor="#334155"),
-                                    yaxis=dict(showgrid=True, gridcolor="#1E293B", linecolor="#334155"), height=400)
-            st.plotly_chart(fig_price, use_container_width=True)
-            
-        with col_r:
-            df_rating_clean = df_ota[(df_ota['rating_num'] > 0) & (df_ota['reviews_num'] > 0)].copy()
-            corr_rating = df_rating_clean['rating_num'].corr(df_rating_clean['reviews_num'])
-            
-            fig_rating = px.scatter(df_rating_clean, x='rating_num', y='reviews_num', color='platform',
-                                    hover_data=['title', 'region_sigungu'],
-                                    color_discrete_sequence=['#38BDF8', '#818CF8', '#A78BFA'],
-                                    title="리뷰 평점 vs 방문(리뷰) 수",
-                                    labels={'rating_num': '평점(5점 만점)', 'reviews_num': '리뷰 수(건)'})
-            fig_rating.add_annotation(
-                x=0.02, y=0.95, xref="paper", yref="paper",
-                text=f"<b>r = {corr_rating:.2f}</b>", showarrow=False,
-                font=dict(size=14, color="white"), bgcolor="rgba(255, 255, 255, 0.1)",
-                bordercolor="rgba(255, 255, 255, 0.3)", borderwidth=1, xanchor="left", yanchor="top"
-            )
-            fig_rating.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-                                     font=dict(color="#E2E8F0"), margin=dict(l=20, r=20, t=40, b=20),
-                                     xaxis=dict(showgrid=True, gridcolor="#1E293B", linecolor="#334155"),
-                                     yaxis=dict(showgrid=True, gridcolor="#1E293B", linecolor="#334155"), height=400)
-            st.plotly_chart(fig_rating, use_container_width=True)
-
-        st.success("**분석 인사이트:** 상품 수와 방문 규모는 뚜렷한 양의 상관관계(r=0.56)를 보이나, "
-                   "가격이나 평점은 리뷰 수(수요)와 직접적인 선형 관계를 보이지 않습니다. "
-                   "특히 가격의 경우(r=-0.09) 대다수의 수요가 중저가 구간(입장권, 패스 등)에 집중되는 비선형적 특징을 보여, 전략적 가격 포지셔닝이 중요함을 시사합니다.")
+        st.success("**분석 인사이트:** 상품 수와 방문 규모는 뚜렷한 양의 상관관계(r=0.56)를 보이나, 파주시(DMZ)처럼 킬러 콘텐츠 하나로 압도적 수요를 이끄는 이상치(Outlier) 지역도 존재합니다. "
+                   "관광 상품(인프라)이 밀집된 곳에 뚜렷한 방문 수요가 함께 창출되고 있음을 시사합니다.")
 
         # --- 문화공공데이터광장 추천 여행지 분석 추가 ---
         st.markdown("---")
