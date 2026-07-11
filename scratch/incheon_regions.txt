@@ -1,0 +1,5 @@
+region
+인천광역시        14
+인천광역시 강화군    10
+인천광역시 중구      4
+Name: count, dtype: int64
