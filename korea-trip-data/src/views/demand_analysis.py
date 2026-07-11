@@ -291,54 +291,112 @@ def render_demand_analysis():
         st.markdown("### 🔍 지역 인프라와 방문 규모 상관관계 분석")
         
         import numpy as np
+        from sklearn.preprocessing import MinMaxScaler
         
-        # Scatter plot for correlation (Region)
-        scatter_df_all = df_ota[df_ota['region_sigungu'] != '알 수 없음'].groupby('region_sigungu').agg({'title': 'count', 'reviews_num': 'sum'}).reset_index()
-        scatter_df_all.columns = ['지역', '상품 수', '총 리뷰 수']
-        
-        corr1 = scatter_df_all['상품 수'].corr(scatter_df_all['총 리뷰 수'])
-        
-        # 상위 15개 지역만 필터링하여 노이즈 제거
-        scatter_df = scatter_df_all.sort_values(by='총 리뷰 수', ascending=False).head(15).reset_index(drop=True)
-        scatter_df = pd.merge(scatter_df, keyword_df, on='지역', how='left')
-        
-        # 텍스트 겹침 방지를 위해 상위 5개 지역만 차트 위에 이름을 표시하고, 나머지는 호버(마우스 오버)로만 표시
-        scatter_df['표시 라벨'] = scatter_df['지역']
-        scatter_df.loc[5:, '표시 라벨'] = ''
-        
-        fig_scatter = px.scatter(scatter_df, x='상품 수', y='총 리뷰 수', text='표시 라벨', size='총 리뷰 수',
-                                 color='총 리뷰 수', color_continuous_scale='Blues', size_max=40,
-                                 title="지역별 인프라 vs 방문 규모")
-                                 
-        if len(scatter_df) > 1:
-            z1 = np.polyfit(scatter_df['상품 수'], scatter_df['총 리뷰 수'], 1)
-            p1 = np.poly1d(z1)
-            x_range1 = np.linspace(scatter_df['상품 수'].min(), scatter_df['상품 수'].max(), 50)
-            fig_scatter.add_trace(go.Scatter(x=x_range1, y=p1(x_range1), mode='lines', line=dict(color='red', dash='dash'), showlegend=False, hoverinfo='skip'))
+        # 1. OTA 상품 수
+        def clean_region(r):
+            if pd.isna(r): return "알 수 없음"
+            r = str(r).strip()
+            parts = r.split()
+            if len(parts) >= 2: return f"{parts[0]} {parts[1]}"
+            return r
             
-        fig_scatter.add_annotation(
-            x=0.98, y=0.95,
-            xref="paper", yref="paper",
-            text=f"<b>r = {corr1:.2f}</b>",
-            showarrow=False,
-            font=dict(size=15, color="white"),
-            bgcolor="rgba(255, 255, 255, 0.1)",
-            bordercolor="rgba(255, 255, 255, 0.3)",
-            borderwidth=1,
-            borderpad=6,
-            xanchor="right",
-            yanchor="top"
-        )
+        mapping_dict = {
+            "서울특별시": "서울", "부산광역시": "부산", "대구광역시": "대구", "인천광역시": "인천",
+            "광주광역시": "광주", "대전광역시": "대전", "울산광역시": "울산", "세종특별자치시": "세종",
+            "경기도": "경기", "강원특별자치도": "강원", "강원도": "강원", "충청북도": "충북", "충청남도": "충남",
+            "전북특별자치도": "전북", "전라북도": "전북", "전라남도": "전남", "경상북도": "경북",
+            "경상남도": "경남", "제주특별자치도": "제주", "제주도": "제주"
+        }
+        
+        def normalize_region(name):
+            if not isinstance(name, str): return ""
+            parts = name.split()
+            if len(parts) >= 2:
+                sido = parts[0]
+                sigungu = parts[1]
+                for k, v in mapping_dict.items():
+                    if sido == k:
+                        sido = v
+                return f"{sido} {sigungu}"
+            return name
             
-        fig_scatter.update_traces(
-            textposition='middle right',
-            hovertemplate='<b>상품 수:</b> %{x}개<br><b>총 리뷰 수:</b> %{y}건<extra></extra>'
-        )
-        fig_scatter.update_layout(height=500)
-        st.plotly_chart(fig_scatter, use_container_width=True)
-
-        st.success("**분석 인사이트:** 상품 수와 방문 규모는 뚜렷한 양의 상관관계(r=0.56)를 보이나, 파주시(DMZ)처럼 킬러 콘텐츠 하나로 압도적 수요를 이끄는 이상치(Outlier) 지역도 존재합니다. "
-                   "관광 상품(인프라)이 밀집된 곳에 뚜렷한 방문 수요가 함께 창출되고 있음을 시사합니다.")
+        df_ota_copy = df_ota.copy()
+        df_ota_copy['region_sigungu'] = df_ota_copy['region'].apply(clean_region)
+        df_ota_copy['norm_region'] = df_ota_copy['region_sigungu'].apply(normalize_region)
+        ota_counts = df_ota_copy[df_ota_copy['norm_region'] != '알 수 없음'].groupby('norm_region').size().reset_index(name='ota_count')
+        
+        # 2. 문화공공데이터광장 빈도수
+        import sqlite3
+        db_path = os.path.join(data_dir, 'tourist_spots.db')
+        if os.path.exists(db_path):
+            conn = sqlite3.connect(db_path)
+            df_spots = pd.read_sql('SELECT * FROM recommended_spots', conn)
+            conn.close()
+        else:
+            df_spots = pd.DataFrame(columns=['지역_시도시군구'])
+            
+        df_spots['norm_region'] = df_spots['지역_시도시군구'].apply(normalize_region)
+        spot_counts = df_spots.groupby('norm_region').size().reset_index(name='spot_count')
+        
+        # 3. 외국인 방문 규모 (목적지 검색건수, 서울/부산/제주 제외)
+        df_kto_demand_corr = df_kto_demand.copy()
+        if '광역지자체' in df_kto_demand_corr.columns:
+            df_kto_demand_corr = df_kto_demand_corr[~df_kto_demand_corr["광역지자체"].str.contains("서울|부산|제주")].copy()
+            df_kto_demand_corr["signguNm"] = df_kto_demand_corr["광역지자체"] + " " + df_kto_demand_corr["기초지자체"]
+        
+        df_kto_demand_corr['norm_region'] = df_kto_demand_corr['signguNm'].apply(normalize_region)
+        visit_volume = df_kto_demand_corr.groupby('norm_region')['기초지자체 검색건수'].sum().reset_index(name='visit_volume')
+        
+        # Merge
+        merged = pd.merge(visit_volume, ota_counts, on='norm_region', how='inner').fillna({'ota_count': 0})
+        merged = pd.merge(merged, spot_counts, on='norm_region', how='left').fillna({'spot_count': 0})
+        
+        if len(merged) > 0:
+            # MinMax 정규화 후 중간값(평균) 계산
+            scaler = MinMaxScaler(feature_range=(0, 100))
+            merged[['ota_scaled', 'spot_scaled']] = scaler.fit_transform(merged[['ota_count', 'spot_count']])
+            merged['infra_score'] = merged[['ota_scaled', 'spot_scaled']].median(axis=1) # 2개 값의 중간값(평균)
+            
+            corr1 = merged['infra_score'].corr(merged['visit_volume'])
+            
+            # Scatter plot
+            scatter_df = merged.sort_values(by='visit_volume', ascending=False).head(20).reset_index(drop=True)
+            scatter_df.columns = ['지역', '방문 규모 (검색건수)', 'OTA 상품수', '공공데이터 여행지수', 'OTA_S', 'SPOT_S', '종합 인프라 점수']
+            
+            # 텍스트 겹침 방지
+            scatter_df['표시 라벨'] = scatter_df['지역']
+            scatter_df.loc[5:, '표시 라벨'] = ''
+            
+            fig_scatter = px.scatter(scatter_df, x='종합 인프라 점수', y='방문 규모 (검색건수)', text='표시 라벨', size='방문 규모 (검색건수)',
+                                     color='방문 규모 (검색건수)', color_continuous_scale='Blues', size_max=40,
+                                     title="관광 인프라(상품+공공 추천) vs 외국인 방문 규모")
+                                     
+            if len(scatter_df) > 1:
+                z1 = np.polyfit(scatter_df['종합 인프라 점수'], scatter_df['방문 규모 (검색건수)'], 1)
+                p1 = np.poly1d(z1)
+                x_range1 = np.linspace(scatter_df['종합 인프라 점수'].min(), scatter_df['종합 인프라 점수'].max(), 50)
+                fig_scatter.add_trace(go.Scatter(x=x_range1, y=p1(x_range1), mode='lines', line=dict(color='red', dash='dash'), showlegend=False, hoverinfo='skip'))
+                
+            fig_scatter.add_annotation(
+                x=0.98, y=0.95, xref="paper", yref="paper", text=f"<b>r = {corr1:.2f}</b>",
+                showarrow=False, font=dict(size=15, color="white"),
+                bgcolor="rgba(255, 255, 255, 0.1)", bordercolor="rgba(255, 255, 255, 0.3)",
+                borderwidth=1, borderpad=6, xanchor="right", yanchor="top"
+            )
+                
+            fig_scatter.update_traces(
+                textposition='middle right',
+                hovertemplate='<b>지역:</b> %{customdata[0]}<br><b>인프라 점수:</b> %{x:.1f}점<br><b>방문 규모:</b> %{y:,.0f}건<extra></extra>',
+                customdata=scatter_df[['지역']]
+            )
+            fig_scatter.update_layout(height=500, xaxis_title="종합 인프라 점수 (중간값 기준)", yaxis_title="방문 규모 (검색건수)")
+            st.plotly_chart(fig_scatter, use_container_width=True)
+    
+            st.success(f"**분석 인사이트:** OTA 플랫폼 기반 관광 상품 수와 문화공공데이터 추천 여행지 빈도수를 종합(중간값)한 '종합 인프라 점수'와 실제 외국인 방문 규모 간에는 **양의 상관관계(r={corr1:.2f})**를 확인할 수 있습니다. "
+                       "이는 민간 플랫폼의 인프라와 공공 데이터의 관광지 추천 빈도가 높은 지역일수록 실제 방문 수요로도 유의미하게 연결되고 있음을 시사합니다.")
+        else:
+            st.warning("상관관계 분석을 위한 데이터가 충분하지 않습니다.")
 
         # --- 문화공공데이터광장 추천 여행지 분석 추가 ---
         st.markdown("---")
