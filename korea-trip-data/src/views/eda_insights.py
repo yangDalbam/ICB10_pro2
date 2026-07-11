@@ -223,7 +223,7 @@ def render_eda_insights():
             df_ota['region_sigungu'] = df_ota['region'].apply(clean_region_sigungu)
             
             df_ota_agg = df_ota.groupby('region_sigungu').agg({'title': 'count', 'reviews_num': 'sum', 'rating_num': 'mean'}).reset_index()
-            df_ota_agg.columns = ['지역', '인프라', '방문수', '만족도']
+            df_ota_agg.columns = ['지역', 'OTA_상품수', '방문수', '만족도']
             
             # 지역명 정규화 (경기도 수원시 -> 경기 수원시)
             mapping_dict = {
@@ -239,6 +239,24 @@ def render_eda_insights():
                 return name
             
             df_ota_agg['signguNm'] = df_ota_agg['지역'].apply(normalize_region)
+            
+            # 3. 문화공공데이터광장 추천 여행지 분석 (tourist_spots.db) 연동
+            db_path = os.path.join(data_dir, 'tourist_spots.db')
+            if os.path.exists(db_path):
+                import sqlite3
+                conn = sqlite3.connect(db_path)
+                df_spots = pd.read_sql('SELECT * FROM recommended_spots', conn)
+                conn.close()
+                df_spots_agg = df_spots.groupby('지역_시도시군구').size().reset_index(name='공공_스팟수')
+                df_spots_agg['signguNm'] = df_spots_agg['지역_시도시군구'].apply(normalize_region)
+                
+                # OTA 데이터와 공공 스팟 데이터 병합
+                df_infra = pd.merge(df_ota_agg, df_spots_agg, on='signguNm', how='outer').fillna(0)
+                df_infra['인프라'] = df_infra['OTA_상품수'] + df_infra['공공_스팟수']
+                # 리뷰수나 만족도는 OTA 기준 유지 (없는 경우 0)
+            else:
+                df_infra = df_ota_agg.copy()
+                df_infra['인프라'] = df_infra['OTA_상품수']
             
             # 소비 및 국제 다양성 데이터 로드
             df_spend = get_area_spend_diversity("202602")
@@ -263,7 +281,7 @@ def render_eda_insights():
                 df_intl_agg = pd.DataFrame(columns=['signguNm', 'intl_div'])
 
             # df_demand 와 병합
-            df_merged = pd.merge(df_demand, df_ota_agg, on='signguNm', how='left').fillna(0)
+            df_merged = pd.merge(df_demand, df_infra, on='signguNm', how='left').fillna(0)
             df_merged = pd.merge(df_merged, df_spend_agg, on='signguNm', how='left').fillna(0)
             df_merged = pd.merge(df_merged, df_intl_agg, on='signguNm', how='left').fillna(0)
         else:
