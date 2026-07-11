@@ -470,9 +470,9 @@ def render_demand_analysis():
                 ny = row['방문 규모 (검색건수)'] / y_max
                 
                 overlap = False
-                for px, py in labeled_points:
+                for pt_x, pt_y in labeled_points:
                     # x축(텍스트 길이 고려) 가중치 적용 거리 계산
-                    dist = (((nx - px) * 1.5)**2 + (ny - py)**2)**0.5
+                    dist = (((nx - pt_x) * 1.5)**2 + (ny - pt_y)**2)**0.5
                     if dist < 0.1:
                         overlap = True
                         break
