@@ -173,7 +173,7 @@ def render_demand_analysis():
         st.warning(f"지역별 방문자 수 데이터를 확인할 수 없습니다: {e}")
         
     st.markdown("---")
-    st.header("4. 🌍 OTA 플랫폼 기반 지역별 관광 인프라 현황")
+    st.header("3. 🌍 OTA 플랫폼 기반 지역별 관광 인프라 현황")
     st.markdown("글로벌 온라인 여행 플랫폼(GetYourGuide, Klook)에 등록된 한국 관광 상품 데이터를 바탕으로 지역별 인프라, 방문 규모, 만족도를 분석합니다.")
 
     # 데이터 로딩 및 전처리 로직
@@ -297,7 +297,7 @@ def render_demand_analysis():
 
         # --- 문화공공데이터광장 추천 여행지 분석 추가 ---
         st.markdown("---")
-        st.header("3. 문화공공데이터광장 추천 여행지 분석")
+        st.header("4. 문화공공데이터광장 추천 여행지 분석")
         
         import sqlite3
         db_path = os.path.join(data_dir, 'tourist_spots.db')
