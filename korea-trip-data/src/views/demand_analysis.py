@@ -174,7 +174,7 @@ def render_demand_analysis():
         
     st.markdown("---")
     st.header("3. 🌍 OTA 플랫폼 기반 지역별 관광 인프라 현황")
-    st.markdown("글로벌 온라인 여행 플랫폼(GetYourGuide, Klook)에 등록된 한국 관광 상품 데이터를 바탕으로 지역별 인프라, 방문 규모, 만족도를 분석합니다.")
+    st.markdown("글로벌 온라인 여행 플랫폼(GetYourGuide, Klook, Kkday)에 등록된 한국 관광 상품 데이터를 바탕으로 지역별 인프라, 방문 규모, 만족도를 분석합니다.")
 
     # 데이터 로딩 및 전처리 로직
     @st.cache_data
