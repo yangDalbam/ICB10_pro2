@@ -62,6 +62,10 @@ def render_tourism_diversity():
                 yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
             )
             st.plotly_chart(fig1, use_container_width=True)
+            with st.expander("📊 소비액 통계 및 데이터 테이블"):
+                st.caption("🔹 **자료 출처:** 한국관광공사(한국관광데이터랩) - 전체 외국인 신용카드 관광소비액")
+                st.dataframe(df_melt[['기준년월', '소비액(원)']].describe().astype(str), use_container_width=True)
+                st.dataframe(df_melt, use_container_width=True)
 
         with col2:
             st.subheader("외국인 방문객 주요 소비국 비율")
@@ -79,6 +83,10 @@ def render_tourism_diversity():
                 margin=dict(l=20, r=20, t=40, b=20)
             )
             st.plotly_chart(fig2, use_container_width=True)
+            with st.expander("📊 소비 비율 데이터 요약"):
+                st.caption("🔹 **자료 출처:** 한국관광공사(한국관광데이터랩) - 국가별 관광소비 유형")
+                st.dataframe(df_country_top10.describe().astype(str), use_container_width=True)
+                st.dataframe(df_country_top10, use_container_width=True)
     except Exception as e:
         st.warning(f"소비 트렌드 CSV 데이터를 불러올 수 없습니다: {e}")
 
@@ -160,6 +168,10 @@ def render_tourism_diversity():
                     yaxis_title=None
                 )
                 st.plotly_chart(fig_pie_spend, use_container_width=True)
+                with st.expander("📊 소비 비중 통계 및 데이터"):
+                    st.caption("🔹 **자료 출처:** 한국관광공사(한국관광데이터랩) - 간편결제 업종별 관광소비")
+                    st.dataframe(df_ind_spend.describe().astype(str), use_container_width=True)
+                    st.dataframe(df_ind_spend, use_container_width=True)
                 
             with col_sp2:
                 st.markdown("#### 핵심 거점 관광지출액 Top 5")
@@ -181,6 +193,10 @@ def render_tourism_diversity():
                     yaxis_title=None
                 )
                 st.plotly_chart(fig_city_spend, use_container_width=True)
+                with st.expander("📊 지출액 통계 및 데이터"):
+                    st.caption("🔹 **자료 출처:** 한국관광공사(한국관광데이터랩) - 지역별 관광지출액")
+                    st.dataframe(df_top_city_spend.describe().astype(str), use_container_width=True)
+                    st.dataframe(df_top_city_spend[['시도명', '관광지출액(억원)']], use_container_width=True)
                 
         # 3. 신규 추가 그래프: 방문자수 대비 관광지출액 산점도
         st.markdown("---")
@@ -215,6 +231,10 @@ def render_tourism_diversity():
             coloraxis_colorbar=dict(tickformat=",.0f")
         )
         st.plotly_chart(fig_scatter, use_container_width=True)
+        with st.expander("📊 방문자수 및 관광지출액 통계"):
+            st.caption("🔹 **자료 출처:** 한국관광공사(한국관광데이터랩) - 지역 방문자수 및 관광지출액 추세")
+            st.dataframe(df_region[['방문자수', '관광지출액']].describe().astype(str), use_container_width=True)
+            st.dataframe(df_region, use_container_width=True)
                 
     except Exception as e:
         st.warning(f"관광 소비 데이터를 불러올 수 없습니다: {e}")

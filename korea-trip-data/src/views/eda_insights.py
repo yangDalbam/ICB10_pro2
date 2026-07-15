@@ -143,6 +143,10 @@ def render_eda_insights():
             yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
         )
         st.plotly_chart(fig, use_container_width=True)
+        with st.expander("📊 데이터 테이블 및 통계 요약"):
+            st.caption("🔹 **자료 출처:** 한국관광공사(한국관광데이터랩) - 온/오프라인 매트릭스 지표")
+            st.dataframe(df_demand[[x_col, 'naviSearchCo', 'cityType']].describe(include='all').astype(str), use_container_width=True)
+            st.dataframe(df_demand[['signguNm', x_col, 'naviSearchCo', 'cityType']], use_container_width=True)
 
         st.markdown("#### 벤치마킹 대상 도시 선택")
         
@@ -340,6 +344,14 @@ def render_eda_insights():
                 margin=dict(l=40, r=40, t=40, b=40)
             )
             st.plotly_chart(fig_radar, use_container_width=True)
+            with st.expander("📊 벤치마킹 지표 데이터 테이블"):
+                st.caption("🔹 **자료 출처:** 한국관광데이터랩, 문화공공데이터광장, OTA 통합 데이터 종합")
+                radar_df = pd.DataFrame({
+                    "지표": labels,
+                    city_1: val_c1,
+                    city_2: val_c2
+                })
+                st.dataframe(radar_df, use_container_width=True)
 
             c1_infra = int(m_c1.iloc[0]["인프라"])
             c2_infra = int(m_c2.iloc[0]["인프라"])

@@ -96,6 +96,10 @@ def render_demand_analysis():
                     yaxis_title=None
                 )
                 st.plotly_chart(fig_sns, use_container_width=True)
+                with st.expander("📊 데이터 테이블 및 통계 요약"):
+                    st.caption("🔹 **자료 출처:** 한국관광공사(한국관광데이터랩) - 지역별 검색건수 기반 프록시")
+                    st.dataframe(df_top_sns.describe(include='all').astype(str), use_container_width=True)
+                    st.dataframe(df_top_sns, use_container_width=True)
             with col_chart2:
                 st.markdown("#### 🧭 실제 방문도 (목적지 검색건수 Top 5)")
                 df_top_navi = df_kto_demand.nlargest(5, "naviSearchCo")
@@ -121,6 +125,10 @@ def render_demand_analysis():
                     yaxis_title=None
                 )
                 st.plotly_chart(fig_navi, use_container_width=True)
+                with st.expander("📊 데이터 테이블 및 통계 요약"):
+                    st.caption("🔹 **자료 출처:** 한국관광공사(한국관광데이터랩) - 목적지 검색건수")
+                    st.dataframe(df_top_navi[['signguNm', 'naviSearchCo']].describe().astype(str), use_container_width=True)
+                    st.dataframe(df_top_navi[['signguNm', 'naviSearchCo']], use_container_width=True)
     else:
         st.warning("관광 서비스 수요 데이터를 불러올 수 없습니다.")
 
@@ -149,6 +157,10 @@ def render_demand_analysis():
                 yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155", tickformat=",")
             )
             st.plotly_chart(fig3, use_container_width=True)
+            with st.expander("📊 데이터 테이블 및 교차표"):
+                st.caption("🔹 **자료 출처:** 한국관광공사(한국관광데이터랩) - 외국인 지역별 방문자 수 추이")
+                crosstab_df = pd.crosstab(df_top5['날짜'], df_top5['지역'], values=df_top5['외국인 방문자수'], aggfunc='sum').fillna(0)
+                st.dataframe(crosstab_df, use_container_width=True)
 
         with col4:
             st.subheader("지역별 성수기(봄철) 수요 집중도")
@@ -169,6 +181,9 @@ def render_demand_analysis():
                 margin=dict(l=20, r=20, t=40, b=20)
             )
             st.plotly_chart(fig5, use_container_width=True)
+            with st.expander("📊 데이터 테이블(히트맵 기초 데이터)"):
+                st.caption("🔹 **자료 출처:** 한국관광공사(한국관광데이터랩) - 외국인 지역별 방문자 수 히트맵")
+                st.dataframe(df_heatmap, use_container_width=True)
     except Exception as e:
         st.warning(f"지역별 방문자 수 데이터를 확인할 수 없습니다: {e}")
         
@@ -275,6 +290,10 @@ def render_demand_analysis():
             fig1.update_traces(hovertemplate='<b>상품 수:</b> %{x}개<br><b>주요 키워드:</b> %{customdata[0]}<extra></extra>')
             fig1.update_layout(yaxis={'categoryorder':'total ascending'})
             st.plotly_chart(fig1, use_container_width=True)
+            with st.expander("📊 데이터 테이블 및 통계 요약"):
+                st.caption("🔹 **자료 출처:** 글로벌 OTA 통합 데이터(Klook, KKday, GetYourGuide)")
+                st.dataframe(top5_infra.describe(include='all').astype(str), use_container_width=True)
+                st.dataframe(top5_infra, use_container_width=True)
             
         with col2:
             # 주요 5개 지역별 평점 분포 박스 플롯 (바이올린 플롯의 극단치 왜곡 현상 개선)
@@ -293,6 +312,9 @@ def render_demand_analysis():
                 showlegend=False
             )
             st.plotly_chart(fig3, use_container_width=True)
+            with st.expander("📊 데이터 테이블 및 지역별 평점 요약"):
+                st.caption("🔹 **자료 출처:** 글로벌 OTA 통합 데이터(Klook, KKday, GetYourGuide)")
+                st.dataframe(df_violin.groupby('region_sigungu')['rating_num'].describe().astype(str), use_container_width=True)
             st.caption("※ 시각적 왜곡(빈 공간)을 방지하기 위해 4.0점 미만의 일부 극단적 이상치는 화면 표시 범위에서 제외되었습니다.")
 
         # --- 문화공공데이터광장 추천 여행지 분석 추가 ---
@@ -340,6 +362,10 @@ def render_demand_analysis():
                     yaxis_title=None
                 )
                 st.plotly_chart(fig_spots, use_container_width=True)
+                with st.expander("📊 추천 수 통계 요약"):
+                    st.caption("🔹 **자료 출처:** 문화공공데이터광장 - 추천 여행지 빈도수")
+                    st.dataframe(top5_spots.describe(include='all').astype(str), use_container_width=True)
+                    st.dataframe(top5_spots, use_container_width=True)
                 
             with col4:
                 st.subheader("🍰 주요 광역시도별 관광지 점유 비중")
@@ -389,6 +415,9 @@ def render_demand_analysis():
                     hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                 )
                 st.plotly_chart(fig_pie, use_container_width=True)
+                with st.expander("📊 점유 비중 데이터 테이블"):
+                    st.caption("🔹 **자료 출처:** 문화공공데이터광장 - 주요 광역시도별 관광지 비중")
+                    st.dataframe(pie_data, use_container_width=True)
                 
             st.info("**분석 인사이트:** 대표적인 대도시 및 대형 관광 거점(서울, 부산, 제주)을 제외하고 분석한 결과, "
                     "**강원, 전남, 경북** 등 자연 경관과 역사/문화 자원이 풍부한 권역의 추천 빈도가 매우 높게 나타났습니다. "
@@ -527,6 +556,10 @@ def render_demand_analysis():
             )
             fig_scatter.update_layout(height=500, xaxis_title="종합 인프라 점수 (합산 기준)", yaxis_title="방문 규모 (검색건수)")
             st.plotly_chart(fig_scatter, use_container_width=True)
+            with st.expander("📊 종합 인프라 점수 및 데이터 요약"):
+                st.caption("🔹 **자료 출처:** 한국관광데이터랩, OTA 데이터, 문화공공데이터광장 통합 지표")
+                st.dataframe(scatter_df.describe().astype(str), use_container_width=True)
+                st.dataframe(scatter_df, use_container_width=True)
     
             st.success(f"**분석 인사이트:** OTA 플랫폼 기반 관광 상품 수와 문화공공데이터 추천 여행지 빈도수를 단순 합산한 '종합 인프라 점수'와 실제 방문 규모 간에는 **상관관계(r={corr1:.2f})**를 확인할 수 있습니다. "
                        "이는 민간 플랫폼의 인프라와 공공 데이터의 관광지 추천 빈도가 높은 지역일수록 실제 방문 수요로도 유의미하게 연결되고 있음을 시사합니다.")

@@ -106,6 +106,10 @@ def render_foreigner_trend():
             yaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
         )
         st.plotly_chart(fig, use_container_width=True)
+        with st.expander("📊 데이터 테이블 및 통계 요약"):
+            st.caption("🔹 **자료 출처:** 한국관광공사(한국관광데이터랩) - 방한 외래 관광객 통계")
+            st.dataframe(df_monthly_sorted[['기준년월', '조회기간 방문자 수']].describe(include='all').astype(str), use_container_width=True)
+            st.dataframe(df_monthly_sorted[['기준년월', '조회기간 방문자 수']], use_container_width=True)
         
     st.markdown("---")
 
@@ -159,6 +163,10 @@ def render_foreigner_trend():
             yaxis=dict(showgrid=False, zeroline=False, linecolor="#334155")
         )
         st.plotly_chart(fig_gender_age, use_container_width=True)
+        with st.expander("📊 성별/연령대별 교차표"):
+            st.caption("🔹 **자료 출처:** 한국관광공사(한국관광데이터랩) - 방한 외래 관광객 성별/연령대별 통계")
+            crosstab_df = pd.crosstab(df_long['연령 구분'], df_long['성별'], values=df_long['실제 인원수(명)'], aggfunc='sum').fillna(0)
+            st.dataframe(crosstab_df, use_container_width=True)
 
     with col2:
         st.markdown("#### 2. 방한 외래객 목적별 점유율")
@@ -184,6 +192,10 @@ def render_foreigner_trend():
         )
         
         st.plotly_chart(fig_share, use_container_width=True)
+        with st.expander("📊 목적별 방문자 수 통계"):
+            st.caption("🔹 **자료 출처:** 한국관광공사(한국관광데이터랩) - 목적별 방한 외래객 입국현황")
+            st.dataframe(df_share[['목적 유형', '방문자 수(명)']].describe(include='all').astype(str), use_container_width=True)
+            st.dataframe(df_share[['목적 유형', '방문자 수(명)']], use_container_width=True)
         
     st.markdown("---")
     
@@ -287,5 +299,9 @@ def render_foreigner_trend():
             margin=dict(l=0, r=0, t=40, b=0)
         )
         st.plotly_chart(fig4, use_container_width=True)
+        with st.expander("📊 국적별 입국자 통계 및 데이터"):
+            st.caption("🔹 **자료 출처:** 한국관광공사(한국관광데이터랩) - 입국자 국적별 입국현황")
+            st.dataframe(df_entry[['입국자 수(명)', '입국자 비율(%)']].describe().astype(str), use_container_width=True)
+            st.dataframe(df_entry[['입국자 국적', '입국자 수(명)', '입국자 비율(%)']], use_container_width=True)
     else:
         st.warning("입국자 국적 데이터를 확인할 수 없습니다.")
