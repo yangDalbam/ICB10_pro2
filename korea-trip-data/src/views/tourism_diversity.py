@@ -130,13 +130,13 @@ def render_tourism_diversity():
             col_sp1, col_sp2 = st.columns(2)
             
             with col_sp1:
-                st.markdown("#### 월별 간편결제 업종 소비 비중")
+                st.markdown("#### 업종별 월간 소비 비중 (간편결제 기준)")
 
                 fig_pie_spend = px.bar(
                     df_monthly_ind,
-                    x='기준년월',
+                    x='업종',
                     y='소비금액(억원)',
-                    color='업종',
+                    color='기준년월',
                     color_discrete_sequence=px.colors.sequential.Teal
                 )
                 
@@ -149,7 +149,7 @@ def render_tourism_diversity():
                     font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
                     hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                     margin=dict(l=20, r=20, t=20, b=20),
-                    xaxis=dict(title="기준년월", type='category', showgrid=False, zeroline=False),
+                    xaxis=dict(title="업종", showgrid=False, zeroline=False),
                     yaxis=dict(title="비중 (%)", showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
                 )
                 st.plotly_chart(fig_pie_spend, use_container_width=True)
