@@ -139,7 +139,6 @@ def render_tourism_diversity():
                     x='분류',
                     y='소비금액(억원)',
                     color='업종',
-                    barnorm='percent',
                     color_discrete_sequence=px.colors.sequential.Teal,
                     text_auto='.1f'
                 )
@@ -153,6 +152,8 @@ def render_tourism_diversity():
                 )
                 
                 fig_pie_spend.update_layout(
+                    barmode='stack',
+                    barnorm='percent',
                     showlegend=True,
                     plot_bgcolor="rgba(0,0,0,0)",
                     paper_bgcolor="rgba(0,0,0,0)",
