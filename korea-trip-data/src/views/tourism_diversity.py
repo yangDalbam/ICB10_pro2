@@ -131,41 +131,36 @@ def render_tourism_diversity():
             with col_sp1:
                 st.markdown("#### 업종별 관광 소비 비중 (간편결제 기준)")
 
-                df_ind_spend = df_ind_spend.sort_values("소비금액(억원)", ascending=True)
+                df_ind_spend = df_ind_spend.sort_values("소비금액(억원)", ascending=False)
+                df_ind_spend['분류'] = '전체 비중'
 
-                fig_pie_spend = px.scatter(
+                fig_pie_spend = px.bar(
                     df_ind_spend,
-                    x='소비금액(억원)',
-                    y='업종',
-                    color='소비금액(억원)',
-                    size='소비금액(억원)',
-                    color_continuous_scale='Teal'
+                    x='분류',
+                    y='소비금액(억원)',
+                    color='업종',
+                    barnorm='percent',
+                    color_discrete_sequence=px.colors.sequential.Teal,
+                    text_auto='.1f'
                 )
                 
-                for i in range(len(df_ind_spend)):
-                    val = df_ind_spend["소비금액(억원)"].iloc[i]
-                    cat = df_ind_spend["업종"].iloc[i]
-                    fig_pie_spend.add_shape(
-                        type="line",
-                        x0=0, y0=cat,
-                        x1=val, y1=cat,
-                        line=dict(color="#0F766E", width=2), # Teal 라인
-                        layer="below"
-                    )
-                
-                fig_pie_spend.update_traces(marker=dict(line=dict(width=1, color="#E2E8F0")))
+                fig_pie_spend.update_traces(
+                    textfont_size=12,
+                    textangle=0,
+                    textposition="inside",
+                    cliponaxis=False,
+                    marker=dict(line=dict(width=1, color="#E2E8F0"))
+                )
                 
                 fig_pie_spend.update_layout(
-                    coloraxis_colorbar=dict(title="소비금액(억원)", tickformat=",.0f"),
-                    showlegend=False,
+                    showlegend=True,
                     plot_bgcolor="rgba(0,0,0,0)",
                     paper_bgcolor="rgba(0,0,0,0)",
                     font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
                     hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                     margin=dict(l=20, r=20, t=20, b=20),
-                    xaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=True, zerolinecolor="#475569", linecolor="#334155"),
-                    yaxis=dict(showgrid=False, zeroline=False, linecolor="#334155"),
-                    yaxis_title=None
+                    xaxis=dict(title=None, showgrid=False, zeroline=False),
+                    yaxis=dict(title="비중 (%)", showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
                 )
                 st.plotly_chart(fig_pie_spend, use_container_width=True)
                 with st.expander("📊 소비 비중 통계 및 데이터"):
