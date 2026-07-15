@@ -131,30 +131,27 @@ def render_tourism_diversity():
             with col_sp1:
                 st.markdown("#### 업종별 관광 소비 비중 (간편결제 기준)")
 
-                df_ind_spend = df_ind_spend.sort_values("소비금액(억원)", ascending=False)
-                df_ind_spend['분류'] = '전체 비중'
+                df_ind_spend['비중(%)'] = (df_ind_spend['소비금액(억원)'] / df_ind_spend['소비금액(억원)'].sum()) * 100
+                df_ind_spend = df_ind_spend.sort_values("비중(%)", ascending=False)
 
                 fig_pie_spend = px.bar(
                     df_ind_spend,
-                    x='분류',
-                    y='소비금액(억원)',
+                    x='업종',
+                    y='비중(%)',
+                    text='비중(%)',
                     color='업종',
-                    color_discrete_sequence=px.colors.sequential.Teal,
-                    text_auto='.1f'
+                    color_discrete_sequence=px.colors.sequential.Teal
                 )
                 
                 fig_pie_spend.update_traces(
-                    textfont_size=12,
-                    textangle=0,
-                    textposition="inside",
+                    texttemplate='%{text:.1f}%',
+                    textposition="outside",
                     cliponaxis=False,
                     marker=dict(line=dict(width=1, color="#E2E8F0"))
                 )
                 
                 fig_pie_spend.update_layout(
-                    barmode='stack',
-                    barnorm='percent',
-                    showlegend=True,
+                    showlegend=False,
                     plot_bgcolor="rgba(0,0,0,0)",
                     paper_bgcolor="rgba(0,0,0,0)",
                     font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
