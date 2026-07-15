@@ -116,8 +116,9 @@ def render_tourism_diversity():
         
         # 1. 전국 관광 소비 비중 (간편결제 업종별)
         df_easy_filtered = df_easy[df_easy['업종'] != '전체']
-        df_ind_spend = df_easy_filtered.groupby('업종')['소비금액(천원)'].sum().reset_index()
-        df_ind_spend['소비금액(억원)'] = df_ind_spend['소비금액(천원)'] / 100000
+        df_monthly_ind = df_easy_filtered.groupby(['기준년월', '업종'])['소비금액(천원)'].sum().reset_index()
+        df_monthly_ind['소비금액(억원)'] = df_monthly_ind['소비금액(천원)'] / 100000
+        df_monthly_ind['기준년월'] = df_monthly_ind['기준년월'].astype(str)
         
         # 2. 전국 관광 총 소비 규모 Top 5 (서울, 부산, 제주 제외)
         excludes = ['서울', '부산', '제주']
@@ -129,42 +130,33 @@ def render_tourism_diversity():
             col_sp1, col_sp2 = st.columns(2)
             
             with col_sp1:
-                st.markdown("#### 업종별 관광 소비 비중 (간편결제 기준)")
-
-                df_ind_spend['비중(%)'] = (df_ind_spend['소비금액(억원)'] / df_ind_spend['소비금액(억원)'].sum()) * 100
-                df_ind_spend = df_ind_spend.sort_values("비중(%)", ascending=False)
+                st.markdown("#### 월별 간편결제 업종 소비 비중")
 
                 fig_pie_spend = px.bar(
-                    df_ind_spend,
-                    x='업종',
-                    y='비중(%)',
-                    text='비중(%)',
+                    df_monthly_ind,
+                    x='기준년월',
+                    y='소비금액(억원)',
                     color='업종',
                     color_discrete_sequence=px.colors.sequential.Teal
                 )
                 
-                fig_pie_spend.update_traces(
-                    texttemplate='%{text:.1f}%',
-                    textposition="outside",
-                    cliponaxis=False,
-                    marker=dict(line=dict(width=1, color="#E2E8F0"))
-                )
-                
                 fig_pie_spend.update_layout(
-                    showlegend=False,
+                    barmode='stack',
+                    barnorm='percent',
+                    showlegend=True,
                     plot_bgcolor="rgba(0,0,0,0)",
                     paper_bgcolor="rgba(0,0,0,0)",
                     font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
                     hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
                     margin=dict(l=20, r=20, t=20, b=20),
-                    xaxis=dict(title=None, showgrid=False, zeroline=False),
+                    xaxis=dict(title="기준년월", type='category', showgrid=False, zeroline=False),
                     yaxis=dict(title="비중 (%)", showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155")
                 )
                 st.plotly_chart(fig_pie_spend, use_container_width=True)
                 with st.expander("📊 소비 비중 통계 및 데이터"):
                     st.caption("🔹 **자료 출처:** 한국관광공사(한국관광데이터랩) - 간편결제 업종별 관광소비")
-                    st.dataframe(df_ind_spend.describe().astype(str), use_container_width=True)
-                    st.dataframe(df_ind_spend, use_container_width=True)
+                    st.dataframe(df_monthly_ind.describe().astype(str), use_container_width=True)
+                    st.dataframe(df_monthly_ind, use_container_width=True)
                 
             with col_sp2:
                 st.markdown("#### 핵심 거점 관광지출액 Top 5")
