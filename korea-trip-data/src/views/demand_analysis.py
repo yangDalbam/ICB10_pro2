@@ -356,8 +356,9 @@ def render_demand_analysis():
         )
         st.plotly_chart(fig_infra, use_container_width=True)
         
-        with st.expander("📊 데이터 테이블 및 출처"):
-            st.caption("🔹 **자료 출처:** 문화공공데이터광장")
+        with st.expander("📊 데이터 테이블 및 통계 요약"):
+            st.caption("🔹 **자료 출처:** 문화공공데이터광장 - 지역별 관광 인프라 현황")
+            st.dataframe(top5_infra_df[['축제수', '다국어가이드수', '세계음식점수', '인프라총합']].describe().astype(str), use_container_width=True)
             st.dataframe(top5_infra_df[['시도', '시군구', '축제수', '다국어가이드수', '세계음식점수', '인프라총합']], use_container_width=True)
         
         st.info('''
