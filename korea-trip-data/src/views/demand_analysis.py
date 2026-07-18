@@ -1,4 +1,4 @@
-﻿"""
+"""
 인기 관광 지역 수요 분석 뷰 모듈입니다.
 주요 기능:
 - 온라인 관심도 및 실제 방문도 시각화
@@ -276,11 +276,7 @@ def render_demand_analysis():
         # 결측 키워드 처리
         top5_infra['주요 키워드'].fillna('지역 특화 투어, 맞춤형 체험', inplace=True)
 
-        st.subheader("💡 외국인 타겟 핵심 관광 키워드 (제주/서울/부산 외)")
-        st.info("핵심 거점을 제외한 주요 관광 키워드: **DMZ, 남이섬, 에버랜드, 수원화성, 인천공항, 경주, 전등사**")
-        st.markdown("➡️ 서울/제주/부산 등 3대 핵심 거점을 제외하고 분석한 결과, **'파주 DMZ'**, **'남이섬/춘천'**, **'용인 에버랜드'**, **'수원 스타필드/화성'** 등 뚜렷한 목적성을 지닌 **근교 체험형/테마형 일일 투어(Day Tour)**가 강력한 2선 관광 인프라를 구축하고 있음을 알 수 있습니다.")
 
-        st.markdown("<br>", unsafe_allow_html=True)
         st.subheader("📊 지역별 관광 상품 인프라 및 평점 분포 분석")
 
         col1, col2 = st.columns(2)
@@ -316,6 +312,8 @@ def render_demand_analysis():
                 st.caption("🔹 **자료 출처:** 글로벌 OTA 통합 데이터(Klook, KKday, GetYourGuide)")
                 st.dataframe(df_violin.groupby('region_sigungu')['rating_num'].describe().astype(str), use_container_width=True)
             st.caption("※ 시각적 왜곡(빈 공간)을 방지하기 위해 4.0점 미만의 일부 극단적 이상치는 화면 표시 범위에서 제외되었습니다.")
+
+        st.info("**분석 인사이트 (외국인 타겟 핵심 관광 키워드):** 서울/제주/부산 등 3대 핵심 거점을 제외하고 분석한 결과, **'파주 DMZ'**, **'남이섬/춘천'**, **'용인 에버랜드'**, **'수원 스타필드/화성'** 등 뚜렷한 목적성을 지닌 **근교 체험형/테마형 일일 투어(Day Tour)**가 강력한 2선 관광 인프라를 구축하고 있음을 알 수 있습니다. 주요 관광 키워드로는 **DMZ, 남이섬, 에버랜드, 수원화성, 인천공항, 경주, 전등사** 등이 도출되었습니다.")
 
         # --- 문화공공데이터광장 추천 여행지 분석 추가 ---
         st.markdown("---")
