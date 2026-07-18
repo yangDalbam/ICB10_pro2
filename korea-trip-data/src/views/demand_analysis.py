@@ -340,7 +340,7 @@ def render_demand_analysis():
             orientation='h',
             title="상위 5개 권역 인프라 구성",
             labels={'value': '개수', 'variable': '인프라 종류', '지역명': ''},
-            color_discrete_sequence=["#F87171", "#34D399", "#FBBF24"]
+            color_discrete_sequence=["#38BDF8", "#2563EB", "#00F0FF"]
         )
         fig_infra.update_layout(
             barmode='group',
