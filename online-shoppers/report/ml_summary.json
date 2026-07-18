@@ -1,0 +1,71 @@
+{
+    "eda_tables": {
+        "VisitorType_Revenue": {
+            "false": {
+                "New_Visitor": 1272,
+                "Other": 69,
+                "Returning_Visitor": 9081
+            },
+            "true": {
+                "New_Visitor": 422,
+                "Other": 16,
+                "Returning_Visitor": 1470
+            }
+        },
+        "VisitorType_Revenue_Pct": {
+            "false": {
+                "New_Visitor": 75.09,
+                "Other": 81.18,
+                "Returning_Visitor": 86.07
+            },
+            "true": {
+                "New_Visitor": 24.91,
+                "Other": 18.82,
+                "Returning_Visitor": 13.93
+            }
+        }
+    },
+    "model_results": {
+        "Random Forest": {
+            "Accuracy": 0.9006,
+            "Precision": 0.7354,
+            "Recall": 0.5602,
+            "F1-Score": 0.636,
+            "ROC-AUC": 0.9178,
+            "Log-Loss": 0.2537
+        },
+        "Gradient Boosting": {
+            "Accuracy": 0.8982,
+            "Precision": 0.7148,
+            "Recall": 0.5707,
+            "F1-Score": 0.6346,
+            "ROC-AUC": 0.9251,
+            "Log-Loss": 0.2358
+        },
+        "XGBoost": {
+            "Accuracy": 0.8921,
+            "Precision": 0.6813,
+            "Recall": 0.5707,
+            "F1-Score": 0.6211,
+            "ROC-AUC": 0.9184,
+            "Log-Loss": 0.264
+        }
+    },
+    "feature_importance": {
+        "PageValues": 0.40049999952316284,
+        "Month": 0.09910000115633011,
+        "BounceRates": 0.052000001072883606,
+        "Administrative": 0.04230000078678131,
+        "VisitorType": 0.0421999990940094,
+        "ProductRelated": 0.03579999879002571,
+        "Informational_Duration": 0.03460000082850456,
+        "ExitRates": 0.03420000150799751,
+        "ProductRelated_Duration": 0.03229999914765358,
+        "TrafficType": 0.03189999982714653
+    },
+    "image_paths": {
+        "eda_plot": "reports/images/visitor_revenue_countplot.png",
+        "ml_comp_plot": "reports/images/model_comparison_roc.png",
+        "fi_plot": "reports/images/xgboost_feature_importance.png"
+    }
+}
