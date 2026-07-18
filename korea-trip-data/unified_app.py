@@ -43,10 +43,32 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "korea-trip-data2", "da
 
 @st.cache_data
 def load_foreign_dashboard_data():
-    file_path = os.path.join(DATA_DIR, "foreign_dashboard_data.csv")
-    if os.path.exists(file_path):
-        return pd.read_csv(file_path)
-    return pd.DataFrame()
+    # korea-trip-data2의 app.py에서 get_integrated_data 함수를 직접 호출하여 데이터 프레임을 반환합니다.
+    import sys
+    import os
+    import importlib.util
+    
+    # st.set_page_config 중복 호출 방지를 위한 임시 패치
+    original_set_page_config = st.set_page_config
+    st.set_page_config = lambda *args, **kwargs: None
+    
+    app2_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "korea-trip-data2"))
+    if app2_dir not in sys.path:
+        sys.path.append(app2_dir)
+        
+    try:
+        import app as app2
+        df_int, df_vis = app2.get_integrated_data()
+        
+        # Merge interest and visit data
+        df_merged = pd.merge(df_int, df_vis, on="지역", how="outer").fillna(0)
+        df_merged.rename(columns={"interest_score": "관심도", "visit_score": "방문도"}, inplace=True)
+        return df_merged
+    except Exception as e:
+        print("Error loading data from app2:", e)
+        return pd.DataFrame()
+    finally:
+        st.set_page_config = original_set_page_config
 
 @st.cache_data
 def load_spending_top5():
@@ -74,16 +96,8 @@ def load_spending_top5():
 @st.cache_data
 def calculate_matrix_data():
     # 내비게이션 검색(방문도)과 온라인 관심도(SNS 언급량) 기반 2x2 데이터
-    file_path = os.path.join(DATA_DIR, "foreign_dashboard_data.csv")
-    if os.path.exists(file_path):
-        df = pd.read_csv(file_path)
-        # Dummy computation for matrix
-        if '관심도' not in df.columns:
-            df['관심도'] = np.random.randint(100, 1000, size=len(df))
-        if '방문도' not in df.columns:
-            df['방문도'] = np.random.randint(50, 500, size=len(df))
-        return df
-    return pd.DataFrame()
+    df = load_foreign_dashboard_data()
+    return df
 
 def render_online_interest():
     st.header("🌐 온라인 관심도 분석")
