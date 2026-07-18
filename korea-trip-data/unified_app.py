@@ -43,32 +43,14 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "korea-trip-data2", "da
 
 @st.cache_data
 def load_foreign_dashboard_data():
-    # korea-trip-data2의 app.py에서 get_integrated_data 함수를 직접 호출하여 데이터 프레임을 반환합니다.
-    import sys
-    import os
-    import importlib.util
-    
-    # st.set_page_config 중복 호출 방지를 위한 임시 패치
-    original_set_page_config = st.set_page_config
-    st.set_page_config = lambda *args, **kwargs: None
-    
-    app2_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "korea-trip-data2"))
-    if app2_dir not in sys.path:
-        sys.path.append(app2_dir)
-        
-    try:
-        import app as app2
-        df_int, df_vis = app2.get_integrated_data()
-        
-        # Merge interest and visit data
-        df_merged = pd.merge(df_int, df_vis, on="지역", how="outer").fillna(0)
-        df_merged.rename(columns={"interest_score": "관심도", "visit_score": "방문도"}, inplace=True)
-        return df_merged
-    except Exception as e:
-        print("Error loading data from app2:", e)
+    # 백그라운드 스크립트(export_data.py)를 통해 korea-trip-data2의 로직으로 
+    # 미리 집계된 관심도/방문도 통합 데이터를 불러옵니다.
+    file_path = os.path.join(DATA_DIR, "aggregated_dashboard_data.csv")
+    if os.path.exists(file_path):
+        return pd.read_csv(file_path)
+    else:
+        st.error("데이터 파일을 찾을 수 없습니다. (aggregated_dashboard_data.csv)")
         return pd.DataFrame()
-    finally:
-        st.set_page_config = original_set_page_config
 
 @st.cache_data
 def load_spending_top5():
