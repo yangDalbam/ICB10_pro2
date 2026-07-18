@@ -254,9 +254,20 @@ def render_eda_insights():
                 df_spots_agg = df_spots.groupby('지역_시도시군구').size().reset_index(name='공공_스팟수')
                 df_spots_agg['signguNm'] = df_spots_agg['지역_시도시군구'].apply(normalize_region)
                 
+                # 추가: 문화공공데이터(축제, 다국어가이드, 세계음식점)
+                culture_path = os.path.join(data_dir, 'culture_infra_summary.csv')
+                if os.path.exists(culture_path):
+                    df_culture = pd.read_csv(culture_path)
+                    df_culture['signguNm'] = df_culture['norm_region'].apply(normalize_region)
+                    # 합산용 컬러 생성
+                    df_culture['추가인프라'] = df_culture['축제수'] + df_culture['다국어가이드수'] + df_culture['세계음식점수']
+                    df_spots_agg = pd.merge(df_spots_agg, df_culture[['signguNm', '추가인프라']], on='signguNm', how='outer').fillna(0)
+                else:
+                    df_spots_agg['추가인프라'] = 0
+                
                 # OTA 데이터와 공공 스팟 데이터 병합
                 df_infra = pd.merge(df_ota_agg, df_spots_agg, on='signguNm', how='outer').fillna(0)
-                df_infra['인프라'] = df_infra['OTA_상품수'] + df_infra['공공_스팟수']
+                df_infra['인프라'] = df_infra['OTA_상품수'] + df_infra['공공_스팟수'] + df_infra['추가인프라']
                 # 리뷰수나 만족도는 OTA 기준 유지 (없는 경우 0)
             else:
                 df_infra = df_ota_agg.copy()
