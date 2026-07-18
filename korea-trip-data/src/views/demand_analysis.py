@@ -536,13 +536,21 @@ def render_demand_analysis():
         df_kto_demand_corr['norm_region'] = df_kto_demand_corr['signguNm'].apply(normalize_region)
         visit_volume = df_kto_demand_corr.groupby('norm_region')['기초지자체 검색건수'].sum().reset_index(name='visit_volume')
         
+        # 4. 추가 문화공공데이터 (축제, 다국어가이드, 세계음식점)
+        culture_summary_path = os.path.join(data_dir, 'culture_infra_summary.csv')
+        if os.path.exists(culture_summary_path):
+            df_culture = pd.read_csv(culture_summary_path, encoding='utf-8')
+        else:
+            df_culture = pd.DataFrame(columns=['norm_region', '축제수', '다국어가이드수', '세계음식점수'])
+
         # Merge
         merged = pd.merge(visit_volume, ota_counts, on='norm_region', how='inner').fillna({'ota_count': 0})
         merged = pd.merge(merged, spot_counts, on='norm_region', how='left').fillna({'spot_count': 0})
+        merged = pd.merge(merged, df_culture, on='norm_region', how='left').fillna({'축제수': 0, '다국어가이드수': 0, '세계음식점수': 0})
         
         if len(merged) > 0:
-            # OTA 상품 수와 추천 여행지 수를 단순 합산하여 종합 인프라 점수 산출
-            merged['infra_score'] = merged['ota_count'] + merged['spot_count']
+            # OTA 상품 수와 추천 여행지, 축제, 다국어가이드, 세계음식점 수를 단순 합산하여 종합 인프라 점수 산출
+            merged['infra_score'] = merged['ota_count'] + merged['spot_count'] + merged['축제수'] + merged['다국어가이드수'] + merged['세계음식점수']
             
             # 극단적으로 인프라 점수가 낮아 시각화를 왜곡하는 지역(경기 평택시, 경기 하남시) 제외
             merged = merged[~merged['norm_region'].isin(['경기 평택시', '경기 하남시'])]
@@ -551,8 +559,8 @@ def render_demand_analysis():
             
             # Scatter plot
             scatter_df = merged.sort_values(by='visit_volume', ascending=False).head(20).reset_index(drop=True)
-            scatter_df = scatter_df[['norm_region', 'visit_volume', 'ota_count', 'spot_count', 'infra_score']].copy()
-            scatter_df.columns = ['지역', '방문 규모 (검색건수)', 'OTA 상품수', '공공데이터 여행지수', '종합 인프라 점수']
+            scatter_df = scatter_df[['norm_region', 'visit_volume', 'ota_count', 'spot_count', '축제수', '다국어가이드수', '세계음식점수', 'infra_score']].copy()
+            scatter_df.columns = ['지역', '방문 규모 (검색건수)', 'OTA 상품수', '공공데이터 여행지수', '축제수', '다국어가이드수', '세계음식점수', '종합 인프라 점수']
             
             # 텍스트 겹침 방지 (우선순위가 높은 점부터 라벨 할당)
             labels = []
