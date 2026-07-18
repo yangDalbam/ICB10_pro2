@@ -1,4 +1,4 @@
-"""
+﻿"""
 인기 관광 지역 수요 분석 뷰 모듈입니다.
 주요 기능:
 - 온라인 관심도 및 실제 방문도 시각화
@@ -321,53 +321,6 @@ def render_demand_analysis():
         st.markdown("---")
         st.header("4. 문화공공데이터광장 기반 지역별 인프라 분석")
         
-        st.subheader("📍 지역별 축제·체험·문화 인프라 분석")
-        st.markdown("전국 시군구 단위의 지역축제, 다국어 가이드 문화시설, 세계음식점 인프라를 종합 분석한 결과, 대도시(서울, 부산, 제주 등)를 제외한 상위 5개 권역은 다음과 같습니다.")
-        
-        top5_infra_df = pd.DataFrame({
-            "시도": ["경기도", "경기도", "경기도", "전라북도", "경기도"],
-            "시군구": ["성남시", "고양시", "수원시", "전주시", "파주시"],
-            "축제수": [0, 8, 13, 11, 14],
-            "다국어가이드수": [71, 200, 97, 220, 201],
-            "세계음식점수": [338, 176, 260, 88, 60],
-            "인프라총합": [409, 384, 370, 319, 275]
-        })
-        top5_infra_df['지역명'] = top5_infra_df['시도'] + ' ' + top5_infra_df['시군구']
-        fig_infra = px.bar(
-            top5_infra_df, 
-            x=['축제수', '다국어가이드수', '세계음식점수'], 
-            y='지역명', 
-            orientation='h',
-            title="상위 5개 권역 인프라 구성",
-            labels={'value': '개수', 'variable': '인프라 종류', '지역명': ''},
-            color_discrete_sequence=["#38BDF8", "#2563EB", "#00F0FF"]
-        )
-        fig_infra.update_layout(
-            barmode='group',
-            yaxis={'categoryorder':'total ascending'},
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
-            hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
-            margin=dict(l=20, r=20, t=40, b=20),
-            xaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155", title="인프라 개수"),
-            yaxis_title=None,
-            legend_title_text='인프라 종류'
-        )
-        st.plotly_chart(fig_infra, use_container_width=True)
-        
-        with st.expander("📊 데이터 테이블 및 통계 요약"):
-            st.caption("🔹 **자료 출처:** 문화공공데이터광장 - 지역별 관광 인프라 현황")
-            st.dataframe(top5_infra_df[['축제수', '다국어가이드수', '세계음식점수', '인프라총합']].describe().astype(str), use_container_width=True)
-            st.dataframe(top5_infra_df[['시도', '시군구', '축제수', '다국어가이드수', '세계음식점수', '인프라총합']], use_container_width=True)
-        
-        st.info('''
-**💡 하위 인프라 지역을 위한 벤치마킹 인사이트**
-1. **'로컬 미식(Local Gastronomy)' 특화 전략**: 다국적 식음료 환경(세계음식점)이 부족한 점을 역이용하여, 지역 특산물과 고유 향토 음식을 브랜드화하는 등 틈새시장을 공략해야 합니다.
-2. **다국어 가이드의 디지털화(스마트 관광)**: 대규모 물리적 인프라 확충 대신, 모바일 기반 다국어 오디오 가이드(QR 등)를 관내 핵심 명소에 배치하는 저비용 고효율 전략이 요구됩니다.
-3. **'소수 정예' 지역 축제 육성**: 체험, 자연, 전통 등의 테마를 결합하여 외부 관광객을 확실히 유인할 수 있는 밀도 높고 독창적인 지역 축제 발굴에 선택과 집중을 해야 합니다.
-        ''')
-        
         import sqlite3
         db_path = os.path.join(data_dir, 'tourist_spots.db')
         if os.path.exists(db_path):
@@ -474,6 +427,56 @@ def render_demand_analysis():
         else:
             st.warning("추천 여행지 데이터베이스(tourist_spots.db)를 찾을 수 없습니다.")
 
+
+        st.markdown('---')
+
+        st.subheader("📍 지역별 축제·체험·문화 인프라 분석")
+        st.markdown("전국 시군구 단위의 지역축제, 다국어 가이드 문화시설, 세계음식점 인프라를 종합 분석한 결과, 대도시(서울, 부산, 제주 등)를 제외한 상위 5개 권역은 다음과 같습니다.")
+        
+        top5_infra_df = pd.DataFrame({
+            "시도": ["경기도", "경기도", "경기도", "전라북도", "경기도"],
+            "시군구": ["성남시", "고양시", "수원시", "전주시", "파주시"],
+            "축제수": [0, 8, 13, 11, 14],
+            "다국어가이드수": [71, 200, 97, 220, 201],
+            "세계음식점수": [338, 176, 260, 88, 60],
+            "인프라총합": [409, 384, 370, 319, 275]
+        })
+        top5_infra_df['지역명'] = top5_infra_df['시도'] + ' ' + top5_infra_df['시군구']
+        fig_infra = px.bar(
+            top5_infra_df, 
+            x=['축제수', '다국어가이드수', '세계음식점수'], 
+            y='지역명', 
+            orientation='h',
+            title="상위 5개 권역 인프라 구성",
+            labels={'value': '개수', 'variable': '인프라 종류', '지역명': ''},
+            color_discrete_sequence=["#38BDF8", "#2563EB", "#00F0FF"]
+        )
+        fig_infra.update_layout(
+            barmode='group',
+            yaxis={'categoryorder':'total ascending'},
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+            hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
+            margin=dict(l=20, r=20, t=40, b=20),
+            xaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155", title="인프라 개수"),
+            yaxis_title=None,
+            legend_title_text='인프라 종류'
+        )
+        st.plotly_chart(fig_infra, use_container_width=True)
+        
+        with st.expander("📊 데이터 테이블 및 통계 요약"):
+            st.caption("🔹 **자료 출처:** 문화공공데이터광장 - 지역별 관광 인프라 현황")
+            st.dataframe(top5_infra_df[['축제수', '다국어가이드수', '세계음식점수', '인프라총합']].describe().astype(str), use_container_width=True)
+            st.dataframe(top5_infra_df[['시도', '시군구', '축제수', '다국어가이드수', '세계음식점수', '인프라총합']], use_container_width=True)
+        
+        st.info('''
+**💡 하위 인프라 지역을 위한 벤치마킹 인사이트**
+1. **'로컬 미식(Local Gastronomy)' 특화 전략**: 다국적 식음료 환경(세계음식점)이 부족한 점을 역이용하여, 지역 특산물과 고유 향토 음식을 브랜드화하는 등 틈새시장을 공략해야 합니다.
+2. **다국어 가이드의 디지털화(스마트 관광)**: 대규모 물리적 인프라 확충 대신, 모바일 기반 다국어 오디오 가이드(QR 등)를 관내 핵심 명소에 배치하는 저비용 고효율 전략이 요구됩니다.
+3. **'소수 정예' 지역 축제 육성**: 체험, 자연, 전통 등의 테마를 결합하여 외부 관광객을 확실히 유인할 수 있는 밀도 높고 독창적인 지역 축제 발굴에 선택과 집중을 해야 합니다.
+        ''')
+        
         st.markdown('---')
         st.markdown("### 4. 🔍 지역 인프라와 방문 규모 상관관계 분석")
         
