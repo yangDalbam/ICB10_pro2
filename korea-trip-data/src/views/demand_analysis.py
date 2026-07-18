@@ -332,7 +332,33 @@ def render_demand_analysis():
             "세계음식점수": [338, 176, 260, 88, 60],
             "인프라총합": [409, 384, 370, 319, 275]
         })
-        st.dataframe(top5_infra_df, use_container_width=True)
+        top5_infra_df['지역명'] = top5_infra_df['시도'] + ' ' + top5_infra_df['시군구']
+        fig_infra = px.bar(
+            top5_infra_df, 
+            x=['축제수', '다국어가이드수', '세계음식점수'], 
+            y='지역명', 
+            orientation='h',
+            title="상위 5개 권역 인프라 구성",
+            labels={'value': '개수', 'variable': '인프라 종류', '지역명': ''},
+            color_discrete_sequence=["#F87171", "#34D399", "#FBBF24"]
+        )
+        fig_infra.update_layout(
+            barmode='group',
+            yaxis={'categoryorder':'total ascending'},
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)",
+            font=dict(family="Pretendard, sans-serif", size=14, color="#E2E8F0"),
+            hoverlabel=dict(bgcolor="#1E293B", font_size=13, font_family="Pretendard", font=dict(color="#F8FAFC")),
+            margin=dict(l=20, r=20, t=40, b=20),
+            xaxis=dict(showgrid=True, gridcolor="#1E293B", zeroline=False, linecolor="#334155", title="인프라 개수"),
+            yaxis_title=None,
+            legend_title_text='인프라 종류'
+        )
+        st.plotly_chart(fig_infra, use_container_width=True)
+        
+        with st.expander("📊 데이터 테이블 및 출처"):
+            st.caption("🔹 **자료 출처:** 문화공공데이터광장")
+            st.dataframe(top5_infra_df[['시도', '시군구', '축제수', '다국어가이드수', '세계음식점수', '인프라총합']], use_container_width=True)
         
         st.info('''
 **💡 하위 인프라 지역을 위한 벤치마킹 인사이트**
