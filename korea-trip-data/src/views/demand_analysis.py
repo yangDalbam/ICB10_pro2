@@ -476,7 +476,7 @@ def render_demand_analysis():
         ''')
         
         st.markdown('---')
-        st.markdown("### 4. 🔍 지역 인프라와 방문 규모 상관관계 분석")
+        st.header("5. 🔍 지역 인프라와 방문 규모 상관관계 분석")
         
         import numpy as np
         from sklearn.preprocessing import MinMaxScaler
